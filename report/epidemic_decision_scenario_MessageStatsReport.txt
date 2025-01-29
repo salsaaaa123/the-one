@@ -1,4 +1,4 @@
-Message stats for scenario default_scenario
+Message stats for scenario epidemic_decision_scenario
 sim_time: 43200.1000
 created: 1461
 started: 57911
