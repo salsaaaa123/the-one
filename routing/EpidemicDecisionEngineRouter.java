@@ -1,33 +1,34 @@
 package routing;
 
 import core.*;
-import routing.*;
+import java.util.HashSet;
 
-public class EpidemicDecisionEngineRouter implements RoutingDecisionEngine  {
+public class EpidemicDecisionEngineRouter implements RoutingDecisionEngine {
 
-     public EpidemicDecisionEngineRouter(Settings settings) {
+     private HashSet<Integer> deliveredMessageIds;
 
-
+     public EpidemicDecisionEngineRouter() {
+          this.deliveredMessageIds = new HashSet<>();
      }
 
-     public EpidemicDecisionEngineRouter(EpidemicDecisionEngineRouter prototype) {
-
-     }
      @Override
      public void connectionUp(DTNHost thisHost, DTNHost peer) {
-
+          // Tidak ada tindakan khusus yang diperlukan saat koneksi naik
      }
 
      @Override
      public void connectionDown(DTNHost thisHost, DTNHost peer) {
+          // Tidak ada tindakan khusus yang diperlukan saat koneksi turun
      }
 
      @Override
      public void doExchangeForNewConnection(Connection con, DTNHost peer) {
+          // Tidak ada pertukaran informasi khusus yang diperlukan di sini
      }
 
      @Override
      public boolean newMessage(Message m) {
+          // Selalu teruskan pesan baru (epidemic)
           return true;
      }
 
@@ -38,7 +39,8 @@ public class EpidemicDecisionEngineRouter implements RoutingDecisionEngine  {
 
      @Override
      public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
-          return !thisHost.getRouter().hasMessage(m.getId());
+          // Simpan pesan yang belum pernah diterima sebelumnya
+          return !deliveredMessageIds.contains(m.getId());
      }
 
      @Override
@@ -46,28 +48,30 @@ public class EpidemicDecisionEngineRouter implements RoutingDecisionEngine  {
           return true;
      }
 
+
      @Override
      public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
+          // Pesan tidak perlu dihapus setelah dikirim dalam pendekatan Epidemic murni
           return false;
      }
 
      @Override
      public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld) {
+          // Hapus pesan yang sudah pernah terkirim
+          if(deliveredMessageIds.contains(m.getId())){
+               return true;
+          }
           return false;
      }
 
-     private EpidemicDecisionEngineRouter getOtherEpidemicRouter(DTNHost host) {
-          MessageRouter otherRouter = host.getRouter();
-          assert otherRouter instanceof DecisionEngineRouter : "This router only works "
-                  + " with other routers of same type";
-
-          return (EpidemicDecisionEngineRouter) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
-     }
 
      @Override
      public RoutingDecisionEngine replicate() {
-          return new EpidemicDecisionEngineRouter(this);
+          return new EpidemicDecisionEngineRouter();
      }
 
-
+     @Override
+     public String toString() {
+          return "EpidemicDecisionEngine";
+     }
 }
