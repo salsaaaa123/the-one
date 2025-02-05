@@ -253,20 +253,20 @@ abstract public class NetworkInterface implements ModuleCommunicationListener {
 	 * make the decision whether to disconnect or not
 	 * @param con The connection to tear down
 	 */
-	/*protected void disconnect(Connection con, 
-			NetworkInterface anotherInterface) {
-		con.setUpState(false);
-		notifyConnectionListeners(CON_DOWN, anotherInterface.getHost());
-
-		// tear down bidirectional connection
-		if (!anotherInterface.removeConnection(con, this)) {
-			throw new SimError("No connection " + con + " found in " +
-					anotherInterface);	
-		}
-
-		this.host.connectionDown(con);
-		anotherInterface.getHost().connectionDown(con);
-	}*/
+//	protected void disconnect(Connection con,
+//			NetworkInterface anotherInterface) {
+//		con.setUpState(false);
+//		notifyConnectionListeners(CON_DOWN, anotherInterface.getHost());
+//
+//		// tear down bidirectional connection
+//		if (!anotherInterface.removeConnection(con, this)) {
+//			throw new SimError("No connection " + con + " found in " +
+//					anotherInterface);
+//		}
+//
+//		this.host.connectionDown(con);
+//		anotherInterface.getHost().connectionDown(con);
+//	}
 	public void disconnect(NetworkInterface anotherInterface)
 	{
 		notifyConnectionListeners(CON_DOWN, anotherInterface.getHost());
