@@ -130,7 +130,7 @@ public class SprayAndFocusRouter extends ActiveRouter
 	{
 		makeRoomForNewMessage(m.getSize());
 
-		m.addProperty(MSG_COUNT_PROP, new Integer(initialNrofCopies));
+		m.addProperty(MSG_COUNT_PROP, Integer.valueOf(initialNrofCopies));
 		addToMessages(m, true);
 		return true;
 	}
