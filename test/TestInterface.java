@@ -68,7 +68,7 @@ public class TestInterface extends NetworkInterface {
 			assert con.isUp() : "Connection " + con + " was down!";
 
 			if (!isWithinRange(anotherInterface)) {
-				disconnect(con,anotherInterface);
+				disconnect(anotherInterface);
 				connections.remove(i);
 			}
 			else {

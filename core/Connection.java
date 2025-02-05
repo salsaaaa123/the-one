@@ -220,20 +220,36 @@ public abstract class Connection {
 	public void disconnect(NetworkInterface initiator)
 	{
 		setUpState(false);
-		
+
 		NetworkInterface other = initiator == fromInterface ? toInterface : fromInterface;
-		
+
 		initiator.disconnect(other);
-		
+
 		if(!fromInterface.removeConnection(this, initiator))
 			throw new SimError("No connection " + this + " found in " +
 					fromInterface);
 		if(!toInterface.removeConnection(this, initiator))
 			throw new SimError("No connection " + this + " found in " +
 					toInterface);
-		
+
 		toNode.connectionDown(this);
 		fromNode.connectionDown(this);
 	}
+//public void disconnect(Connection con, NetworkInterface initiator) {
+//	con.setUpState(false);
+//
+//	NetworkInterface other = initiator == fromInterface ? toInterface : fromInterface;
+//
+//	initiator.disconnect(con, other);
+//
+//	if (!fromInterface.removeConnection(con, initiator))
+//		throw new SimError("No connection " + con + " found in " + fromInterface);
+//	if (!toInterface.removeConnection(con, initiator))
+//		throw new SimError("No connection " + con + " found in " + toInterface);
+//
+//	toNode.connectionDown(con);
+//	fromNode.connectionDown(con);
+//}
+
 }
 
