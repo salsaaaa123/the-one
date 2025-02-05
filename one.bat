@@ -1,3 +1,3 @@
 @echo off
-set CLASSPATH=.;lib/DTNConsoleConnection.jar;lib/ECLA.jar
+set CLASSPATH=target;lib/ECLA.jar;lib/DTNConsoleConnection.jar
 java -Xmx512M -cp "%CLASSPATH%" core.DTNSim %*
