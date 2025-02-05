@@ -117,5 +117,5 @@ public interface RoutingDecisionEngine
 	public RoutingDecisionEngine replicate();
 
 
-//	public void update(DTNHost thisHost);
+
 }

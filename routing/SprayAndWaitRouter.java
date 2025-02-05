@@ -80,7 +80,7 @@ public class SprayAndWaitRouter extends ActiveRouter {
 		makeRoomForNewMessage(msg.getSize());
 
 		msg.setTtl(this.msgTtl);
-		msg.addProperty(MSG_COUNT_PROPERTY, new Integer(initialNrofCopies));
+		msg.addProperty(MSG_COUNT_PROPERTY, Integer.valueOf(initialNrofCopies));
 		addToMessages(msg, true);
 		return true;
 	}
