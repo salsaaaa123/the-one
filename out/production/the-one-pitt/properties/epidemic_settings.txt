@@ -1,0 +1,15 @@
+
+
+# Aktifkan DecisionEngineRouter
+Group1.router = DecisionEngineRouter
+
+# Tentukan implementasi Epidemic
+DecisionEngineRouter.decisionEngine = EpidemicDecisionEngineRouter
+
+# Parameter Epidemic
+Scenario.name = EpidemicDemo
+Scenario.endTime = 7200
+Group1.nrofHosts = 100
+Group1.bufferSize = 100M
+Group1.msgTtl = 300
+MovementModel.worldSize = 10000,10000
