@@ -57,7 +57,6 @@ nbproject/private/
 .nfs*
 
 # Windows batch and PowerShell
-*.bat
 *.cmd
 *.ps1
 
