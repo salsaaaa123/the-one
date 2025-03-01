@@ -1,74 +1,30 @@
-# Mengatur cara Git menangani file tertentu
-# ========== GENERAL IGNORES ==========
-# System-specific files
-.DS_Store
-Thumbs.db
-desktop.ini
-*.swp
-*.swo
-*.tmp
-*.log
-*.bak
+# Keep EOLs consistent
+* text=auto
 
-# ========== JAVA / GRADLE ==========
-# Compiled Java files
-*.class
-*.jar
-*.war
-*.ear
+# Gradle wrapper scripts
+gradlew        text eol=lf
+gradlew.bat    text eol=crlf
 
-# Logs and temporary files
-*.log
-hs_err_pid*
-replay_pid*
+# Java source code
+*.java         text
+*.md           text
+*.txt          text
+*.sh           text eol=lf
+*.bat          text eol=crlf
+*.xml          text
+*.yml          text
+*.yaml         text
+*.properties   text
 
-# Gradle build directory & caches
-/build/
-.gradle/
-.gradle/**/caches/
-.gradle/**/daemon/
-.gradle/**/taskHistory/
-.gradle/**/gradleApp/
-
-# Gradle wrapper files
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
-
-# ========== IDE / EDITOR ==========
-# IntelliJ IDEA
-.idea/
-*.iml
-
-# Eclipse
-.classpath
-.project
-.settings/
-
-# VS Code
-.vscode/
-
-# NetBeans
-nbproject/private/
-
-# ========== LINUX & WINDOWS SPECIFIC ==========
-# Linux temporary files
-*~
-.nfs*
-
-# Windows batch and PowerShell
-*.bat
-*.cmd
-*.ps1
-
-# Windows Explorer thumbnail cache
-Thumbs.db
-
-# ========== SIMULATION / REPORT FILES ==========
-# Simulation report files
-*reports*/*.txt
-
-# Javadoc
-*.html
-doc/stylesheet.css
-doc/resources/*.gif
-doc/package-list
+# Binary files
+*.class        binary
+*.jar          binary
+*.war          binary
+*.ear          binary
+*.zip          binary
+*.tar          binary
+*.gz           binary
+*.png          binary
+*.jpg          binary
+*.gif          binary
+*.ico          binary
