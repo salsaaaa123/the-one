@@ -49,18 +49,6 @@ gradle/wrapper/gradle-wrapper.properties
 # NetBeans
 nbproject/private/
 
-# ========== LINUX & WINDOWS SPECIFIC ==========
-# Linux temporary files
-*~
-.nfs*
-
-# Windows batch and PowerShell
-*.bat
-*.cmd
-*.ps1
-
-# Windows Explorer thumbnail cache
-Thumbs.db
 
 # ========== SIMULATION / REPORT FILES ==========
 # Simulation report files

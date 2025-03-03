@@ -145,14 +145,14 @@ MapBasedMovement.mapFile4 = data/shops.wkt
 ## Reports - all report names have to be valid report classes
 
 # how many reports to load
-Report.nrofReports = 2
+Report.nrofReports = 1
 # length of the warm up period (simulated seconds)
 Report.warmup = 0
 # default directory of reports (can be overridden per Report with output setting)
-Report.reportDir = reports/session1
+Report.reportDir = reports/buffer
 # Report classes to load
-Report.report1 = BufferOccupancy_v1
-Report.report2 = BufferOccupancy_v2
+Report.report1 = BufferOccupancyPerTime
+
 
 
 

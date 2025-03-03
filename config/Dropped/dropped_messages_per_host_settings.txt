@@ -145,18 +145,13 @@ MapBasedMovement.mapFile4 = data/shops.wkt
 ## Reports - all report names have to be valid report classes
 
 # how many reports to load
-Report.nrofReports = 6
+Report.nrofReports = 1
 # length of the warm up period (simulated seconds)
 Report.warmup = 0
 # default directory of reports (can be overridden per Report with output setting)
-Report.reportDir = reports/session1
+Report.reportDir = reports/dropped
 # Report classes to load
-Report.report1 = DroppedMessagesPerHost_v1
-Report.report2 = DroppedMessagesPerHost_v2
-Report.report3 = DroppedMessagesPerHost_v3
-Report.report4 = DroppedMessagesPerHostByTotal_v1
-Report.report5 = DroppedMessagesPerHostByTotal_v2
-Report.report6 = DroppedMessagesPerHostByTotal_v3
+Report.report1 = MessageDeleteReportPerTime
 
 ## Default settings for some routers settings
 ProphetRouter.secondsInTimeUnit = 30

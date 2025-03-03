@@ -42,6 +42,8 @@ tasks.named<JavaExec>("run") {
     classpath = sourceSets.main.get().runtimeClasspath  // Pakai classpath yang benar dari Gradle
 
     args = listOf("1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
+
+
 }
 
 
