@@ -36,7 +36,7 @@ ONE can be started using the included `one.bat` (for Windows) or `one.sh` (for L
 
 **Synopsis:**
 ```bash
-   ./one.sh [-b runcount] [conf-files]
+   ./gradlew run [-b runcount] [conf-files]
 ```
 **Options:**
 * -b Run simulation in batch mode. Doesn't start GUI but prints
