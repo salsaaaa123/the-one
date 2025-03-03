@@ -20,7 +20,7 @@ import java.util.*;
  *  Tujuan: Untuk memberikan gambaran yang jelas dan terstruktur tentang bagaimana pesan
  *  hilang di jaringan, dan mengidentifikasi node mana yang paling sering menjatuhkan pesan.
  */
-public class DroppedMessagesPerHost_v1 extends Report implements MessageListener {
+public class MessageDeleteReportPerTime_v1 extends Report implements MessageListener {
 
     /**
      * Durasi setiap interval laporan (dalam detik simulasi).
@@ -61,7 +61,7 @@ public class DroppedMessagesPerHost_v1 extends Report implements MessageListener
      * Membuat instance baru dari trainingDropPerHost_Asc_v1.
      * Menginisialisasi struktur data untuk melacak drop pesan.
      */
-    public DroppedMessagesPerHost_v1() {
+    public MessageDeleteReportPerTime_v1() {
         init();
         this.droppedPerNode = new HashMap<>();
         this.droppedPerNodeInterval = new HashMap<>();
