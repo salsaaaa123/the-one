@@ -1,0 +1,63 @@
+# ========== GENERAL IGNORES ==========
+# System-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.log
+*.bak
+
+# ========== JAVA / GRADLE ==========
+# Compiled Java files
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs and temporary files
+*.log
+hs_err_pid*
+replay_pid*
+
+# Gradle build directory & caches
+/build/
+.gradle/
+.gradle/**/caches/
+.gradle/**/daemon/
+.gradle/**/taskHistory/
+.gradle/**/gradleApp/
+
+# Gradle wrapper files
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
+
+# ========== IDE / EDITOR ==========
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/private/
+
+
+# ========== SIMULATION / REPORT FILES ==========
+# Simulation report files
+reports/*.txt
+reports/*/*.txt
+config/*/*.txt
+
+# Javadoc
+*.html
+doc/stylesheet.css
+doc/resources/*.gif
+doc/package-list

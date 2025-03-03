@@ -1,0 +1,30 @@
+# Keep EOLs consistent
+* text=auto
+
+# Gradle wrapper scripts
+gradlew        text eol=lf
+gradlew.bat    text eol=crlf
+
+# Java source code
+*.java         text
+*.md           text
+*.txt          text
+*.sh           text eol=lf
+*.bat          text eol=crlf
+*.xml          text
+*.yml          text
+*.yaml         text
+*.properties   text
+
+# Binary files
+*.class        binary
+*.jar          binary
+*.war          binary
+*.ear          binary
+*.zip          binary
+*.tar          binary
+*.gz           binary
+*.png          binary
+*.jpg          binary
+*.gif          binary
+*.ico          binary
