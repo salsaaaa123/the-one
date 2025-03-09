@@ -13,10 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class MessageDeliveryReportPerContact extends Report implements MessageListener, ConnectionListener {
+public class MessageDeliveryPerContactReport extends Report implements MessageListener, ConnectionListener {
 
     private static final String NROFCONTACT_INTERVAL = "perTotalContact";
-    public static final int DEFAULT_CONTACT_COUNT = 600;
+    public static final int DEFAULT_CONTACT_COUNT = 100;
     private int lastRecord;
     private int interval;
     private int nrofContacts;
@@ -27,7 +27,7 @@ public class MessageDeliveryReportPerContact extends Report implements MessageLi
 
 
     // Constructor: Menentukan interval berdasarkan konfigurasi
-    public MessageDeliveryReportPerContact() {
+    public MessageDeliveryPerContactReport() {
         init();
         if (getSettings().contains(NROFCONTACT_INTERVAL)) {
             interval = getSettings().getInt(NROFCONTACT_INTERVAL);
