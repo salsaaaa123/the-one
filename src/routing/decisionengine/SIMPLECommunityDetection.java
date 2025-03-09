@@ -203,6 +203,11 @@ public class SIMPLECommunityDetection implements RoutingDecisionEngine, Communit
 		return m.getTo() != thisHost;
 	}
 
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+		return false;
+	}
+
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost)
 	{
 //		if(m.getTo() == otherHost) return true;
@@ -223,6 +228,11 @@ public class SIMPLECommunityDetection implements RoutingDecisionEngine, Communit
 	public RoutingDecisionEngine replicate()
 	{
 		return new SIMPLECommunityDetection(this);
+	}
+
+	@Override
+	public void update(DTNHost thisHost) {
+
 	}
 
 	private SIMPLECommunityDetection getOtherDecisionEngine(DTNHost h)
