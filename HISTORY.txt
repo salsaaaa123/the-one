@@ -1,0 +1,103 @@
+📜 HISTORY.txt
+
+---
+
+### 🆕 Version 1.4.1 (31 Jan 2011)
+- 🛠 **Bugfixes**
+  - External connectivity traces now properly clear connections; thanks to CS
+  - InterferenceLimitedInterface speeds are updated; thanks to Jad Makhlouta
+  - CarMovement reads speed properly from settings
+  - Warmup time fix to connectivity reports
+  - Fixed initial location (was off by one stop) in MapRoute movement model
+  - dieselnetConverter.pl supports now also exponent format in the input data
+- 🖥 **GUI Fixes**
+  - Fixed window resize issue and using spinner instead of dropdown for zoom levels; thanks to PJ
+- 📜 **Miscellaneous**
+  - Set of javadoc, style, and other small fixes
+
+---
+
+### 🚀 Version 1.4.0 (18 Mar 2010)
+- 🔧 **New Features**
+  - Added the possibility for each node to have multiple interfaces
+  - New/improved routing algorithms
+    - Added parametrization for MaxProp (default alpha=1)
+    - Added Prophet and MaxProp routing algorithm versions that take timescale as a parameter
+    - Added EpidemicOracleRouter (unrealistic) that transfers messages immediately
+    - Added maximum meeting probability set size support for MaxProp
+  - Added **MessageReport**, **CreatedMessagesReport**, and **EventLogReport**
+  - Added application layer with examples (PingApplication and PingAppReporter)
+  - New movement models: **ClusterMovement** and **LinearFormation**
+  - ExternalMovementReader supports comment lines ("#")
+  - "Delete all" message event support in StandardEventsReader
+  - Possibility to choose first route stop for MapRouteMovement
+  - New message event generators: **OneFromEachMessageGenerator** and **OneToEachMessageGenerator**
+  - Added time range setting to MessageEventGenerator
+- 🎨 **GUI Improvements**
+  - Highlighting of pause-events to EventLogPanel
+  - GUI starts paused by default
+  - hh:mm:ss display for simulation time (right-click the simulation time)
+- 📊 **Improved and New Analysis Scripts**
+  - Added "log", "total", and "index" options for ccdfPlotter.pl
+  - Added getStatsAverages.pl
+- 🛠 **Bugfixes**
+  - Host range checking in MessageEventGenerator
+  - Command line option `-b` doesn't require range anymore
+
+---
+
+### 🔥 Version 1.3.0 (19 Jan 2009)
+- 🆕 **New Features**
+  - **ModuleCommunicationBus** for sharing information between modules
+  - **EnergyAwareRouter** demonstrating energy awareness
+  - **ConnectivityONEReport** for generating connectivity traces
+- 📈 **Enhancements**
+  - Any number of input config files supported
+  - Batch mode supports run index ranges
+  - MessageEventGenerator supports message creation time and destination host ranges
+  - NetworkLayer has configurable scanning intervals
+  - ExternalEventsQueue can be configured like all the other event generators
+- 🛠 **Bug Fixes**
+  - Handling of incoming messages with expired TTL
+  - Report directory creation; thanks to STARpio
+  - BusTravellerMovement incState; thanks to Mehedi Bakht
+  - MaxProp calcTreshold; thanks to Vasco Soares and STARpio
+
+---
+
+### 🏢 Version 1.2.0 (25 Aug 2008)
+- 🏙 **New Movement Model:** **Working Day Movement** (WDM)
+  - See `WDM_conf_help.txt` for configuration help
+  - Sample configuration files in the `wdm_settings` folder
+  - For details, see: [Working Day Model Paper](http://www.netlab.tkk.fi/tutkimus/distance/papers/2008-mobmod-working-day-model.pdf)
+- 🚏 **New Stationary Movement Model** (StationaryMovement)
+  - Useful for running simulations with only connectivity trace input
+  - `createCircles.pl` script for easy configuration
+
+---
+
+### 🌍 Version 1.1.0 (6 May 2008)
+- 🌐 **External Events Interface** (EEI)
+  - Allows external event generation (e.g., creating messages, setting up connections)
+  - New **MessageEventGenerator** class for uniformly distributed message creation
+  - New event: **ConnectionEvent** (supported by StandardEventsReader)
+- 🔄 **New Features & Improvements**
+  - Configurable message queue modes (random and FIFO)
+  - Option to automatically delete delivered messages
+  - New **update scheduling** feature for higher precision simulations
+  - **DTN2 connectivity** (requires JDK 6+)
+  - Generic property adding feature for Message class
+  - SprayAndWait router now tracks copy count with message properties
+
+---
+
+### 🎉 Version 1.0.1 (24 Feb 2008)
+- ⏳ **New Warm-up Feature**
+  - Allows ignoring events and messages created during warm-up time
+- 🆕 **New Routing Module:** First Contact
+
+---
+
+### 📢 Version 1.0.0 (27 Nov 2007)
+- 🏁 **First official public release!** 🎊
+
