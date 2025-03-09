@@ -170,5 +170,5 @@ Pastikan semua dependensi ada di folder `lib/` sebelum menjalankan proyek.
 - Semua file konfigurasi dapat diedit sesuai kebutuhan untuk menyesuaikan simulasi.
 
 
-<h1 align="center">🚀 Selamat mencoba dan Bereksperimen dengan The ONE  🎉</h1>
+<h1 align="center">🚀 Selamat bereksperimen! 🎉</h1>
 
