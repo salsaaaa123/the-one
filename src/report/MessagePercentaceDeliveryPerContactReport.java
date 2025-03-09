@@ -8,9 +8,9 @@ import core.MessageListener;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PercentaceMessageDeliveredPerContact extends Report implements MessageListener, ConnectionListener {
+public class MessagePercentaceDeliveryPerContactReport extends Report implements MessageListener, ConnectionListener {
     public static final String NROF_CONTACT_INTERVAL = "perTotalContact";
-    public static final int DEFAULT_CONTACT_COUNT = 500;
+    public static final int DEFAULT_CONTACT_COUNT = 100; // Reduced default interval
     private int lastRecord;
     private int interval;
     private int nrofContact;
@@ -19,11 +19,10 @@ public class PercentaceMessageDeliveredPerContact extends Report implements Mess
     private Map<Integer, Double> nrofDeliver;
 
     // Constructor:
-    public PercentaceMessageDeliveredPerContact() {
+    public MessagePercentaceDeliveryPerContactReport() {
         init();
         if (getSettings().contains(NROF_CONTACT_INTERVAL)) {
             interval = getSettings().getInt(NROF_CONTACT_INTERVAL);
-
         } else {
             interval = DEFAULT_CONTACT_COUNT;
         }
@@ -34,6 +33,7 @@ public class PercentaceMessageDeliveredPerContact extends Report implements Mess
         this.nrofDelivered = 0;
         this.lastRecord = 0;
         this.nrofContact = 0;
+        this.nrofCreated = 0; // Initialize nrofCreated
         this.nrofDeliver = new HashMap<>();
     }
 
@@ -41,10 +41,21 @@ public class PercentaceMessageDeliveredPerContact extends Report implements Mess
     @Override
     public void hostsConnected(DTNHost host1, DTNHost host2) {
         nrofContact++;
+//        System.out.println("Contact #" + nrofContact + " between " + host1 + " and " + host2); // Debug
+
         if (nrofContact - lastRecord >= interval) {
             lastRecord = nrofContact;
-            double deliveryPercentage = ((1.0 * this.nrofDelivered) / this.nrofCreated) * 100;
+            double deliveryPercentage;
+            if (nrofCreated > 0) {
+                deliveryPercentage = ((1.0 * this.nrofDelivered) / this.nrofCreated) * 100;
+            } else {
+                deliveryPercentage = 0.0; // Avoid division by zero
+            }
             nrofDeliver.put(lastRecord, deliveryPercentage);
+//            System.out.println("Recording data at contact #" + lastRecord +
+//                    ", Created: " + nrofCreated +
+//                    ", Delivered: " + nrofDelivered +
+//                    ", Percentage: " + deliveryPercentage); // Debug
         }
     }
 
@@ -56,6 +67,7 @@ public class PercentaceMessageDeliveredPerContact extends Report implements Mess
     @Override
     public void newMessage(Message m) {
         this.nrofCreated++;
+//        System.out.println("New message created: " + m.getId() + ", Total created: " + nrofCreated); // Debug
     }
 
     @Override
@@ -77,11 +89,15 @@ public class PercentaceMessageDeliveredPerContact extends Report implements Mess
     public void messageTransferred(Message m, DTNHost from, DTNHost to, boolean firstDelivery) {
         if (firstDelivery) {
             this.nrofDelivered++;
+//            System.out.println("Message delivered: " + m.getId() +
+//                    ", from: " + from +
+//                    ", to: " + to +
+//                    ", Total delivered: " + nrofDelivered); // Debug
         }
     }
     @Override
     public void done() {
-        String output = "Contact\tNrofDelivered\n";
+        String output = "Contact\tDeliveryPercentage\n";
         for (Map.Entry<Integer, Double> entry : nrofDeliver.entrySet()) {
             Integer key = entry.getKey();
             Double value = entry.getValue();
