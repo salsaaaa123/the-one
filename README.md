@@ -33,10 +33,19 @@ Untuk menjalankan ONE Simulator dari source code, Anda perlu mengompilasinya men
 
 #### **Langkah-langkah untuk Linux/macOS:**
 ```sh
+  ./gradlew clean build
+```
+atau
+```sh
   ./gradlew build
 ```
 
+
 #### **Langkah-langkah untuk Windows:**
+```sh
+  gradlew.bat clean build
+```
+atau
 ```sh
   gradlew.bat build
 ```
