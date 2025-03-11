@@ -12,7 +12,12 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 	{
 		return null;
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public void connectionDown(DTNHost thisHost, DTNHost peer)
 	{
 	// TODO Auto-generated method stub
@@ -57,6 +62,11 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost)
 	{
 		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
 		return false;
 	}
 

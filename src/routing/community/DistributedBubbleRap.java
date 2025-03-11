@@ -168,6 +168,11 @@ public class DistributedBubbleRap
 		return m.getTo() != thisHost;
 	}
 
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+		return false;
+	}
+
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost)
 	{
 		if(m.getTo() == otherHost) return true; // trivial to deliver to final dest
@@ -226,7 +231,12 @@ public class DistributedBubbleRap
 	{
 		return new DistributedBubbleRap(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	protected boolean commumesWithHost(DTNHost h)
 	{
 		return community.isHostInCommunity(h);

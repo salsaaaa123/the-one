@@ -41,7 +41,12 @@ public class ExpectedDelayDecisionEngine implements RoutingDecisionEngine
 	{
 		return new ExpectedDelayDecisionEngine(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public void doExchangeForNewConnection(Connection con, DTNHost peer)
 	{
 		// TODO Auto-generated method stub
@@ -96,6 +101,11 @@ public class ExpectedDelayDecisionEngine implements RoutingDecisionEngine
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost)
 	{
 		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
 		return false;
 	}
 

@@ -7,7 +7,7 @@ import core.Settings;
 
 import java.util.*;
 
-public class MessageDeleteReportPerTime extends Report implements MessageListener {
+public class MessageDeletePerTimeReport extends Report implements MessageListener {
 
     private Map<Integer, Map<DTNHost, Integer>> deleteMessagePerTime; // Data penghapusan per waktu
     private int interval; // Interval pencatatan dalam detik
@@ -17,7 +17,7 @@ public class MessageDeleteReportPerTime extends Report implements MessageListene
     public static final String DELETE_REPORT_INTERVAL = "deleteInterval";
     public static final int DEFAULT_DELETE_REPORT_INTERVAL = 3600;
 
-    public MessageDeleteReportPerTime() {
+    public MessageDeletePerTimeReport() {
         init();
         // Mengambil nilai interval dari pengaturan jika ada, jika tidak, gunakan default
         Settings settings = getSettings();

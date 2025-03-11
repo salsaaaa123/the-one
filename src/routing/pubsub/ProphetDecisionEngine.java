@@ -76,7 +76,12 @@ public class ProphetDecisionEngine implements RoutingDecisionEngine
 	{
 		return new ProphetDecisionEngine(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public void connectionUp(DTNHost thisHost, DTNHost peer)
 	{
 		/*ProphetDecisionEngine pde = getOtherProphetDecisionEngine(peer);
@@ -232,7 +237,12 @@ public class ProphetDecisionEngine implements RoutingDecisionEngine
 		assert pubname != null;
 		return !isSubscriber(pubname);
 	}
-	
+
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+		return false;
+	}
+
 	public boolean isFinalDest(Message m, DTNHost aHost)
 	{
 		String pubname = (String) m.getProperty(PUBNAME_PROP);

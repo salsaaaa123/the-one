@@ -59,7 +59,12 @@ public class SnFDecisionEngine implements RoutingDecisionEngine
 	{
 		return new SnFDecisionEngine(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public void connectionDown(DTNHost thisHost, DTNHost peer){}
 
 	public void connectionUp(DTNHost thisHost, DTNHost peer)
@@ -213,6 +218,11 @@ public class SnFDecisionEngine implements RoutingDecisionEngine
 		assert pubname != null;
 		
 		return !isSubscriber(pubname);
+	}
+
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+		return false;
 	}
 
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
