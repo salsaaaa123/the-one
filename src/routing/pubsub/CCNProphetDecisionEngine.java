@@ -63,7 +63,12 @@ public class CCNProphetDecisionEngine implements RoutingDecisionEngine
 	{
 		return new CCNProphetDecisionEngine(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public void connectionUp(DTNHost thisHost, DTNHost peer){}
 
 	public void connectionDown(DTNHost thisHost, DTNHost peer){}
@@ -110,6 +115,11 @@ public class CCNProphetDecisionEngine implements RoutingDecisionEngine
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost)
 	{
 		return true;
+	}
+
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+		return false;
 	}
 
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost)

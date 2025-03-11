@@ -1,7 +1,3 @@
-/* 
- * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details. 
- */
 package core;
 
 import java.util.ArrayList;
@@ -21,8 +17,8 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	private static int nextAddress = 0;
 	private int address;
 
-	private Coord location; 	// where is the host
-	private Coord destination;	// where is it going
+	private Coord location;     // where is the host
+	private Coord destination;  // where is it going
 
 	private MessageRouter router;
 	private MovementModel movement;
@@ -50,10 +46,10 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	 * @param mRouterProto Prototype of the message router of this host
 	 */
 	public DTNHost(List<MessageListener> msgLs,
-			List<MovementListener> movLs,
-			String groupId, List<NetworkInterface> interf,
-			ModuleCommunicationBus comBus, 
-			MovementModel mmProto, MessageRouter mRouterProto) {
+				   List<MovementListener> movLs,
+				   String groupId, List<NetworkInterface> interf,
+				   ModuleCommunicationBus comBus,
+				   MovementModel mmProto, MessageRouter mRouterProto) {
 		this.comBus = comBus;
 		this.location = new Coord(0,0);
 		this.address = getNextAddress();
@@ -64,7 +60,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 			NetworkInterface ni = i.replicate();
 			ni.setHost(this);
 			net.add(ni);
-		}	
+		}
 
 		// TODO - think about the names of the interfaces and the nodes
 		//this.name = groupId + ((NetworkInterface)net.get(1)).getAddress();
@@ -88,14 +84,14 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns a new network interface address and increments the address for
 	 * subsequent calls.
 	 * @return The next address.
 	 */
 	private synchronized static int getNextAddress() {
-		return nextAddress++;	
+		return nextAddress++;
 	}
 
 	/**
@@ -118,7 +114,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	 * @param router The router to set
 	 */
 	private void setRouter(MessageRouter router) {
-		router.initialize(this, msgListeners);
+		router.init(this, msgListeners); // Menggunakan init, bukan initialize
 		this.router = router;
 	}
 
@@ -136,7 +132,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	public int getAddress() {
 		return this.address;
 	}
-	
+
 	/**
 	 * Returns this hosts's ModuleCommunicationBus
 	 * @return this hosts's ModuleCommunicationBus
@@ -144,8 +140,8 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	public ModuleCommunicationBus getComBus() {
 		return this.comBus;
 	}
-	
-    /**
+
+	/**
 	 * Informs the router of this host about state change in a connection
 	 * object.
 	 * @param con  The connection object whose state changed
@@ -173,7 +169,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	}
 
 	/**
-	 * Returns the current location of this host. 
+	 * Returns the current location of this host.
 	 * @return The location
 	 */
 	public Coord getLocation() {
@@ -224,7 +220,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 
 	/**
 	 * Returns the buffer occupancy percentage. Occupancy is 0 for empty
-	 * buffer but can be over 100 if a created message is bigger than buffer 
+	 * buffer but can be over 100 if a created message is bigger than buffer
 	 * space that could be freed.
 	 * @return Buffer occupancy percentage
 	 */
@@ -272,14 +268,14 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 				return ni;
 			}
 		}
-		return null;	
+		return null;
 	}
 
 	/**
 	 * Force a connection event
 	 */
-	public void forceConnection(DTNHost anotherHost, String interfaceId, 
-			boolean up) {
+	public void forceConnection(DTNHost anotherHost, String interfaceId,
+								boolean up) {
 		NetworkInterface ni;
 		NetworkInterface no;
 
@@ -292,11 +288,11 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 		} else {
 			ni = getInterface(1);
 			no = anotherHost.getInterface(1);
-			
-			assert (ni.getInterfaceType().equals(no.getInterfaceType())) : 
-				"Interface types do not match.  Please specify interface type explicitly";
+
+			assert (ni.getInterfaceType().equals(no.getInterfaceType())) :
+					"Interface types do not match.  Please specify interface type explicitly";
 		}
-		
+
 		if (up) {
 			ni.createConnection(no);
 		} else {
@@ -310,7 +306,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	public void connect(DTNHost h) {
 		System.err.println(
 				"WARNING: using deprecated DTNHost.connect(DTNHost)" +
-		"\n Use DTNHost.forceConnection(DTNHost,null,true) instead");
+						"\n Use DTNHost.forceConnection(DTNHost,null,true) instead");
 		forceConnection(h,null,true);
 	}
 
@@ -322,7 +318,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 		if (!isActive()) {
 			return;
 		}
-		
+
 		if (simulateConnections) {
 			for (NetworkInterface i : net) {
 				i.update();
@@ -336,13 +332,13 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	 * not time to move yet
 	 * @param timeIncrement How long time the node moves
 	 */
-	public void move(double timeIncrement) {		
+	public void move(double timeIncrement) {
 		double possibleMovement;
 		double distance;
 		double dx, dy;
 
 		if (!isActive() || SimClock.getTime() < this.nextTimeToMove) {
-			return; 
+			return;
 		}
 		if (this.destination == null) {
 			if (!setNextWaypoint()) {
@@ -369,7 +365,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 		dy = (possibleMovement/distance) * (this.destination.getY() -
 				this.location.getY());
 		this.location.translate(dx, dy);
-	}	
+	}
 
 	/**
 	 * Sets the next destination and speed to correspond the next waypoint
@@ -413,17 +409,17 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	 * Start receiving a message from another host
 	 * @param m The message
 	 * @param from Who the message is from
-	 * @return The value returned by 
+	 * @return The value returned by
 	 * {@link MessageRouter#receiveMessage(Message, DTNHost)}
 	 */
 	public int receiveMessage(Message m, DTNHost from) {
-		int retVal = this.router.receiveMessage(m, from); 
+		int retVal = this.router.receiveMessage(m, from);
 
 		if (retVal == MessageRouter.RCV_OK) {
-			m.addNodeOnPath(this);	// add this node on the messages path
+			m.addNodeOnPath(this);    // add this node on the messages path
 		}
 
-		return retVal;	
+		return retVal;
 	}
 
 	/**
@@ -501,7 +497,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 	public int compareTo(DTNHost h) {
 		return this.getAddress() - h.getAddress();
 	}
-	
+
 	public int getConnectionCount() {
 		int sum = 0;
 		for (NetworkInterface i : net) {
@@ -509,7 +505,7 @@ public class DTNHost implements Comparable<DTNHost>, Iterable<Connection> {
 		}
 		return sum;
 	}
-	
+
 	public Iterator<Connection> iterator()
 	{
 		return new ConnectionIterator(this);

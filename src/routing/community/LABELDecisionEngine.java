@@ -150,11 +150,13 @@ public class LABELDecisionEngine
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost)
 		{return m.getTo() != thisHost;}
 
+
+
 	/**
 	 * LABEL Routing works such that we only send the message to hosts in the same
 	 * local community as the message's destination.
 	 */
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost)
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost,DTNHost thisHost)
 	{
 		if(m.getTo() == otherHost) return true;
 		
@@ -178,7 +180,12 @@ public class LABELDecisionEngine
 	{
 		return new LABELDecisionEngine(this);
 	}
-	
+
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	protected boolean commumesWithHost(DTNHost h)
 	{
 		return community.isHostInCommunity(h);
