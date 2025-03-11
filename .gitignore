@@ -61,6 +61,7 @@ doc/resources/*.gif
 doc/package-list
 
 # Jangan abaikan folder config dan semua isinya
-!config/
-!config/**
+!the-one/config/
+!the-one/config/**
+
 
