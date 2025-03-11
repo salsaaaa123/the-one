@@ -54,7 +54,6 @@ nbproject/private/
 # Simulation report files
 reports/*.txt
 reports/*/*.txt
-config/*/*.txt
 
 # Javadoc
 *.html
