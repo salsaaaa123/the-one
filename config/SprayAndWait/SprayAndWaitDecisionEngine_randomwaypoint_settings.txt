@@ -86,4 +86,5 @@ Report.report2 = MessageLatencyPerContactReport
 Report.report3 = MessageOverheadPerContactReport
 Report.report4 = MessagePercentaceDeliveryPerContactReport
 Report.report5 = MessageForwardingPerContactReport
+Report.report6 = AlgorithmicComparisonReport
 
