@@ -13,7 +13,8 @@ import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasang
  * Strategi ini dirancang untuk jaringan yang terputus-putus di mana tidak selalu ada jalur langsung
  * antara sumber dan tujuan.
  * </p>
- * @author Hendrowunga, Sanata Dharma University, Network Laboratory
+ * @author PJ Dillon, University of Pittsburgh (original code)
+ * @author Hendrowunga, Sanata Dharma University, Network Laboratory (modifications and comments)
  */
 public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
 
