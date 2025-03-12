@@ -28,26 +28,30 @@ Group.movementModel = RandomWaypoint
 Group.router = DecisionEngineRouter
 # Ukuran buffer pesan (bytes) - 5MB (sesuaikan dengan kebutuhan Anda)
 Group.bufferSize = 50M
+#Group.bufferSize = 40M
 # Waktu tunggu (detik) setelah mencapai tujuan (acak antara min dan max)
 Group.waitTime = 0, 120
 # Kecepatan pergerakan (m/s) (acak antara min dan max)
-Group.speed = 0.5, 1.5
+Group.speed = 1.0,3.0
 # Jumlah interface yang dimiliki setiap host (dalam kasus ini, hanya 1)
 Group.nrofInterfaces = 1
 # Interface yang digunakan (dalam kasus ini, Bluetooth)
 Group.interface1 = btInterface
 # Time-to-Live (TTL) pesan (menit) - 300 menit (5 jam)
-Group.msgTtl = 300
+#Group.msgTtl = 300
+Group.msgTtl = 240
 # Jumlah host dalam grup
 Group.nrofHosts = 100
 
 # Pengaturan khusus untuk DecisionEngineRouter dan SprayAndWait
 # Menggunakan SprayAndWaitDecisionEngine
-DecisionEngineRouter.decisionEngine = SprayAndWaitDecisionEngine
+DecisionEngineRouter.decisionEngine = decisionengine.SnWDecisionEngine
 # Jumlah salinan awal (L) - **Kunci untuk performa!**
-SprayAndWaitDecisionEngine.nrofCopies = 10
+#SnWDecisionEngine.nrofCopies = 10
+SnWDecisionEngine.nrofCopies = 12
+#SnWDecisionEngine.nrofCopies = 8
 # Menggunakan mode biner (bagi dua setiap kali dikirim)
-SprayAndWaitDecisionEngine.binaryMode = true
+SnWDecisionEngine.binaryMode = false
 
 # Pengaturan khusus untuk Grup 1 (satu-satunya grup)
 # ID grup (dapat digunakan untuk membedakan grup dalam laporan)
@@ -59,7 +63,7 @@ Events.nrof = 1
 # Class event generator yang digunakan (MessageEventGenerator membuat pesan acak)
 Events1.class = MessageEventGenerator
 # Interval pembuatan pesan (detik) (acak antara min dan max)
-Events1.interval = 25,35
+Events1.interval = 30,40
 # Ukuran pesan (bytes) (acak antara min dan max)
 Events1.size = 500k,1M
 # Jangkauan host pengirim dan penerima pesan (acak di antara semua host)
@@ -69,7 +73,7 @@ Events1.prefix = M
 
 ## Pengaturan Model Pergerakan (Random Waypoint)
 # Ukuran dunia simulasi (meter)
-MovementModel.worldSize = 300, 300
+MovementModel.worldSize = 300,300
 # Waktu pemanasan (detik) sebelum simulasi "nyata" dimulai
 MovementModel.warmup = 1000
 
