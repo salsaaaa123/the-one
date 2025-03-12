@@ -1,13 +1,13 @@
 /*
- * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details.
+ * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
  */
-package routing;
+package routing.decisionengine;
 
 import core.Connection;
 import core.DTNHost;
 import core.Message;
 import core.Settings;
+import routing.RoutingDecisionEngine;
 
 /**
  * Implementasi Decision Engine untuk protokol Epidemic Routing, berdasarkan paper
