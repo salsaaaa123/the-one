@@ -1,6 +1,11 @@
-package routing;
+/*
+ * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+ */
+
+package routing.decisionengine;
 
 import core.*; // Mengimpor kelas-kelas inti dari framework simulasi
+import routing.RoutingDecisionEngine;
 
 import java.util.HashMap; // Mengimpor kelas HashMap untuk menyimpan informasi
 import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasangan
@@ -14,7 +19,7 @@ import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasang
  * antara sumber dan tujuan.
  * </p>
  * @author PJ Dillon, University of Pittsburgh (original code)
- * @author Hendrowunga, Sanata Dharma University, Network Laboratory (modifications and comments)
+ * @author Hendrowunga, Sanata Dharma University, Network Laboratory
  */
 public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
 
@@ -131,7 +136,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
            initialNrofCopies. Jika gagal, kode akan mencetak pesan kesalahan dan
            mengembalikan false, yang menandakan bahwa pesan tidak dapat diproses. */
 
-//        messageCreationTimes.put(m.getId(), SimClock.getTime()); // Simpan waktu pembuatan pesan
+        messageCreationTimes.put(m.getId(), SimClock.getTime()); // Simpan waktu pembuatan pesan
         /* Maksud: Kode ini menyimpan waktu pembuatan pesan dalam map messageCreationTimes.
            Ini digunakan untuk menghitung TTL (Time-To-Live) pesan nanti. */
 
@@ -234,41 +239,27 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
-        // Ambil thisHost dari properti pesan (ditambahkan oleh DecisionEngineRouter)
-        DTNHost thisHost = (DTNHost) m.getProperty("thisHost");
-        if (thisHost == null) {
-            System.out.println("Error: thisHost tidak ditemukan dalam properti pesan!"); // Jika thisHost tidak ditemukan, tampilkan pesan kesalahan
-            return false; // Jangan hapus pesan
-        }
 
-        boolean deleteMessage = false; // Apakah pesan harus dihapus? Default: tidak
-
-        // Periksa apakah pesan sudah mencapai tujuan akhir
-        if (isFinalDest(m, otherHost)) {
-            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-            deleteMessage = true; // Hapus pesan karena sudah sampai tujuan
-        } else if (isMessageExpired(m)) { // Periksa apakah pesan sudah kadaluarsa
-            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-            deleteMessage = true; // Hapus pesan karena sudah kadaluarsa
-        } else { // Jika pesan belum mencapai tujuan akhir dan belum kadaluarsa
-            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY); // Dapatkan jumlah salinan pesan
-            if (copies == null) {
-                deleteMessage = true; // Jika tidak ada salinan, hapus pesan
-            } else {
-                if (copies <= 0) {
-                    deleteMessage = true; //JIka copy kurang dari sama dengan 0 , maka hapus
-                } else {
-                    deleteMessage = false; // Jika tidak, jangan hapus pesan
-                }
-
+            DTNHost thisHost = (DTNHost) m.getProperty("thisHost");
+            if (thisHost == null) {
+                System.out.println("Error: thisHost tidak ditemukan dalam properti pesan!");
+                return false;
             }
-        }
-        return deleteMessage;
-        /*Maksud: Method ini menentukan apakah pesan yang baru saja dikirim harus
+
+            if (isFinalDest(m, otherHost) || isMessageExpired(m)) {
+                messageCreationTimes.remove(m.getId());
+                return true;
+            }
+
+            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY);
+            return copies == null || copies <= 0;
+
+            /*Maksud: Method ini menentukan apakah pesan yang baru saja dikirim harus
            dihapus dari memori perangkat ini atau tidak. Pesan dihapus berdasarkan beberapa
            kondisi, termasuk apakah pesan telah mencapai tujuan akhir, apakah TTL-nya
            telah kedaluwarsa, dan apakah masih ada salinan pesan yang tersisa. */
-    }
+        }
+
 
     /**
      * Menentukan apakah pesan lama harus dihapus.
