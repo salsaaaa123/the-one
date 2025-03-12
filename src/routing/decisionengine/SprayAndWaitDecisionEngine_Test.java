@@ -21,7 +21,7 @@ import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasang
  * @author PJ Dillon, University of Pittsburgh (original code)
  * @author Hendrowunga, Sanata Dharma University, Network Laboratory
  */
-public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
+public class SprayAndWaitDecisionEngine_Test implements RoutingDecisionEngine {
 
     /** Identifier untuk pengaturan jumlah salinan awal (nilai = "nrofCopies") */
     public static final String NROF_COPIES = "nrofCopies";
@@ -42,7 +42,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      * Konstruktor untuk kelas SprayAndWaitDecisionEngine.
      * @param s Objek Settings yang berisi pengaturan konfigurasi.
      */
-    public SprayAndWaitDecisionEngine(Settings s) {
+    public SprayAndWaitDecisionEngine_Test(Settings s) {
         Settings snwSettings = new Settings(SPRAYANDWAIT_NS); // Membuat objek Settings baru dengan namespace SprayAndWait
 
         // Logika untuk membaca jumlah salinan awal dari pengaturan:
@@ -75,7 +75,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      * Copy constructor.
      * @param r Objek SprayAndWaitDecisionEngine yang akan disalin.
      */
-    protected SprayAndWaitDecisionEngine(SprayAndWaitDecisionEngine r) {
+    protected SprayAndWaitDecisionEngine_Test(SprayAndWaitDecisionEngine_Test r) {
         this.initialNrofCopies = r.initialNrofCopies; // Salin jumlah salinan awal
         this.isBinary = r.isBinary; // Salin mode biner
     }
@@ -335,7 +335,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public RoutingDecisionEngine replicate() {
-        return new SprayAndWaitDecisionEngine(this);
+        return new SprayAndWaitDecisionEngine_Test(this);
     }
     /* Maksud: Kode ini membuat dan mengembalikan salinan (replika) dari objek
        SprayAndWaitDecisionEngine saat ini. Ini penting karena setiap
