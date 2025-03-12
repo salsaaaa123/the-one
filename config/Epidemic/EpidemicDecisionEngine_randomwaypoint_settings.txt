@@ -42,7 +42,7 @@ Group.nrofHosts = 100
 
 # Pengaturan khusus untuk DecisionEngineRouter dan Epidemic
 # Menggunakan EpidemicDecisionEngine
-DecisionEngineRouter.decisionEngine = EpidemicDecisionEngine
+DecisionEngineRouter.decisionEngine = decisionengine.EpidemicDecisionEngine
 
 # Pengaturan khusus untuk Grup 1 (satu-satunya grup)
 # ID grup (dapat digunakan untuk membedakan grup dalam laporan)
