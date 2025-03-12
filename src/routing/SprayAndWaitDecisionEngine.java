@@ -31,7 +31,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
     protected boolean isBinary; // Apakah menggunakan mode biner atau tidak
 
     // Menyimpan waktu pembuatan setiap pesan. Kunci adalah ID pesan, dan nilainya adalah waktu pembuatan.
-//    private final Map<String, Double> messageCreationTimes = new HashMap<>();
+    private final Map<String, Double> messageCreationTimes = new HashMap<>();
 
     /**
      * Konstruktor untuk kelas SprayAndWaitDecisionEngine.
@@ -166,11 +166,11 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
     public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
         boolean shouldSave = false; // Apakah pesan harus disimpan? Default: tidak
 
-//        // Pertama, periksa apakah pesan sudah kadaluarsa
-//        if (isMessageExpired(m)) {
-//            // Jika pesan sudah kadaluarsa, jangan simpan
-//            shouldSave = false; // Atur shouldSave ke false
-//        } else {
+        // Pertama, periksa apakah pesan sudah kadaluarsa
+        if (isMessageExpired(m)) {
+            // Jika pesan sudah kadaluarsa, jangan simpan
+            shouldSave = false; // Atur shouldSave ke false
+        } else {
             // Jika pesan belum kadaluarsa, lanjutkan pemeriksaan lain
 
             // Periksa apakah host ini sudah memiliki pesan dengan ID yang sama
@@ -189,7 +189,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
                     shouldSave = true; // Atur shouldSave ke true
                 }
             }
-//        }
+        }
 
         return shouldSave; // Kembalikan nilai shouldSave (true atau false)
     }
@@ -243,14 +243,14 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
 
         boolean deleteMessage = false; // Apakah pesan harus dihapus? Default: tidak
 
-//        // Periksa apakah pesan sudah mencapai tujuan akhir
-//        if (isFinalDest(m, otherHost)) {
-//            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-//            deleteMessage = true; // Hapus pesan karena sudah sampai tujuan
-//        } else if (isMessageExpired(m)) { // Periksa apakah pesan sudah kadaluarsa
-//            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-//            deleteMessage = true; // Hapus pesan karena sudah kadaluarsa
-//        } else { // Jika pesan belum mencapai tujuan akhir dan belum kadaluarsa
+        // Periksa apakah pesan sudah mencapai tujuan akhir
+        if (isFinalDest(m, otherHost)) {
+            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
+            deleteMessage = true; // Hapus pesan karena sudah sampai tujuan
+        } else if (isMessageExpired(m)) { // Periksa apakah pesan sudah kadaluarsa
+            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
+            deleteMessage = true; // Hapus pesan karena sudah kadaluarsa
+        } else { // Jika pesan belum mencapai tujuan akhir dan belum kadaluarsa
             Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY); // Dapatkan jumlah salinan pesan
             if (copies == null) {
                 deleteMessage = true; // Jika tidak ada salinan, hapus pesan
@@ -262,7 +262,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
                 }
 
             }
-//        }
+        }
         return deleteMessage;
         /*Maksud: Method ini menentukan apakah pesan yang baru saja dikirim harus
            dihapus dari memori perangkat ini atau tidak. Pesan dihapus berdasarkan beberapa
@@ -311,19 +311,19 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      * @return true jika pesan sudah kedaluwarsa, false jika tidak.
      */
     private boolean isMessageExpired(Message m) {
-//        Double creationTime = messageCreationTimes.get(m.getId()); // Dapatkan waktu pembuatan pesan
-//        boolean messageExpired=false; //inisialisasi variable messageExpired
-//        if (creationTime == null) { //apakah creation Time nya kosong
-//            messageExpired = false;// Jika tidak ada waktu pembuatan, anggap pesan belum kadaluarsa (atau gunakan strategi lain)
-//        }else{
-//            double age = SimClock.getTime() - creationTime; // Hitung usia pesan
-//            if (age > m.getTtl()) { // Periksa apakah usia pesan melebihi TTL
-//                messageExpired = true;// Jika ya, kembalikan true (pesan kadaluarsa)
-//            }else{
-//                messageExpired = false;// Jika tidak, kembalikan false (pesan belum kadaluarsa)
-//            }
-//        }
-        return false;
+        Double creationTime = messageCreationTimes.get(m.getId()); // Dapatkan waktu pembuatan pesan
+        boolean messageExpired=false; //inisialisasi variable messageExpired
+        if (creationTime == null) { //apakah creation Time nya kosong
+            messageExpired = false;// Jika tidak ada waktu pembuatan, anggap pesan belum kadaluarsa (atau gunakan strategi lain)
+        }else{
+            double age = SimClock.getTime() - creationTime; // Hitung usia pesan
+            if (age > m.getTtl()) { // Periksa apakah usia pesan melebihi TTL
+                messageExpired = true;// Jika ya, kembalikan true (pesan kadaluarsa)
+            }else{
+                messageExpired = false;// Jika tidak, kembalikan false (pesan belum kadaluarsa)
+            }
+        }
+        return messageExpired;
           /* Maksud: Method ini memeriksa apakah pesan m telah kedaluwarsa atau tidak.
              Untuk melakukan ini, kode pertama-tama mencoba mendapatkan waktu
              pembuatan pesan dari map messageCreationTimes menggunakan ID pesan
