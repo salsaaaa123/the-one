@@ -1,6 +1,4 @@
-/*
- * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
- */
+
 
 package routing.decisionengine;
 
@@ -9,6 +7,10 @@ import routing.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+/*
+ * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+ */
 
 public class SnWDecisionEngine implements RoutingDecisionEngine {
 
@@ -128,7 +130,7 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
 
             // Eh, host ini udah punya pesan dengan ID yang sama belum?
             if (thisHost.getRouter().hasMessage(m.getId())) {
-                shouldSave = false; // Udah punya? Ya ngapain disimpan lagi, mubazir bro!
+                shouldSave = false; // Udah punya? Ya ngapain disimpan lagi, mubazir bro! wkwkwkw
             } else {
                 // Oke, pesan ini unik! Tapi ada satu hal lagi yang perlu dicek...
 
