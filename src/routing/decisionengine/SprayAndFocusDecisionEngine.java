@@ -4,15 +4,12 @@
  * Copyright 2010 by University of Pittsburgh, released under GPLv3.
  *
  */
-
 package routing.decisionengine;
 
 import java.util.*;
 
 import core.*;
-import routing.DecisionEngineRouter;
-import routing.MessageRouter;
-import routing.RoutingDecisionEngine;
+import routing.*;
 
 /**
  * An implementation of the Spray and Focus Routing protocol using the
@@ -20,8 +17,8 @@ import routing.RoutingDecisionEngine;
  *
  * @author PJ Dillon, University of Pittsburgh
  */
-public class SprayAndFocusDecisionEngine implements RoutingDecisionEngine {
-
+public class SprayAndFocusDecisionEngine implements RoutingDecisionEngine
+{
     /** identifier for the initial number of copies setting ({@value})*/
     public static final String NROF_COPIES_S = "nrofCopies";
     /** Message property key for the remaining available copies of a message */
@@ -60,11 +57,6 @@ public class SprayAndFocusDecisionEngine implements RoutingDecisionEngine {
     public RoutingDecisionEngine replicate()
     {
         return new SprayAndFocusDecisionEngine(this);
-    }
-
-    @Override
-    public void update(DTNHost thisHost) {
-
     }
 
     public void connectionDown(DTNHost thisHost, DTNHost peer){}
@@ -142,6 +134,14 @@ public class SprayAndFocusDecisionEngine implements RoutingDecisionEngine {
         return m.getTo() == hostReportingOld;
     }
 
+    /**
+     * @param thisHost Host lokal (yang menjalankan router ini). 
+     */
+    @Override
+    public void update(DTNHost thisHost) {
+
+    }
+
     public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
     {
         int nrofCopies;
@@ -163,6 +163,12 @@ public class SprayAndFocusDecisionEngine implements RoutingDecisionEngine {
         return m.getTo() != thisHost;
     }
 
+    /**
+     * @param m         Pesan yang akan dievaluasi untuk pengiriman. 
+     * @param otherHost Host peer yang berpotensi menjadi tujuan pengiriman.
+     * @param thisHost  Host lokal (yang menjalankan router ini).
+     * @return
+     */
     @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
         return false;
