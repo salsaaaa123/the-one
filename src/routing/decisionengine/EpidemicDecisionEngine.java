@@ -10,22 +10,6 @@ import core.Settings;
 import routing.RoutingDecisionEngine;
 
 /**
- * Implementasi Decision Engine untuk protokol Epidemic Routing, berdasarkan paper
- * "Epidemic Routing for Partially-Connected Ad Hoc Networks" oleh Vahdat dan Becker.
- * <p>
- * Epidemic Routing adalah protokol routing yang dirancang untuk jaringan ad hoc yang terputus-putus,
- * di mana tidak selalu ada jalur langsung antara sumber dan tujuan. Dalam protokol ini, setiap node
- * yang bertemu dengan node lain akan bertukar pesan, sehingga menyebarkan pesan secara "epidemi".
- * </p>
- * <p>
- * Tujuan Epidemic Routing adalah untuk memaksimalkan delivery rate, meminimalkan latency, dan
- * meminimalkan sumber daya yang digunakan.
- * </p>
- * <p>
- * Dalam implementasi ini, kita menggunakan pendekatan drop-oldest buffer (pesan terlama dihapus
- * jika buffer penuh) dan membatasi transmisi ke satu koneksi pada satu waktu (single transferring
- * connections).
- * </p>
  * @author PJ Dillon, University of Pittsburgh (original code)
  * @author Hendrowunga, Sanata Dharma University, Network Laboratory (modifications and comments)
  */
