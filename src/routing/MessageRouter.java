@@ -317,9 +317,12 @@ public abstract class MessageRouter {
      *
      * @return The host object
      */
-    protected DTNHost getHost() {
+    public DTNHost getHost() {
         return this.host;
     }
+//    protected DTNHost getHost() {
+//        return this.host;
+//    }
 
     /**
      * Start sending a message to another host.
