@@ -42,7 +42,10 @@ tasks.named<JavaExec>("run") {
     classpath = sourceSets.main.get().runtimeClasspath  // Pakai classpath yang benar dari Gradle
 
 //    args = listOf("1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
-    args = listOf("-b","1", "config/SprayAndWait/SprayAndWaitDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/Epidemic/EpidemicDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndWait/SprayAndWaitDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/Prophet/ProphetDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 
 
 }
