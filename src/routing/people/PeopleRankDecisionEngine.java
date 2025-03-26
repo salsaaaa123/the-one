@@ -48,13 +48,13 @@ public class PeopleRankDecisionEngine implements RoutingDecisionEngine, RankingN
         Settings prSettings = new Settings(PEOPLERANK_NS);
         if (prSettings.contains(DUMPING_FACTOR_SETTING)) {
             d = prSettings.getDouble(DUMPING_FACTOR_SETTING);
-//            System.out.println("d: " + d); // debug
+            System.out.println("d: " + d); // debug
         } else {
             this.d = 0.85;
         }
         if (prSettings.contains(TRESHOLD_SETTING)) {
             threshold = prSettings.getDouble(TRESHOLD_SETTING);
-//            System.out.println("threshold: " + threshold); // debug
+            System.out.println("threshold: " + threshold); // debug
         } else {
             this.threshold = 700;
 //            System.out.println("threshold: " + this.threshold); // debug
