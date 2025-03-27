@@ -113,11 +113,11 @@ public class SnFDecisionEngine implements RoutingDecisionEngine
 		// dalam koneksi ini dari sudut pandang peer
 		DTNHost myHost = con.getOtherNode(peer);
 
-		// Hitung jarak antara saya (myHost) dan peer 📏
+		// Hitung jarak antara saya (myHost) dan peer
 		// Method `getLocation()` ini bakal ngasih tahu lokasi dari masing-masing host di dalam simulasi
 		double distBwt = myHost.getLocation().distance(peer.getLocation());
 
-		// Cek kecepatan masing-masing host 🚀
+		// Cek kecepatan masing-masing host
 		// Kalau `getPath()` == null, berarti host ini sedang diam alias nggak bergerak
 		// Kalau nggak null, kita bisa ambil kecepatannya lewat `getSpeed()`
 		double mySpeed = myHost.getPath() == null ? 0 : myHost.getPath().getSpeed();
