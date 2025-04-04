@@ -15,6 +15,7 @@ public class ProphetDecisionEngine implements RoutingDecisionEngine
 	protected final static String BETA_SETTING = "beta";
 	protected final static String P_INIT_SETTING = "initial_p";
 	protected final static String SECONDS_IN_UNIT_S = "secondsInTimeUnit";
+	public static final String PROPHET_NS = "ProphetDecisionEngine";
 	
 	protected static final double DEFAULT_P_INIT = 0.75;
 	protected static final double GAMMA = 0.92;
@@ -31,18 +32,19 @@ public class ProphetDecisionEngine implements RoutingDecisionEngine
 	
 	public ProphetDecisionEngine(Settings s)
 	{
-		if(s.contains(BETA_SETTING))
-			beta = s.getDouble(BETA_SETTING);
+		Settings prophetSettings = new Settings(PROPHET_NS);
+		if(prophetSettings.contains(BETA_SETTING))
+			beta = prophetSettings.getDouble(BETA_SETTING);
 		else
 			beta = DEFAULT_BETA;
 		
-		if(s.contains(P_INIT_SETTING))
-			pinit = s.getDouble(P_INIT_SETTING);
+		if(prophetSettings.contains(P_INIT_SETTING))
+			pinit = prophetSettings.getDouble(P_INIT_SETTING);
 		else
 			pinit = DEFAULT_P_INIT;
 		
-		if(s.contains(SECONDS_IN_UNIT_S))
-			secondsInTimeUnit = s.getInt(SECONDS_IN_UNIT_S);
+		if(prophetSettings.contains(SECONDS_IN_UNIT_S))
+			secondsInTimeUnit = prophetSettings.getInt(SECONDS_IN_UNIT_S);
 		else
 			secondsInTimeUnit = DEFAULT_UNIT;
 		
