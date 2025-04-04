@@ -51,8 +51,21 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     public SnWDecisionEngine(Settings s) {
         Settings snwSettings = new Settings(SPRAYANDWAIT_NS);
-        initialNrofCopies = snwSettings.getInt(NROF_COPIES);
-        isBinary = snwSettings.getBoolean(BINARY_MODE);
+//        initialNrofCopies = snwSettings.getInt(NROF_COPIES);
+        if (snwSettings.contains(NROF_COPIES)) {
+            initialNrofCopies = snwSettings.getInt(NROF_COPIES);
+            System.out.println("initialNrofCopies: " + initialNrofCopies); // debug
+        } else {
+            this.initialNrofCopies = 2;
+        }
+//        isBinary = snwSettings.getBoolean(BINARY_MODE);
+
+        if (snwSettings.contains(BINARY_MODE)) {
+            isBinary = snwSettings.getBoolean(BINARY_MODE);
+            System.out.println("isBinary: " + isBinary); // debug
+        } else {
+            this.isBinary = true;
+        }
     }
 
     public SnWDecisionEngine(SnWDecisionEngine r) {
