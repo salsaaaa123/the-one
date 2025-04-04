@@ -182,7 +182,7 @@ public abstract class MessageRouter {
 //                return;
 //            }
 //        }
-        System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+        System.setProperty("java.routing.util.Arrays.useLegacyMergeSort", "true");
     }
 
     /**
