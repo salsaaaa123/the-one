@@ -27,7 +27,9 @@ Group.movementModel = RandomWaypoint
 # Router: DecisionEngineRouter (memungkinkan penggunaan DecisionEngine)
 Group.router = DecisionEngineRouter
 # Ukuran buffer pesan (bytes) - 50MB (cukup besar untuk menampung banyak pesan)
-Group.bufferSize = 50M
+#Group.bufferSize = 50M
+Group.bufferSize = 100M
+
 # Waktu tunggu (detik) setelah mencapai tujuan (acak antara min dan max)
 Group.waitTime = 0, 120
 # Kecepatan pergerakan (m/s) (acak antara min dan max)
@@ -43,10 +45,21 @@ Group.nrofHosts = 100
 
 # Pengaturan khusus untuk DecisionEngineRouter dan PeopleRank
 # Menggunakan PeopleRankDecisionEngine
-DecisionEngineRouter.decisionEngine = peoplerank.PeopleRankCombinedEngine
-PeopleRankCombinedEngine.dampingFactor = 0.6
-PeopleRankCombinedEngine.frequencyThreshold = 15
-PeopleRankCombinedEngine.durationThreshold = 70.0
+
+DecisionEngineRouter.decisionEngine = rank.PeopleRankFrequencyEngineUpdate
+PeopleRankFrequencyEngineUpdate.dampingFactor = 0.85
+#PeopleRankDurationEngineUpdate.durationThreshold = 50.0
+PeopleRankFrequencyEngineUpdate.frequencyThreshold = 2
+
+#PeopleRankDurationEngine.rankNormalization = true
+
+
+#DecisionEngineRouter.decisionEngine = peoplerank.PeopleRankFrequencyEngine
+#PeopleRankFrequencyEngine.dampingFactor = 0.85
+##PeopleRankCombinedEngine.frequencyThreshold = 2
+##PeopleRankCombinedEngine.durationThreshold = 30.0
+#PeopleRankFrequencyEngine.frequencyThreshold = 15
+##PeopleRankDurationEngine.durationThreshold = 70.0
 
 
 # Pengaturan khusus untuk Grup 1 (satu-satunya grup)
@@ -75,17 +88,10 @@ MovementModel.warmup = 1000
 
 ## Pengaturan Laporan
 # Jumlah laporan yang dihasilkan
-Report.nrofReports = 6
+Report.nrofReports = 1
 # Direktori tempat laporan disimpan
-Report.reportDir = reports/DistributedPeopleRank/random
+Report.reportDir = reports/PeopleRank/peoplerankupdatefrequency
 # Waktu pemanasan untuk laporan (data sebelum waktu ini tidak disertakan)
-Report.warmup = 0
+Report.warmup = 1000
 # Laporan yang akan dihasilkan
 Report.report1 = MessageStatsReport
-Report.report2 = MessageLatencyPerContactReport
-Report.report3 = MessageOverheadPerContactReport
-Report.report4 = MessagePercentaceDeliveryPerContactReport
-Report.report5 = MessageForwardingPerContactReport
-MessageForwardingPerContactReport.perTotalContact=600
-Report.report6 = AlgorithmicComparisonReport
-AlgorithmicComparisonReport.perTotalContact=600
