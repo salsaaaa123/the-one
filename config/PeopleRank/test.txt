@@ -1,0 +1,95 @@
+#
+# Default settings for the simulation
+#
+
+## Scenario settings
+Scenario.name = dtn_comparison_scenario
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 43200
+
+## Interface-specific settings
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
+
+highspeedInterface.type = SimpleBroadcastInterface
+highspeedInterface.transmitSpeed = 10M
+highspeedInterface.transmitRange = 1000
+
+Scenario.nrofHostGroups = 3
+
+## Group 1: PeopleRank Decision Engine
+Group1.router = DecisionEngineRouter
+Group1.bufferSize = 5M
+Group1.waitTime = 0, 120
+Group1.nrofInterfaces = 1
+Group1.interface1 = btInterface
+Group1.nrofHosts = 33
+Group1.movementModel = RandomWaypoint
+Group1.speed = 0.5, 1.5
+Group1.msgTtl = 300
+DecisionEngineRouter.decisionEngine = peoplerank.PeopleRankDecisionEngine
+PeopleRankDecisionEngine.dampingFactor = 0.6
+PeopleRankDecisionEngine.frequencyThreshold = 15
+PeopleRankDecisionEngine.durationThreshold = 70.0
+
+## Group 2: Prophet Decision Engine
+Group2.router = DecisionEngineRouter
+Group2.bufferSize = 5M
+Group2.waitTime = 0, 120
+Group2.nrofInterfaces = 1
+Group2.interface1 = btInterface
+Group2.nrofHosts = 33
+Group2.movementModel = RandomWaypoint
+Group2.speed = 0.5, 1.5
+Group2.msgTtl = 300
+DecisionEngineRouter.decisionEngine = decisionengine.ProphetDecisionEngine
+ProphetDecisionEngine.p_init = 0.75
+ProphetDecisionEngine.beta = 0.25
+ProphetDecisionEngine.gamma = 0.98
+ProphetDecisionEngine.secondsInTimeUnit = 30
+
+## Group 3: Spray and Wait Decision Engine
+Group3.router = DecisionEngineRouter
+Group3.bufferSize = 5M
+Group3.waitTime = 0, 120
+Group3.nrofInterfaces = 1
+Group3.interface1 = btInterface
+Group3.nrofHosts = 34
+Group3.movementModel = RandomWaypoint
+Group3.speed = 0.5, 1.5
+Group3.msgTtl = 300
+DecisionEngineRouter.decisionEngine = decisionengine.SnWDecisionEngine
+SnWDecisionEngine.nrofCopies = 6
+SnWDecisionEngine.binaryMode = false
+
+## Message creation parameters
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 25,35
+Events1.size = 500k,1M
+Events1.hosts = 0,99
+Events1.prefix = M
+
+## Movement model settings
+MovementModel.rngSeed = 1
+MovementModel.worldSize = 300, 300
+MovementModel.warmup = 1000
+
+## Reports
+Report.nrofReports = 6
+Report.warmup = 0
+Report.reportDir = reports/DTN_Comparison
+Report.report1 = MessageStatsReport
+Report.report2 = MessageLatencyPerContactReport
+Report.report3 = MessageOverheadPerContactReport
+Report.report4 = MessagePercentaceDeliveryPerContactReport
+Report.report5 = MessageForwardingPerContactReport
+MessageForwardingPerContactReport.perTotalContact=600
+Report.report6 = AlgorithmicComparisonReport
+AlgorithmicComparisonReport.perTotalContact=600
+
+## Optimization settings
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
