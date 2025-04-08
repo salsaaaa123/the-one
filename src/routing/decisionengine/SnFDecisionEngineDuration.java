@@ -4,347 +4,223 @@ import core.*;
 import routing.DecisionEngineRouter;
 import routing.MessageRouter;
 import routing.RoutingDecisionEngine;
+import routing.community.Duration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An implementation of the Spray and Focus Routing protocol using the
  * Decision Engine framework.
  *
  * @author PJ Dillon, University of Pittsburgh
- *
+ * <p>
  * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
  */
-public class SnFDecisionEngineDuration implements RoutingDecisionEngine
-{
-	/**
-	 * Jumlah awal salinan pesan yang akan disebarkan
-	 * Misalnya,kalau kita set 10, berarti pesan ini awalnya 10 salinan yang bisa dibagikan.
-	 *
-	 */
-	public static final String NROF_COPIES_S = "nrofCopies";
-	/**
-	 * Properti dalam pesan yang nyimpen jumlah salinan yang masi tersedia.
-	 * Jadi kalau pesan ini masih dibagi,nilainya bakal lebih dari 1.
-	 */
-	public static final String MSG_COUNT_PROP = "SprayAndFocus.copies";
-	/**
-	 * Perbedaan waktu yang diperluka buat bisa meneruskan ke node lain.
-	 * Semakin besar thershold,semakin "pemilih" si protokol ini dalam berbagi pesan.
-	 */
-	public static final String TIMER_THRESHOLD_S = "transitivityTimerThreshold";
-	/**
-	 * Nilai default kalau ita butuh asumsi waktu tempuh antara node.
-	 * Misalnya,kalau kecepatan host 0 ( lagi diem),kita pakai nilai ini.
-	 */
-	protected static final double DEFAULT_TIMEDIFF = 300;
-	/**
-	 * Nilai default buat transitivity thersholdd
-	 * Ini merupakan seberapa besar perbedaan timer yang dianggap cukup buat berbagi pesan
-	 */
-	protected static final double defaultTransitivityThreshold = 1.0;
-	/**
-	 * Jumlah awal salinan pesan yang bisa dibagikan.
-	 * Nilai ini diatur dari konfigurasi awal dan akan berkurang seiring pesan tersebar.
-	 */
-	protected int initialNrofCopies;
-	/**
-	 * Ambang batas perbedaan timer untuk memutuskan apakah pesan bisa diteruskan.
-	 * Semakin kecil nilainya, semakin sering pesan bisa diteruskan.
-	 */
-	protected double transitivityTimerThreshold;
+public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
 
-	/**
-	 * Map yang nyimpen informasi tentang node-node yang udah pernah ketemu sama host ini.
-	 * Kuncinya adalah host yang pernah ketemu, nilainya adalah waktu terakhir ketemu.
-	 * Digunakan buat bantu keputusan apakah pesan perlu diteruskan atau nggak.
-	 */
-	protected Map<DTNHost, Double> recentEncounters;
+    public static final String NROF_COPIES_S = "nrofCopies";
+    public static final String MSG_COUNT_PROP = "SprayAndFocus.copies";
+    public static final String TIMER_THRESHOLD_S = "transitivityTimerThreshold";
+    protected static final double DEFAULT_TIMEDIFF = 300;
+    protected static final double defaultTransitivityThreshold = 1.0;
+    protected int initialNrofCopies;
+    protected double transitivityTimerThreshold;
 
-	public SnFDecisionEngineDuration(Settings s)
-	{
-		// Ambil jumlah awal salinan pesan dari konfigurasi
-		initialNrofCopies = s.getInt(NROF_COPIES_S);
+    /**
+     * recentEncounters Map yang nyimpen informasi kontak dengan peer.
+     * Kunci = DTNHost (peer)
+     * Nilai = List<Duration> yang berisi daftar durasi kontak dengan peer
+     */
+    protected Map<DTNHost, List<Duration>> connHistory;
 
-		// Cek apakah ada threshold transitivity yang diatur di konfigurasi
-		if (s.contains(TIMER_THRESHOLD_S))
-			transitivityTimerThreshold = s.getDouble(TIMER_THRESHOLD_S); // Kalau ada, pakai yang dikonfigurasi
-		else
-			transitivityTimerThreshold = defaultTransitivityThreshold; // Kalau nggak ada, pakai nilai default
-
-		// Siapkan tempat buat nyimpen daftar host yang pernah ketemu!
-		recentEncounters = new HashMap<DTNHost, Double>();
-	}
-
-	public SnFDecisionEngineDuration(SnFDecisionEngineDuration r) {
-		this.initialNrofCopies = r.initialNrofCopies;
-		this.transitivityTimerThreshold = r.transitivityTimerThreshold;
-		recentEncounters = new HashMap<>();
-	}
-
-	/**
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @param peer     Host peer (host lain) yang terhubung.
-	 */
-	@Override
-	public void connectionUp(DTNHost thisHost, DTNHost peer) {
-		// Tidak ada tindakan khusus yang diperlukan saat koneksi naik
-	}
-
-	/**
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @param peer     Host peer (host lain) yang koneksinya terputus.
-	 */
-	@Override
-	public void connectionDown(DTNHost thisHost, DTNHost peer) {
-		// Tidak ada tindakan khusus yang diperlukan saat koneksi turun
-	}
-
-	/**
-	 * @param con  Objek {@link Connection} yang merepresentasikan koneksi baru.
-	 * @param peer Host peer (host lain) yang terhubung melalui koneksi ini.
-	 */
-	@Override
-	public void doExchangeForNewConnection(Connection con, DTNHost peer) {
-		// Ambil decision engine dari peer yang baru terkoneksi
-		// Ini gunanya buat bisa saling bertukar informasi encounter nanti
-		SnFDecisionEngineDuration de = this.getOtherSnFDecisionEngine(peer);
-
-		// Cari tahu siapa "saya" dalam koneksi ini
-		// `con.getOtherNode(peer)` artinya kita ingin tahu siapa "saya"
-		// dalam koneksi ini dari sudut pandang peer
-		DTNHost myHost = con.getOtherNode(peer);
-
-		// Hitung jarak antara saya (myHost) dan peer
-		// Method `getLocation()` ini bakal ngasih tahu lokasi dari masing-masing host di dalam simulasi
-		double distBwt = myHost.getLocation().distance(peer.getLocation());
-
-		// Cek kecepatan masing-masing host
-		// Kalau `getPath()` == null, berarti host ini sedang diam alias nggak bergerak
-		// Kalau nggak null, kita bisa ambil kecepatannya lewat `getSpeed()`
-		double mySpeed = myHost.getPath() == null ? 0 : myHost.getPath().getSpeed();
-		double peerSpeed = peer.getPath() == null ? 0 : peer.getPath().getSpeed();
-
-		// Variabel buat nyimpen waktu tempuh antara dua host
-		double myTimediff, peerTimediff;
-
-		// Kalau saya (myHost) diam alias `mySpeed == 0.0`, kasih nilai default waktu tempuhnya
-		if (mySpeed == 0.0)
-			myTimediff = DEFAULT_TIMEDIFF; // DEFAULT_TIMEDIFF ini default 300 detik
-		else
-			myTimediff = distBwt / mySpeed; // Kalau saya bergerak, waktu tempuh = jarak / kecepatan
-
-		// Lakukan hal yang sama buat peer
-		if (peerSpeed == 0.0)
-			peerTimediff = DEFAULT_TIMEDIFF; // Kasih nilai default kalau peer diam
-		else
-			peerTimediff = distBwt / peerSpeed; // Hitung waktu tempuh peer
-
-		// Catat waktu pertemuan terbaru ke dalam daftar "recentEncounters" masing-masing host
-		// `SimClock.getTime()` ini bakal ngasih waktu sekarang di dalam simulasi
-		recentEncounters.put(peer, SimClock.getTime());
-		de.recentEncounters.put(myHost, SimClock.getTime());
-
-		// Gabungkan daftar host yang pernah ditemui oleh saya dan peer
-		// Kita pakai HashSet supaya nggak ada duplikasi
-		Set<DTNHost> hostSet = new HashSet<>(this.recentEncounters.size() + de.recentEncounters.size());
-		hostSet.addAll(this.recentEncounters.keySet()); // Tambahkan semua host yang saya pernah temui
-		hostSet.addAll(de.recentEncounters.keySet());  // Tambahkan semua host yang peer pernah temui
-
-		// Update informasi encounter buat setiap host yang pernah kita temui
-		for (DTNHost h : hostSet) {
-			double myTime, peerTime;
-
-			// Cek apakah saya punya catatan waktu terakhir bertemu host ini
-			if (this.recentEncounters.containsKey(h))
-				myTime = this.recentEncounters.get(h); // Ambil waktu terakhir saya bertemu host h
-			else
-				myTime = -1.0; // Kalau nggak ada, berarti saya belum pernah ketemu host ini
-
-			// Lakukan hal yang sama buat peer
-			if (de.recentEncounters.containsKey(h))
-				peerTime = de.recentEncounters.get(h); // Ambil waktu terakhir peer bertemu host h
-			else
-				peerTime = -1.0;
-
-			// Update catatan waktu encounter saya berdasarkan informasi dari peer
-			if (myTime < 0.0 || myTime + myTimediff < peerTime)
-				recentEncounters.put(h, peerTime - myTimediff);
-
-			// Update catatan waktu encounter peer berdasarkan informasi dari saya
-			if (peerTime < 0.0 || peerTime + peerTimediff < myTime)
-				de.recentEncounters.put(h, myTime - peerTimediff);
-		}
-	}
-
-	/**
-	 * @param m Pesan baru yang akan dievaluasi.
-	 * @return
-	 */
-	@Override
-	public boolean newMessage(Message m) {
-		// Oke, kita kasih properti tambahan ke pesan ini!
-		// Kita tambahin jumlah salinan awal (initialNrofCopies) biar tahu berapa banyak pesan ini bisa disebarkan.
-		m.addProperty(MSG_COUNT_PROP, initialNrofCopies);
-
-		// Misinya sukses, kita return true buat kasih tahu kalau pesan ini berhasil diproses!
-		return true;
-	}
+    /**
+     * startTimestamps Map yang menyimpan waktu mulai kontak dengan peer.
+     * Kunci = DTNHost (peer)
+     * Nilai = Waktu Mulai Kontak
+     */
+    protected Map<DTNHost, Double> startTimestamps;
 
 
-	/**
-	 * @param m          Pesan yang diterima.
-	 * @param targetHost Host yang akan diperiksa apakah merupakan tujuan akhir.
-	 * @return
-	 */
-	@Override
-	public boolean isFinalDest(Message m, DTNHost targetHost) {
-		// Cek apakah target pengiriman pesan ini adalah si targetHost yang dimaksud?
-		return m.getTo() == targetHost;
+    public SnFDecisionEngineDuration(Settings s) {
+        initialNrofCopies = s.getInt(NROF_COPIES_S);
+        if (s.contains(TIMER_THRESHOLD_S))
+            transitivityTimerThreshold = s.getDouble(TIMER_THRESHOLD_S);
+        else
+            transitivityTimerThreshold = defaultTransitivityThreshold;
 
-//		// Ambil tujuan akhir dari pesan ini
-//		DTNHost messageDestination = m.getTo();
-//
-//		// Cek apakah tujuan pesan ini sama dengan targetHost yang diperiksa
-//		if (messageDestination == targetHost) {
-//			// Kalau iya, berarti pesan udah sampai di tujuan!
-//			return true;
-//		} else {
-//			// Kalau belum, berarti masih harus lanjut perjalanan
-//			return false;
-//		}
-	}
+        connHistory = new HashMap<DTNHost, List<Duration>>();
 
-	/**
-	 * @param m        Pesan yang diterima.
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @return
-	 */
-	@Override
-	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
-		return m.getTo() != thisHost;
-//		// Cek siapa tujuan akhirnya
-//		DTNHost messageDestination = m.getTo();
-//
-//		// Kalau tujuan akhirnya BUKAN thisHost, berarti pesan masih perlu disimpan
-//		if (messageDestination != thisHost) {
-//			return true; // Simpan pesan karena bukan buat kita!
-//		} else {
-//			return false; // Gak perlu simpan, ini pesan buat kita sendiri!
-//		}
-	}
+        startTimestamps = new HashMap<DTNHost, Double>();
+    }
 
-	/**
-	 * @param m         Pesan yang akan dievaluasi untuk pengiriman.
-	 * @param otherHost Host peer yang berpotensi menjadi tujuan pengiriman.
-	 * @param thisHost  Host lokal (yang menjalankan router ini).
-	 * @return
-	 */
-	@Override
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-		// 1. Cek dulu, apakah si otherHost ini adalah tujuan akhir dari pesan
-		if (m.getTo() == otherHost) return true; // Kalau iya, langsung kirim
+    public SnFDecisionEngineDuration(SnFDecisionEngineDuration r) {
+        this.initialNrofCopies = r.initialNrofCopies;
+        this.transitivityTimerThreshold = r.transitivityTimerThreshold;
+        connHistory = new HashMap<DTNHost, List<Duration>>();
+        startTimestamps = new HashMap<DTNHost, Double>();
+    }
 
-		// 2. Ambil jumlah salinan pesan saat ini (berapa banyak "copy" pesan yang tersedia)
-		int nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
+    @Override
+    public void connectionUp(DTNHost thisHost, DTNHost peer) {
 
-		// Kalau masih ada lebih dari 1 copy, kita bisa bagi ke host lain
-		if (nrofCopies > 1) return true;
+    }
 
-		// 3. Ambil tujuan akhir dari pesan ini
-		DTNHost dest = m.getTo();
+    @Override
+    public void connectionDown(DTNHost thisHost, DTNHost peer) {
 
-		// 4. Ambil decision engine dari host tujuan kita
-		SnFDecisionEngineDuration de = this.getOtherSnFDecisionEngine(otherHost);
+    }
 
-		// 5. Cek apakah otherHost pernah ketemu dengan tujuan pesan sebelumnya
-		if (!de.recentEncounters.containsKey(dest))
-			return false; // Kalau belum pernah ketemu, tidak perlu dikirim
+    @Override
+    public void doExchangeForNewConnection(Connection con, DTNHost peer) {
+        SnFDecisionEngineDuration de = this.getOtherSnFDecisionEngine(peer);
+        DTNHost myHost = con.getOtherNode(peer);
 
-		// 6. Kalau kita sendiri juga belum pernah ketemu dengan tujuan pesan, kita kasih saja ke otherHost
-		if (!this.recentEncounters.containsKey(dest))
-			return true;
+        // Catat waktu mulai koneksi
+        double currentTime = SimClock.getTime();
+        startTimestamps.put(peer, currentTime);
+        de.startTimestamps.put(myHost, currentTime);
 
-		// 7. Ambil waktu terakhir kali kita dan otherHost melihat tujuan pesan
-		double myLastSeen = this.recentEncounters.get(dest); // Waktu terakhir kali kita lihat tujuan pesan
-		double peerLastSeen = de.recentEncounters.get(dest); // Waktu terakhir kali si otherHost lihat tujuan pesan
+        // Update informasi encounter
+        updateEncounter(myHost, peer, con);
+        de.updateEncounter(peer, myHost, con);
 
-		// 8. Kirim pesan ke otherHost kalau dia lebih baru melihat tujuan pesan dibanding kita
-		return (peerLastSeen > myLastSeen + transitivityTimerThreshold);
-	}
+    }
+
+    private void updateEncounter(DTNHost myHost, DTNHost peer, Connection con) {
+        DTNHost destination = null; // Gantilah dengan cara yang benar untuk mendapatkan tujuan pesan
+        // Misalnya, jika Anda memiliki cara untuk mengakses pesan yang sedang dalam proses:
+        // destination = getCurrentMessage().getTo();
+
+        if (destination == null) {
+            // Jika tidak ada pesan yang terkait, jangan lakukan apa-apa
+            return;
+        }
+
+        double currentTime = SimClock.getTime();
+
+        // Buat objek Duration baru
+        Double connectionStartTime = startTimestamps.get(peer);
+        if (connectionStartTime == null) {
+            // Jika tidak ada waktu mulai, mungkin ada kesalahan
+            System.err.println("Error: No start time found for peer " + peer);
+            return;
+        }
+        double connectionEndTime = currentTime;
+        Duration connectionDuration = new Duration(connectionStartTime, connectionEndTime);
+
+        // Ambil daftar durasi kontak untuk tujuan ini
+        List<Duration> durations = connHistory.get(destination);
+        if (durations == null) {
+            // Jika belum ada daftar, buat baru
+            durations = new ArrayList<>();
+            connHistory.put(destination, durations);
+        }
+
+        // Tambahkan durasi kontak baru ke daftar
+        durations.add(connectionDuration);
+
+        //Update StartTimestamps dengan current Time
+        startTimestamps.replace(peer, currentTime);
+    }
+
+    private SnFDecisionEngineDuration getOtherSnFDecisionEngine(DTNHost h) {
+        MessageRouter otherRouter = h.getRouter();
+        assert otherRouter instanceof DecisionEngineRouter : "This router only works " +
+                " with other routers of same type";
+
+        return (SnFDecisionEngineDuration) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
+    }
+
+    private double getAverageIntercontactTime(DTNHost node, DTNHost destination) {
+        List<Duration> durations = connHistory.get(destination);
+        if (durations == null || durations.isEmpty()) {
+            return Double.MAX_VALUE; // Belum pernah kontak, anggap waktu interkontak sangat besar
+        }
+
+        double totalDuration = 0;
+        for (Duration duration : durations) {
+            totalDuration += duration.getEnd() - duration.getStart();
+        }
+
+        return totalDuration / durations.size(); // Rata-rata durasi per kontak
+    }
 
 
+    @Override
+    public boolean newMessage(Message m) {
+        m.addProperty(MSG_COUNT_PROP, initialNrofCopies);
+        return true;
+    }
 
-	/**
-	 * @param m         Pesan yang telah berhasil dikirim.
-	 * @param otherHost Host peer yang menerima pesan.
-	 * @return
-	 */
-	@Override
-	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
-		// Selalu hapus pesan setelah dikirim (sesuai dengan logika Spray and Focus)
-		return true;
-	}
+    @Override
+    public boolean isFinalDest(Message m, DTNHost targetHost) {
+        Integer nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
+        nrofCopies = (int) Math.ceil(nrofCopies / 2.0);
+        m.updateProperty(MSG_COUNT_PROP, nrofCopies);
 
-	/**
-	 * @param m                Pesan yang dianggap sudah lama.
-	 * @param hostReportingOld Host peer yang melaporkan bahwa pesan tersebut sudah lama.
-	 * @return
-	 */
-	@Override
-	public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld) {
-		// Selalu hapus pesan lama
-		return true;
-	}
+        return m.getTo() == targetHost;
+    }
 
-	/**
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 */
-	@Override
-	public void update(DTNHost thisHost) {
-		// Tidak ada logika pemeliharaan rutin dalam implementasi ini
-	}
+    @Override
+    public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
+        return m.getTo() != thisHost;
+    }
 
-	/**
-	 * @return
-	 */
-	@Override
-	public RoutingDecisionEngine replicate() {
-		return new SnFDecisionEngineDuration(this);
-	}
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
+        // 1. Cek apakah otherHost adalah tujuan akhir
+        if (m.getTo() == otherHost) return true;
 
-	/**
-	 * Fungsi buat ngambil Decision Engine dari host lain
-	 * Jadi, kalau kita ingin tahu decision engine yang dipakai peer,
-	 * kita bisa pakai method ini
-	 */
-	private SnFDecisionEngineDuration getOtherSnFDecisionEngine(DTNHost h) {
-		// Ambil router yang digunakan oleh host h
-		MessageRouter otherRouter = h.getRouter();
+        // 2. Ambil jumlah salinan yang tersisa
+        int nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
 
-		// Cek dulu, apakah router yang dipakai host ini adalah DecisionEngineRouter?
-		// Kalau bukan, berarti nggak kompatibel dan kita lempar error
-		if (!(otherRouter instanceof DecisionEngineRouter)) {
-			throw new SimError("Router ini cuma bisa bekerja dengan DecisionEngineRouter");
-		}
+        // 3. Kalau masih ada salinan, forward (Spray Phase)
+        if (nrofCopies > 1) return true;
 
-		// Kalau lolos, kita ubah router jadi DecisionEngineRouter
-		DecisionEngineRouter deRouter = (DecisionEngineRouter) otherRouter;
+        // 4. Ambil tujuan dari pesan
+        DTNHost destination = m.getTo();
 
-		// Ambil decision engine dari router peer
-		RoutingDecisionEngine otherEngine = deRouter.getDecisionEngine();
+        // 5. Hitung Average Intercontact Time antara thisHost dan tujuan
+        double myAvgIntercontactTime = getAverageIntercontactTime(thisHost, destination);
 
-		// Cek lagi, apakah decision engine-nya tipe SnFDecisionEngine?
-		// Kalau bukan, kita kasih error biar nggak terjadi kesalahan
-		if (!(otherEngine instanceof SnFDecisionEngineDuration)) {
-			throw new SimError("DecisionEngineRouter harus dikonfigurasi dengan SnFDecisionEngine");
-		}
+        // 6. Hitung Average Intercontact Time antara otherHost dan tujuan
+        double otherAvgIntercontactTime = getAverageIntercontactTime(otherHost, destination);
 
-		// Semua aman, return SnFDecisionEngine dari peer!
-		return (SnFDecisionEngineDuration) otherEngine;
-	}
+        // 7. Forward jika otherHost memiliki Average Intercontact Time yang lebih kecil (Focus Phase)
+        return otherAvgIntercontactTime < myAvgIntercontactTime;
+    }
 
+    @Override
+    public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
+        int nrofCopies;
+
+        nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
+
+        if (nrofCopies > 1)
+            nrofCopies /= 2;
+        else
+            return true;
+
+        m.updateProperty(MSG_COUNT_PROP, nrofCopies);
+
+        return false;
+    }
+
+    @Override
+    public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld) {
+        return true;
+    }
+
+    @Override
+    public void update(DTNHost thisHost) {
+
+    }
+
+    @Override
+    public RoutingDecisionEngine replicate() {
+        return new SnFDecisionEngineDuration(this);
+    }
 }
