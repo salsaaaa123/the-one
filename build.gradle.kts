@@ -47,7 +47,8 @@ tasks.named<JavaExec>("run") {
 //    args = listOf("-b","1", "config/Prophet/ProphetDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/test1.txt")  // Sesuaikan dengan eksekusi GUI
-    args = listOf("-b","1", "config/PeopleRank/DistributedPeopleRank_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/PeopleRank/DistributedPeopleRank_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
+    args = listOf("-b","1", "config/bublerap/bublerap_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/PeopleRankDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 
 }
