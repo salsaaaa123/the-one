@@ -15,7 +15,7 @@ Once you understand the basics, you can begin conducting experiments and analyzi
 
 📂 **Simulation Reports:** [report](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/src/report)
 
-📊 **Analysis & Graphs: ** [Algorithmic Comparison](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/discussion/AlgorithmicComparison)
+📊 **Analysis & Graphs:** [Algorithmic Comparison](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/discussion/AlgorithmicComparison)
 
 ---
 
