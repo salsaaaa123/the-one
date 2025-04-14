@@ -6,7 +6,7 @@
 // * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
 // */
 //
-//package routing.coba;
+//package report.coba;
 //
 //import core.*;
 //import routing.DecisionEngineRouter;
@@ -17,9 +17,8 @@
 //
 //import java.util.*;
 //
-//public class PeopleRankFrequencyEngine1 implements RoutingDecisionEngine, NodeRanking {
-//
-//    public static final String PEOPLERANK_NS = "PeopleRankFrequencyEngine";
+//public class PeopleRankFrequencyEngineTuple implements RoutingDecisionEngine, NodeRanking {
+//    public static final String PEOPLERANK_NS = "PeopleRankFrequencyEngineTuple";
 //    public static final String DAMPING = "dampingFactor";
 //    public static final String FREQUENCY_THRESHOLD = "frequencyThreshold";
 //    private static final double DEFAULT_PEOPLE_RANK = 0.0;
@@ -31,11 +30,11 @@
 //
 //    protected Map<DTNHost, Double> startTime;
 //    protected Map<DTNHost, SocialInteraction> socialInteractions;
-//    protected Map<DTNHost, PeopleRankInfo> peerInfo;
+//    protected Map<DTNHost, Tuple<Double, Integer>> peerInfo;
 //    protected List<Message> messageBuffer;
 //    protected Set<DTNHost> socialGraph;
 //
-//    public PeopleRankFrequencyEngine1(Settings s) {
+//    public PeopleRankFrequencyEngineTuple(Settings s) {
 //        Settings prSettings = new Settings(PEOPLERANK_NS);
 //
 //        if (prSettings.contains(DAMPING)) {
@@ -52,7 +51,7 @@
 //
 //        startTime = new HashMap<DTNHost, Double>();
 //        socialInteractions = new HashMap<DTNHost, SocialInteraction>();
-//        peerInfo = new HashMap<DTNHost, PeopleRankInfo>();
+//        peerInfo = new HashMap<DTNHost, Tuple<Double, Integer>>();
 //        messageBuffer = new ArrayList<Message>();
 //        socialGraph = new HashSet<DTNHost>();
 //
@@ -62,7 +61,7 @@
 //        System.out.println("Frequency Threshold: " + frequencyThreshold);
 //    }
 //
-//    public PeopleRankFrequencyEngine1(PeopleRankFrequencyEngine1 proto) {
+//    public PeopleRankFrequencyEngineTuple(PeopleRankFrequencyEngineTuple proto) {
 //        dampingFactor = proto.dampingFactor;
 //        frequencyThreshold = proto.frequencyThreshold;
 //        peopleRank = proto.peopleRank;
@@ -70,7 +69,7 @@
 //
 //        startTime = new HashMap<DTNHost, Double>();
 //        socialInteractions = new HashMap<DTNHost, SocialInteraction>(proto.socialInteractions);
-//        peerInfo = new HashMap<DTNHost, PeopleRankInfo>(proto.peerInfo);
+//        peerInfo = new HashMap<DTNHost, Tuple<Double, Integer>>(proto.peerInfo);
 //        messageBuffer = new ArrayList<Message>();
 //        socialGraph = new HashSet<DTNHost>(proto.socialGraph);
 //    }
@@ -104,7 +103,6 @@
 //        updateSocialGraph(thisHost, peer);
 //        processMessageBuffer(thisHost, peer);
 //    }
-//
 //    private void updateSocialGraph(DTNHost thisHost, DTNHost peer) {
 //        SocialInteraction interaction = socialInteractions.get(peer);
 //        int frequency = (interaction != null) ? interaction.getFrequency() : 0;
@@ -129,63 +127,42 @@
 //        }
 //
 //        if (diff > 0.01) {
-//            PeopleRankInfo data = new PeopleRankInfo(currentPeopleRank, getNeighborCount());
+//            Tuple<Double, Integer> data = new Tuple<Double, Integer>(currentPeopleRank, getNeighborCount());
 //            send(myHost, peer, data);
 //            previousPeopleRank = currentPeopleRank;
 //        }
 //
-//        PeopleRankInfo peerData = receive(peer);
+//        Tuple<Double, Integer> peerData = receive(peer);
 //        this.peerInfo.put(peer, peerData);
 //
 //        updateSocialGraph(myHost, peer);
 //    }
-//
-//
-//    private void send(DTNHost myHost, DTNHost peer, PeopleRankInfo information) {
-//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(peer);
+//    private void send(DTNHost myHost, DTNHost peer, Tuple<Double, Integer> information) {
+//        PeopleRankFrequencyEngineTuple prde = getDecisionRouterFrom(peer);
 //        prde.peerInfo.put(myHost, information);
 //    }
 //
-//    private PeopleRankInfo receive(DTNHost peer) {
-//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(peer);
+//    private Tuple<Double, Integer> receive(DTNHost peer) {
+//        PeopleRankFrequencyEngineTuple prde = getDecisionRouterFrom(peer);
 //        double peerRank = prde.getPeopleRank();
 //        int peerFriends = prde.getNeighborCount();
-//
-//        return new PeopleRankInfo(peerRank, peerFriends);
+//        return new Tuple<Double, Integer>(peerRank, peerFriends);
 //    }
 //
 //    @Override
-//    public void update(DTNHost thisHost) {
-//        updatePeopleRank(thisHost);
-//    }
-//
-//    public void updatePeopleRank(DTNHost myHost) {
-//        double sigma = 0.0;
-//
-//        Iterator<DTNHost> it = socialGraph.iterator();
-//        while (it.hasNext()) {
-//            DTNHost neighbor = it.next();
-//
-//            if (neighbor == myHost) {
-//                continue;
-//            }
-//
-//            if (peerInfo.containsKey(neighbor)) {
-//                PeopleRankInfo neighborInfo = peerInfo.get(neighbor);
-//                sigma += neighborInfo.peopleRank / (double) neighborInfo.neighborCount;
-//            }
-//        }
-//
-//        peopleRank = (1 - dampingFactor) + dampingFactor * sigma;
+//    public boolean newMessage(Message m) {
+//        messageBuffer.add(m);
+//        return true;
 //    }
 //
 //    @Override
-//    public double getPeopleRank() {
-//        return this.peopleRank;
+//    public boolean isFinalDest(Message m, DTNHost targetHost) {
+//        return m.getTo() == targetHost;
 //    }
 //
-//    public int getNeighborCount() {
-//        return socialGraph.size();
+//    @Override
+//    public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
+//        return m.getTo() != thisHost;
 //    }
 //
 //    @Override
@@ -198,49 +175,30 @@
 //            return false;
 //        }
 //
-//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(otherHost);
+//        PeopleRankFrequencyEngineTuple prde = getDecisionRouterFrom(otherHost);
 //        double otherHostRank = prde.getPeopleRank();
 //
 //        return otherHostRank >= peopleRank;
 //    }
-//
-//    public PeopleRankFrequencyEngine1 getDecisionRouterFrom(DTNHost h) {
+//    public PeopleRankFrequencyEngineTuple getDecisionRouterFrom(DTNHost h) {
 //        MessageRouter otherRouter = h.getRouter();
 //        if (otherRouter instanceof DecisionEngineRouter) {
 //            RoutingDecisionEngine engine = ((DecisionEngineRouter) otherRouter).getDecisionEngine();
-//            if (engine instanceof PeopleRankFrequencyEngine1) {
-//                return (PeopleRankFrequencyEngine1) engine;
+//            if (engine instanceof PeopleRankFrequencyEngineTuple) {
+//                return (PeopleRankFrequencyEngineTuple) engine;
 //            } else {
-//                throw new IllegalStateException("DecisionEngine is not an instance of PeopleRankFrequencyEngine!");
+//                throw new IllegalStateException("DecisionEngine is not an instance of PeopleRankFrequencyEngineTuple!");
 //            }
 //        } else {
 //            throw new IllegalStateException("Router is not a DecisionEngineRouter!");
 //        }
 //    }
-//
 //    private double check(DTNHost peer) {
 //        if (startTime.containsKey(peer)) {
 //            return startTime.get(peer);
 //        }
 //        return 0;
 //    }
-//
-//    @Override
-//    public boolean newMessage(Message m) {
-//        messageBuffer.add(m);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isFinalDest(Message m, DTNHost aHost) {
-//        return m.getTo() == aHost;
-//    }
-//
-//    @Override
-//    public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
-//        return m.getTo() != thisHost;
-//    }
-//
 //    @Override
 //    public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
 //        return false;
@@ -249,6 +207,42 @@
 //    @Override
 //    public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld) {
 //        return true;
+//    }
+//
+//    @Override
+//    public void update(DTNHost thisHost) {
+//        updatePeopleRank(thisHost);
+//    }
+//    public void updatePeopleRank(DTNHost myHost) {
+//        double sigma = 0.0;
+//
+//        Iterator<DTNHost> it = socialGraph.iterator();
+//        while (it.hasNext()) {
+//            DTNHost neighbor = it.next();
+//
+//            if (neighbor == myHost) {
+//                continue;
+//            }
+//
+//            if (peerInfo.containsKey(neighbor)) {
+//                Tuple<Double, Integer> neighborInfo = peerInfo.get(neighbor);
+//                double rank = neighborInfo.getFirst();
+//                int neighbors = neighborInfo.getSecond();
+//                sigma += rank / (double) neighbors;
+//            }
+//        }
+//
+//        peopleRank = (1 - dampingFactor) + dampingFactor * sigma;
+//    }
+//
+//
+//    public int getNeighborCount() {
+//        return socialGraph.size();
+//    }
+//
+//    @Override
+//    public RoutingDecisionEngine replicate() {
+//        return new PeopleRankFrequencyEngineTuple(this);
 //    }
 //
 //    private void processMessageBuffer(DTNHost thisHost, DTNHost peer) {
@@ -273,30 +267,14 @@
 //    }
 //
 //    @Override
-//    public RoutingDecisionEngine replicate() {
-//        return new PeopleRankFrequencyEngine1(this);
+//    public double getPeopleRank() {
+//        return this.peopleRank;
 //    }
 //
-//    @Override
 //    public boolean hasHigherRankThan(NodeRanking otherNode) {
 //        if (otherNode == null) {
 //            return true;
 //        }
 //        return getPeopleRank() > otherNode.getPeopleRank();
-//    }
-//
-//    @Override
-//    public Map<DTNHost, Double> getAllRank() {
-//        return Map.of();
-//    }
-//
-//    private static class PeopleRankInfo implements java.io.Serializable {
-//        public double peopleRank;
-//        public int neighborCount;
-//
-//        public PeopleRankInfo(double peopleRank, int neighborCount) {
-//            this.peopleRank = peopleRank;
-//            this.neighborCount = neighborCount;
-//        }
 //    }
 //}

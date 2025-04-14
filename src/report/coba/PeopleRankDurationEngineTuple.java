@@ -7,7 +7,7 @@
 // */
 //
 //
-//package routing.coba;
+//package report.coba;
 //
 //import core.*;
 //import routing.DecisionEngineRouter;
@@ -15,11 +15,10 @@
 //import routing.RoutingDecisionEngine;
 //import routing.peoplerank.NodeRanking;
 //import routing.peoplerank.PeopleRankInfo;
-//import routing.peoplerank.SocialInteraction;
 //
 //import java.util.*;
 //
-//public class PeopleRankDurationEngine1 implements RoutingDecisionEngine, NodeRanking {
+//public class PeopleRankDurationEngineTuple implements RoutingDecisionEngine, NodeRanking {
 //
 //    public static final String PEOPLERANK_NS = "PeopleRankDurationEngine";
 //    public static final String DAMPING = "dampingFactor";
@@ -35,14 +34,14 @@
 //    private boolean rankNormalization;
 //
 //    private Map<DTNHost, Double> startTime;
-//    private Map<DTNHost, SocialInteraction> socialInteractions;
+//    private Map<DTNHost, Tuple<Double, Integer>> socialInteractions;
 //    private Map<DTNHost, PeopleRankInfo> peerInfo;
 //    private List<Message> messageBuffer;
 //
 //    private Map<DTNHost, Set<DTNHost>> socialGraph = new HashMap<DTNHost, Set<DTNHost>>();
 //    private boolean isSocialGraphShared = true;
 //
-//    public PeopleRankDurationEngine1(Settings s) {
+//    public PeopleRankDurationEngineTuple(Settings s) {
 //        Settings prSettings = new Settings(PEOPLERANK_NS);
 //
 //        if (prSettings.contains(DAMPING)) {
@@ -64,7 +63,7 @@
 //        }
 //
 //        startTime = new HashMap<DTNHost, Double>();
-//        socialInteractions = new HashMap<DTNHost, SocialInteraction>();
+//        socialInteractions = new HashMap<DTNHost, Tuple<Double, Integer>>();
 //        peerInfo = new HashMap<DTNHost, PeopleRankInfo>();
 //        messageBuffer = new ArrayList<Message>();
 //
@@ -75,7 +74,7 @@
 //        System.out.println("Rank Normalization: " + rankNormalization);
 //    }
 //
-//    public PeopleRankDurationEngine1(PeopleRankDurationEngine1 proto) {
+//    public PeopleRankDurationEngineTuple(PeopleRankDurationEngineTuple proto) {
 //        dampingFactor = proto.dampingFactor;
 //        durationThreshold = proto.durationThreshold;
 //        rankNormalization = proto.rankNormalization;
@@ -83,7 +82,7 @@
 //        previousPeopleRank = proto.previousPeopleRank;
 //
 //        startTime = new HashMap<DTNHost, Double>();
-//        socialInteractions = new HashMap<DTNHost, SocialInteraction>(proto.socialInteractions);
+//        socialInteractions = new HashMap<DTNHost, Tuple<Double, Integer>>(proto.socialInteractions);
 //        peerInfo = new HashMap<DTNHost, PeopleRankInfo>(proto.peerInfo);
 //        messageBuffer = new ArrayList<Message>();
 //
@@ -95,9 +94,10 @@
 //    public void connectionUp(DTNHost thisHost, DTNHost peer) {
 //        double start = SimClock.getTime();
 //        if (!socialInteractions.containsKey(peer)) {
-//            socialInteractions.put(peer, new SocialInteraction());
+//            socialInteractions.put(peer, new Tuple<Double, Integer>(0.0, 0));
 //        }
 //        startTime.put(peer, start);
+//
 //    }
 //
 //    @Override
@@ -106,12 +106,15 @@
 //        double start = check(peer);
 //
 //        if (start > 0) {
-//            SocialInteraction interaction = socialInteractions.get(peer);
+//            Tuple<Double, Integer> interaction = socialInteractions.get(peer);
 //            if (interaction != null) {
-//                interaction.addInteraction(start, end);
+//                double previousDuration = interaction.getKey();
+//                int previousFrequency = interaction.getValue();
+//                double newDuration = previousDuration + (end - start);
+//                int newFrequency = previousFrequency + 1;
+//                socialInteractions.put(peer, new Tuple<Double, Integer>(newDuration, newFrequency));
 //            }
 //        }
-//
 //        startTime.remove(peer);
 //        updateSocialGraph(thisHost, peer);
 //        processMessageBuffer(thisHost, peer);
@@ -136,10 +139,10 @@
 //
 //    private void updateSocialGraph(DTNHost thisHost, DTNHost peer) {
 //        ensureSocialGraphIsMutable();
-//        SocialInteraction interaction = socialInteractions.get(peer);
+//        Tuple<Double, Integer> interaction = socialInteractions.get(peer);
 //        double totalDuration = 0.0;
 //        if (interaction != null) {
-//            totalDuration = interaction.getTotalDuration();
+//            totalDuration = interaction.getKey();
 //        }
 //
 //        if (totalDuration >= durationThreshold) {
@@ -193,19 +196,16 @@
 //
 //        PeopleRankInfo peerData = receive(peer);
 //        peerInfo.put(peer, peerData);
-//
 //        updateSocialGraph(myHost, peer);
-//        processMessageBuffer(myHost, peer);
 //    }
 //
-//
 //    private void send(DTNHost myHost, DTNHost peer, PeopleRankInfo info) {
-//        PeopleRankDurationEngine1 prde = getDecisionRouterFrom(peer);
+//        PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(peer);
 //        prde.peerInfo.put(myHost, info);
 //    }
 //
 //    private PeopleRankInfo receive(DTNHost peer) {
-//        PeopleRankDurationEngine1 prde = getDecisionRouterFrom(peer);
+//        PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(peer);
 //        return new PeopleRankInfo(prde.getPeopleRank(), prde.getNeighborCount(peer));
 //    }
 //
@@ -234,7 +234,7 @@
 //        Iterator<DTNHost> it = socialGraph.keySet().iterator();
 //        while (it.hasNext()) {
 //            DTNHost node = it.next();
-//            PeopleRankDurationEngine1 prde = getDecisionRouterFrom(node);
+//            PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(node);
 //            double rank = prde.getPeopleRank();
 //            if (rank < minRank) minRank = rank;
 //            if (rank > maxRank) maxRank = rank;
@@ -244,19 +244,9 @@
 //            Iterator<DTNHost> it2 = socialGraph.keySet().iterator();
 //            while (it2.hasNext()) {
 //                DTNHost node = it2.next();
-//                PeopleRankDurationEngine1 prde = getDecisionRouterFrom(node);
+//                PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(node);
 //                double normalizedRank = (prde.getPeopleRank() - minRank) / (maxRank - minRank);
 //                prde.setPeopleRank(normalizedRank);
-//            }
-//        } else {
-//            // Tangani kasus di mana semua rank sama
-//            System.out.println("Semua rank sama, tidak ada normalisasi yang dilakukan");
-//            // Setel semua rank ke nilai default (misalnya, 0.5)
-//            Iterator<DTNHost> it2 = socialGraph.keySet().iterator();
-//            while (it2.hasNext()) {
-//                DTNHost node = it2.next();
-//                PeopleRankDurationEngine1 prde = getDecisionRouterFrom(node);
-//                prde.setPeopleRank(0.5);
 //            }
 //        }
 //    }
@@ -296,16 +286,16 @@
 //        if (!getNeighbors(thisHost).contains(otherHost)) return false;
 //        if (m.getTo().equals(otherHost)) return true;
 //
-//        PeopleRankDurationEngine1 prde = getDecisionRouterFrom(otherHost);
+//        PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(otherHost);
 //        return prde.getPeopleRank() >= peopleRank;
 //    }
 //
-//    private PeopleRankDurationEngine1 getDecisionRouterFrom(DTNHost h) {
+//    private PeopleRankDurationEngineTuple getDecisionRouterFrom(DTNHost h) {
 //        MessageRouter otherRouter = h.getRouter();
 //        if (otherRouter instanceof DecisionEngineRouter) {
 //            RoutingDecisionEngine engine = ((DecisionEngineRouter) otherRouter).getDecisionEngine();
-//            if (engine instanceof PeopleRankDurationEngine1) {
-//                return (PeopleRankDurationEngine1) engine;
+//            if (engine instanceof PeopleRankDurationEngineTuple) {
+//                return (PeopleRankDurationEngineTuple) engine;
 //            } else {
 //                throw new IllegalStateException("DecisionEngine is not PeopleRankDurationEngine!");
 //            }
@@ -364,7 +354,7 @@
 //
 //    @Override
 //    public RoutingDecisionEngine replicate() {
-//        return new PeopleRankDurationEngine1(this);
+//        return new PeopleRankDurationEngineTuple(this);
 //    }
 //
 //    @Override
@@ -379,7 +369,7 @@
 //
 //        while (it.hasNext()) {
 //            DTNHost node = it.next();
-//            PeopleRankDurationEngine1 prde = getDecisionRouterFrom(node);
+//            PeopleRankDurationEngineTuple prde = getDecisionRouterFrom(node);
 //            double rank = prde.getPeopleRank();
 //            ranks.put(node, rank);
 //        }

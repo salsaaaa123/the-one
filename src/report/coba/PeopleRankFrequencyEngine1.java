@@ -2,32 +2,32 @@
 // * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
 // */
 //
-//package routing.coba;
+///*
+// * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+// */
 //
-//import core.Connection;
-//import core.DTNHost;
-//import core.Message;
-//import core.Settings;
-//import core.SimClock;
-//import java.util.*;
+//package report.coba;
+//
+//import core.*;
 //import routing.DecisionEngineRouter;
 //import routing.MessageRouter;
 //import routing.RoutingDecisionEngine;
 //import routing.peoplerank.NodeRanking;
 //import routing.peoplerank.SocialInteraction;
 //
-//public class PeopleRankCombinedEngine implements RoutingDecisionEngine, NodeRanking {
+//import java.util.*;
 //
-//    public static final String PEOPLERANK_NS = "PeopleRankCombinedEngine";
+//public class PeopleRankFrequencyEngine1 implements RoutingDecisionEngine, NodeRanking {
+//
+//    public static final String PEOPLERANK_NS = "PeopleRankFrequencyEngine";
 //    public static final String DAMPING = "dampingFactor";
 //    public static final String FREQUENCY_THRESHOLD = "frequencyThreshold";
-//    public static final String DURATION_THRESHOLD = "durationThreshold";
+//    private static final double DEFAULT_PEOPLE_RANK = 0.0;
 //
-//    private static final double DEFAULT_PEOPLE_RANK = 1.0;
+//    private double previousPeopleRank;
 //    protected double dampingFactor;
 //    protected double peopleRank;
 //    protected int frequencyThreshold;
-//    protected double durationThreshold;
 //
 //    protected Map<DTNHost, Double> startTime;
 //    protected Map<DTNHost, SocialInteraction> socialInteractions;
@@ -35,7 +35,7 @@
 //    protected List<Message> messageBuffer;
 //    protected Set<DTNHost> socialGraph;
 //
-//    public PeopleRankCombinedEngine(Settings s) {
+//    public PeopleRankFrequencyEngine1(Settings s) {
 //        Settings prSettings = new Settings(PEOPLERANK_NS);
 //
 //        if (prSettings.contains(DAMPING)) {
@@ -50,82 +50,66 @@
 //            frequencyThreshold = 3;
 //        }
 //
-//        if (prSettings.contains(DURATION_THRESHOLD)) {
-//            durationThreshold = prSettings.getDouble(DURATION_THRESHOLD);
-//        } else {
-//            durationThreshold = 60.0;
-//        }
-//
 //        startTime = new HashMap<DTNHost, Double>();
 //        socialInteractions = new HashMap<DTNHost, SocialInteraction>();
 //        peerInfo = new HashMap<DTNHost, PeopleRankInfo>();
 //        messageBuffer = new ArrayList<Message>();
 //        socialGraph = new HashSet<DTNHost>();
 //
-//        this.peopleRank = DEFAULT_PEOPLE_RANK;
+//        peopleRank = DEFAULT_PEOPLE_RANK;
+//        previousPeopleRank = DEFAULT_PEOPLE_RANK;
 //
 //        System.out.println("Frequency Threshold: " + frequencyThreshold);
-//        System.out.println("Duration Threshold: " + durationThreshold);
 //    }
 //
-//    public PeopleRankCombinedEngine(PeopleRankCombinedEngine proto) {
-//        this.dampingFactor = proto.dampingFactor;
-//        this.frequencyThreshold = proto.frequencyThreshold;
-//        this.durationThreshold = proto.durationThreshold;
-//        this.peopleRank = proto.peopleRank;
+//    public PeopleRankFrequencyEngine1(PeopleRankFrequencyEngine1 proto) {
+//        dampingFactor = proto.dampingFactor;
+//        frequencyThreshold = proto.frequencyThreshold;
+//        peopleRank = proto.peopleRank;
+//        previousPeopleRank = proto.previousPeopleRank;
 //
 //        startTime = new HashMap<DTNHost, Double>();
-//        socialInteractions = new HashMap<DTNHost, SocialInteraction>();
-//        peerInfo = new HashMap<DTNHost, PeopleRankInfo>();
+//        socialInteractions = new HashMap<DTNHost, SocialInteraction>(proto.socialInteractions);
+//        peerInfo = new HashMap<DTNHost, PeopleRankInfo>(proto.peerInfo);
 //        messageBuffer = new ArrayList<Message>();
 //        socialGraph = new HashSet<DTNHost>(proto.socialGraph);
 //    }
 //
 //    @Override
 //    public void connectionUp(DTNHost thisHost, DTNHost peer) {
-//        if (!startTime.containsKey(peer)) {
-//            startTime.put(peer,  Double.valueOf(SimClock.getTime()));
-//        }
-//    }
+//        double start = SimClock.getTime();
 //
+//        SocialInteraction interaction = socialInteractions.get(peer);
+//        if (interaction == null) {
+//            interaction = new SocialInteraction();
+//            socialInteractions.put(peer, interaction);
+//        }
+//
+//        startTime.put(peer, start);
+//    }
 //
 //    @Override
 //    public void connectionDown(DTNHost thisHost, DTNHost peer) {
-//        Double startObj = startTime.remove(peer); // remove sekaligus ambil
 //        double end = SimClock.getTime();
-//        double start;
+//        double start = check(peer);
 //
-//        if (startObj != null) {
-//            start = startObj.doubleValue();
-//        } else {
-//            start = end; // fallback: anggap durasi = 0 jika tidak ada start
+//        if (start > 0) {
+//            SocialInteraction interaction = socialInteractions.get(peer);
+//            if (interaction != null) {
+//                interaction.addInteraction(start, end);
+//            }
 //        }
 //
-//        SocialInteraction interaction;
-//        if (socialInteractions.containsKey(peer)) {
-//            interaction = socialInteractions.get(peer);
-//        } else {
-//            interaction = new SocialInteraction();
-//        }
-//
-//        interaction.addInteraction(start, end);
-//        socialInteractions.put(peer, interaction);
-//
+//        startTime.remove(peer);
 //        updateSocialGraph(thisHost, peer);
 //        processMessageBuffer(thisHost, peer);
 //    }
 //
-//
 //    private void updateSocialGraph(DTNHost thisHost, DTNHost peer) {
-//        if (!socialInteractions.containsKey(peer)) {
-//            return;
-//        }
-//
 //        SocialInteraction interaction = socialInteractions.get(peer);
-//        boolean meetsFrequency = interaction.getFrequency() >= frequencyThreshold;
-//        boolean meetsDuration = interaction.getTotalDuration() >= durationThreshold;
+//        int frequency = (interaction != null) ? interaction.getFrequency() : 0;
 //
-//        if (meetsFrequency || meetsDuration) {
+//        if (frequency >= frequencyThreshold) {
 //            socialGraph.add(peer);
 //            socialGraph.add(thisHost);
 //        } else {
@@ -137,24 +121,37 @@
 //    @Override
 //    public void doExchangeForNewConnection(Connection con, DTNHost peer) {
 //        DTNHost myHost = con.getOtherNode(peer);
+//        double currentPeopleRank = getPeopleRank();
 //
-//        PeopleRankInfo myInfo = new PeopleRankInfo(getPeopleRank(), getNeighborCount());
-//        send(myHost, peer, myInfo);
+//        double diff = currentPeopleRank - previousPeopleRank;
+//        if (diff < 0) {
+//            diff = -diff;
+//        }
 //
-//        PeopleRankInfo receivedInfo = receive(peer);
-//        peerInfo.put(peer, receivedInfo);
+//        if (diff > 0.01) {
+//            PeopleRankInfo data = new PeopleRankInfo(currentPeopleRank, getNeighborCount());
+//            send(myHost, peer, data);
+//            previousPeopleRank = currentPeopleRank;
+//        }
+//
+//        PeopleRankInfo peerData = receive(peer);
+//        this.peerInfo.put(peer, peerData);
 //
 //        updateSocialGraph(myHost, peer);
 //    }
 //
+//
 //    private void send(DTNHost myHost, DTNHost peer, PeopleRankInfo information) {
-//        PeopleRankCombinedEngine prde = getDecisionRouterFrom(peer);
+//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(peer);
 //        prde.peerInfo.put(myHost, information);
 //    }
 //
 //    private PeopleRankInfo receive(DTNHost peer) {
-//        PeopleRankCombinedEngine prde = getDecisionRouterFrom(peer);
-//        return new PeopleRankInfo(prde.getPeopleRank(), prde.getNeighborCount());
+//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(peer);
+//        double peerRank = prde.getPeopleRank();
+//        int peerFriends = prde.getNeighborCount();
+//
+//        return new PeopleRankInfo(peerRank, peerFriends);
 //    }
 //
 //    @Override
@@ -165,20 +162,21 @@
 //    public void updatePeopleRank(DTNHost myHost) {
 //        double sigma = 0.0;
 //
-//        Iterator<DTNHost> iter = socialGraph.iterator();
-//        while (iter.hasNext()) {
-//            DTNHost neighbor = iter.next();
+//        Iterator<DTNHost> it = socialGraph.iterator();
+//        while (it.hasNext()) {
+//            DTNHost neighbor = it.next();
+//
 //            if (neighbor == myHost) {
 //                continue;
 //            }
 //
-//            PeopleRankInfo neighborInfo = peerInfo.get(neighbor);
-//            if (neighborInfo != null) {
-//                sigma += neighborInfo.peopleRank / ((double) neighborInfo.neighborCount);
+//            if (peerInfo.containsKey(neighbor)) {
+//                PeopleRankInfo neighborInfo = peerInfo.get(neighbor);
+//                sigma += neighborInfo.peopleRank / (double) neighborInfo.neighborCount;
 //            }
 //        }
 //
-//        this.peopleRank = (1.0 - dampingFactor) + dampingFactor * sigma;
+//        peopleRank = (1 - dampingFactor) + dampingFactor * sigma;
 //    }
 //
 //    @Override
@@ -192,31 +190,39 @@
 //
 //    @Override
 //    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-//        if (!socialGraph.contains(otherHost) && !m.getTo().equals(otherHost)) {
-//            return false;
-//        }
-//
-//        double otherRank = getDecisionRouterFrom(otherHost).getPeopleRank();
-//        if (otherRank >= this.peopleRank || m.getTo().equals(otherHost)) {
+//        if (m.getTo().equals(otherHost)) {
 //            return true;
 //        }
 //
-//        return false;
+//        if (!socialGraph.contains(otherHost)) {
+//            return false;
+//        }
+//
+//        PeopleRankFrequencyEngine1 prde = getDecisionRouterFrom(otherHost);
+//        double otherHostRank = prde.getPeopleRank();
+//
+//        return otherHostRank >= peopleRank;
 //    }
 //
-//    private PeopleRankCombinedEngine getDecisionRouterFrom(DTNHost h) {
-//        MessageRouter router = h.getRouter();
-//        if (router instanceof DecisionEngineRouter) {
-//            return (PeopleRankCombinedEngine) ((DecisionEngineRouter) router).getDecisionEngine();
+//    public PeopleRankFrequencyEngine1 getDecisionRouterFrom(DTNHost h) {
+//        MessageRouter otherRouter = h.getRouter();
+//        if (otherRouter instanceof DecisionEngineRouter) {
+//            RoutingDecisionEngine engine = ((DecisionEngineRouter) otherRouter).getDecisionEngine();
+//            if (engine instanceof PeopleRankFrequencyEngine1) {
+//                return (PeopleRankFrequencyEngine1) engine;
+//            } else {
+//                throw new IllegalStateException("DecisionEngine is not an instance of PeopleRankFrequencyEngine!");
+//            }
+//        } else {
+//            throw new IllegalStateException("Router is not a DecisionEngineRouter!");
 //        }
-//        throw new IllegalStateException("Router tidak valid atau tidak ditemukan!");
 //    }
 //
 //    private double check(DTNHost peer) {
 //        if (startTime.containsKey(peer)) {
-//            return startTime.get(peer).doubleValue();
+//            return startTime.get(peer);
 //        }
-//        return 0.0;
+//        return 0;
 //    }
 //
 //    @Override
@@ -247,7 +253,6 @@
 //
 //    private void processMessageBuffer(DTNHost thisHost, DTNHost peer) {
 //        List<Message> toRemove = new ArrayList<Message>();
-//
 //        for (int i = 0; i < messageBuffer.size(); i++) {
 //            Message m = messageBuffer.get(i);
 //            if (shouldSendMessageToHost(m, peer, thisHost)) {
@@ -255,7 +260,6 @@
 //                toRemove.add(m);
 //            }
 //        }
-//
 //        messageBuffer.removeAll(toRemove);
 //    }
 //
@@ -270,7 +274,7 @@
 //
 //    @Override
 //    public RoutingDecisionEngine replicate() {
-//        return new PeopleRankCombinedEngine(this);
+//        return new PeopleRankFrequencyEngine1(this);
 //    }
 //
 //    @Override
@@ -278,7 +282,12 @@
 //        if (otherNode == null) {
 //            return true;
 //        }
-//        return this.peopleRank > otherNode.getPeopleRank();
+//        return getPeopleRank() > otherNode.getPeopleRank();
+//    }
+//
+//    @Override
+//    public Map<DTNHost, Double> getAllRank() {
+//        return Map.of();
 //    }
 //
 //    private static class PeopleRankInfo implements java.io.Serializable {
