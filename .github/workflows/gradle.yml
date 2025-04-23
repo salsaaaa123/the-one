@@ -9,9 +9,9 @@ name: the one
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "15-develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "15-develop" ]
 
 jobs:
   build:
