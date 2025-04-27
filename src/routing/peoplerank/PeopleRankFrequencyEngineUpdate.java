@@ -2,15 +2,16 @@
  * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
  */
 
-package routing.rank;
+/*
+ * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+ */
+
+package routing.peoplerank;
 
 import core.*;
 import routing.DecisionEngineRouter;
 import routing.MessageRouter;
 import routing.RoutingDecisionEngine;
-import routing.peoplerank.NodeRanking;
-import routing.peoplerank.PeopleRankInfo;
-import routing.peoplerank.SocialInteraction;
 
 import java.util.*;
 
