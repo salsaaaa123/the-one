@@ -6,6 +6,7 @@
  */
 package routing.community;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -134,9 +135,15 @@ public class SWindowCentrality implements Centrality
 		this.lastLocalComputationTime = SimClock.getIntTime();
 		return this.localCentrality = centrality;
 	}
-
 	public Centrality replicate()
 	{
 		return new SWindowCentrality(this);
 	}
+
+	@Override
+	public double[] getGlobalCentralityHistory(Map<DTNHost, List<Duration>> connHistory, int interval) {
+		return new double[0];
+	}
+
+
 }

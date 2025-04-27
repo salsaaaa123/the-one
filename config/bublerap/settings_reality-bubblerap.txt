@@ -1,7 +1,7 @@
 # Konfigurasi Optimal untuk Mempelajari Karakteristik PeopleRank
 
 ## Pengaturan Skenario
-Scenario.name = DistributedPeopleRankSimulation_RandomMovement
+Scenario.name = BubleRapSimulation_RandomMovement
 # Aktifkan simulasi koneksi (penting untuk DTN)
 Scenario.simulateConnections = true
 # Interval pembaruan simulasi (semakin kecil, semakin akurat, tetapi semakin lambat)
@@ -24,9 +24,10 @@ Scenario.nrofHostGroups = 1
 # Pengaturan umum untuk grup host
 # Model pergerakan: Random Waypoint (sederhana dan umum)
 Group.movementModel = RandomWaypoint
-# Router: ActiveRouter (gunakan ActiveRouter sebagai dasar)
-Group.router = activerouter.PeopleRankActiveRouter
-# Ukuran buffer pesan (bytes) - 100MB (cukup besar untuk menampung banyak pesan)
+# Router: DecisionEngineRouter (memungkinkan penggunaan DecisionEngine)
+Group.router = DecisionEngineRouter
+# Ukuran buffer pesan (bytes) - 50MB (cukup besar untuk menampung banyak pesan)
+#Group.bufferSize = 50M
 Group.bufferSize = 100M
 
 # Waktu tunggu (detik) setelah mencapai tujuan (acak antara min dan max)
@@ -42,10 +43,13 @@ Group.msgTtl = 600
 # Jumlah host dalam grup
 Group.nrofHosts = 100
 
-# Pengaturan khusus untuk PeopleRankActiveRouter
-PeopleRankActiveRouter.dampingFactor = 0.85
-PeopleRankActiveRouter.durationThreshold = 70.0
-#PeopleRankActiveRouter.rankUpdateInterval = 60.0 ; #Hapus ini karena kita sudah tidak memakainya
+DecisionEngineRouter.decisionEngine = community.DistributedBubbleRap_UTS
+DecisionEngineRouter.communityDetectAlg = routing.community.KCliqueCommunityDetection
+DecisionEngineRouter.K = 5
+DecisionEngineRouter.familiarThreshold = 700
+DecisionEngineRouter.centralityAlg = routing.community.SWindowCentrality
+
+
 
 # Pengaturan khusus untuk Grup 1 (satu-satunya grup)
 # ID grup (dapat digunakan untuk membedakan grup dalam laporan)
@@ -73,14 +77,13 @@ MovementModel.warmup = 1000
 
 ## Pengaturan Laporan
 # Jumlah laporan yang dihasilkan
-Report.nrofReports = 1
+Report.nrofReports = 3
 # Direktori tempat laporan disimpan
-Report.reportDir = reports/PeopleRank/activeroututerDuration
+Report.reportDir = reports/Reality/uts
 # Waktu pemanasan untuk laporan (data sebelum waktu ini tidak disertakan)
 Report.warmup = 1000
 # Laporan yang akan dihasilkan
 Report.report1 = MessageStatsReport
-#Report.report2 = ContactHistoryReport #Tambahkan Report
+Report.report2 = CommunityDetectionReport
+Report.report3 = utsReport
 
-#ContactHistoryReport.interval = 10
-#ContactHistoryReport.writeDelay = false

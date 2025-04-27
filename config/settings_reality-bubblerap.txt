@@ -38,12 +38,12 @@ Group1.groupID = p
 # DECISION ENGINE ROUTER CONFIGURATION
 ##########################################################################################
 
-DecisionEngineRouter.decisionEngine = community.DistributedBubbleRapUTS
+DecisionEngineRouter.decisionEngine = community.DistributedBubbleRap
 DecisionEngineRouter.communityDetectAlg = routing.community.KCliqueCommunityDetection
 DecisionEngineRouter.K = 5
 DecisionEngineRouter.familiarThreshold = 700
 DecisionEngineRouter.centralityAlg = routing.community.CWindowCentrality
-CWindowCentrality.timeWindow = 86400
+DecisionEngineRouter.timeWindow = 86400
 
 # "Bluetooth" interface for all nodes
 btInterface.type = SimpleBroadcastInterface
@@ -59,7 +59,7 @@ Events.nrof = 2
 
 ## Event 1
 Events1.class = ExternalEventsQueue
-Events1.filePath = /home/endos/Documents/IntelijIdea/the-one/ee/RealityConnectionTraceFinal.txt
+Events1.filePath = ./data/Reality/RealityConnectionTraceFinal.txt
 Events1.interval = 25,35
 Events1.size = 500k,1M
 Events1.hosts = 0,99
@@ -91,16 +91,22 @@ MapBasedMovement.mapFile4 = data/shops.wkt
 ### Report Settings
 ##########################################################################################
 
-Report.nrofReports = 2
+Report.nrofReports = 5
 Report.warmup = 1
-Report.reportDir = reports/Reality/UTS-1
+Report.reportDir = reports/Reality
 
 # Report classes
 
 Report.report1 = MessageStatsReport
-Report.report2 = BubleRapIntervalReport
+Report.report2 = ContactTimesReport
+Report.report3 = PeriodicStatsReporter
+Report.report4 = CommunityDetectionReport
+# Report.report5 = PeriodicCommunityReporter
+Report.report5 = PeriodicCommunityUniquesReporter
 
 ##########################################################################################
 # REPORT SPECIFIC SETTINGS
 ##########################################################################################
 
+PeriodicStatsReporter.updateInterval = 1000
+PeriodicCommunityReporter.updateInterval = 2000

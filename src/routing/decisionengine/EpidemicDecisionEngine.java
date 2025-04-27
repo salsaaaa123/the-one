@@ -125,6 +125,11 @@ public class EpidemicDecisionEngine implements RoutingDecisionEngine {
 		return !otherHost.getRouter().hasMessage(m.getId()); // Kirim hanya jika host lain belum memiliki pesan ini
 	}
 
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+		return false;
+	}
+
 	/**
 	 * Dipanggil setelah pesan berhasil dikirim ke peer, untuk menentukan apakah pesan tersebut sekarang harus dihapus dari penyimpanan pesan.
 	 * <p>

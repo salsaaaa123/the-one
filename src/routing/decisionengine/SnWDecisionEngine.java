@@ -182,6 +182,11 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
         return shouldSend; // Ok,sekarang kembalikan dong nilaiNya saya mau kirim nih
     }
 
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
+    }
+
     /**
      * @param m         Pesan yang telah berhasil dikirim.
      * @param otherHost Host peer (host lain) yang menerima pesan.

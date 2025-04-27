@@ -166,6 +166,11 @@ public class LABELDecisionEngine
 		return de.commumesWithHost(dest);
 	}
 
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+		return shouldSendMessageToHost(m, otherHost);
+	}
+
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
 	{
 		return !this.commumesWithHost(m.getTo());
@@ -200,9 +205,6 @@ public class LABELDecisionEngine
 		return (LABELDecisionEngine) ((DecisionEngineRouter)otherRouter)
 						.getDecisionEngine();
 	}
-
-	public Set<DTNHost> getLocalCommunity()
-	{
-		return this.community.getLocalCommunity();
+	public Set<DTNHost> getLocalCommunity() {return this.community.getLocalCommunity();
 	}
 }

@@ -4,7 +4,7 @@ plugins {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(23))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 application {
@@ -41,14 +41,19 @@ tasks.named<JavaExec>("run") {
 
     classpath = sourceSets.main.get().runtimeClasspath  // Pakai classpath yang benar dari Gradle
 
-//    args = listOf("-b","1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
+    args = listOf("-b","1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/Epidemic/EpidemicDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/SprayAndWait/SprayAndWaitDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/Prophet/ProphetDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusDecisionEngineDuration_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusDecisionEngineDuration_human_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusRouterRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/SprayAndFocus/SprayAndFocusRouterHuman_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/test1.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/PeopleRank/test.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/DistributedPeopleRank_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
-    args = listOf("-b","1", "config/bublerap/bublerap_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/bublerap/bublerap_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/bublerap/settings_reality-bubblerap.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/PeopleRankDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 
 }

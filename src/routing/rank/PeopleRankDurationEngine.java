@@ -300,6 +300,11 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         return prde.getPeopleRank() >= peopleRank;
     }
 
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
+    }
+
     private PeopleRankDurationEngine getDecisionRouterFrom(DTNHost h) {
         MessageRouter otherRouter = h.getRouter();
         if (otherRouter instanceof DecisionEngineRouter) {

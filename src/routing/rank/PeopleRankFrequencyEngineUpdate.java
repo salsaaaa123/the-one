@@ -196,6 +196,11 @@ public class PeopleRankFrequencyEngineUpdate implements RoutingDecisionEngine, N
         return otherHostRank >= peopleRank;
     }
 
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
+    }
+
     public PeopleRankFrequencyEngineUpdate getDecisionRouterFrom(DTNHost h) {
         MessageRouter otherRouter = h.getRouter();
         if (otherRouter instanceof DecisionEngineRouter) {

@@ -227,6 +227,11 @@ public class SprayAndWaitDecisionEngine_Test implements RoutingDecisionEngine {
 
         return shouldSend; // Kembalikan nilai shouldSend
     }
+
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
+    }
     /* Maksud: Method ini menentukan apakah pesan harus dikirim ke host lain atau tidak.
        Dalam strategi Spray and Wait, pesan hanya dikirim jika perangkat memiliki lebih
        dari satu salinan pesan. Ini adalah bagian dari fase "Spray" dalam strategi ini. */

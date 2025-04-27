@@ -229,4 +229,10 @@ public class AvgDegreeCentrality implements Centrality
 		return new AvgDegreeCentrality(this);
 	}
 
+	@Override
+	public double[] getGlobalCentralityHistory(Map<DTNHost, List<Duration>> connHistory, int interval) {
+		return new double[0];
+	}
+
+
 }

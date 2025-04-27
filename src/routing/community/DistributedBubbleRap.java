@@ -54,8 +54,7 @@ import routing.RoutingDecisionEngine;
  *
  * @author PJ Dillon, University of Pittsburgh
  */
-public class DistributedBubbleRap
-        implements RoutingDecisionEngine, CommunityDetectionEngine {
+public class DistributedBubbleRap implements RoutingDecisionEngine, CommunityDetectionEngine {
     /**
      * Community Detection Algorithm to employ -setting id {@value}
      */
@@ -64,6 +63,7 @@ public class DistributedBubbleRap
      * Centrality Computation Algorithm to employ -setting id {@value}
      */
     public static final String CENTRALITY_ALG_SETTING = "centralityAlg";
+
 
     protected Map<DTNHost, Double> startTimestamps;
     protected Map<DTNHost, List<Duration>> connHistory;
@@ -94,6 +94,7 @@ public class DistributedBubbleRap
 
 
         startTimestamps = new HashMap<DTNHost, Double>();
+        connHistory = new HashMap<DTNHost, List<Duration>>();
 
 
     }
@@ -139,9 +140,44 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
         this.community.newConnection(myHost, peer, de.community);
     }
 
+    public void connectionDown(DTNHost thisHost, DTNHost peer) {
+        Double time = startTimestamps.get(peer);
+        if (time == null) {
+            return;
+        }
+        double etime = SimClock.getTime();
+
+        // Find or create the connection history list
+        List<Duration> history;
+        if (!connHistory.containsKey(peer)) {
+            history = new LinkedList<Duration>();
+            connHistory.put(peer, history);
+        } else
+            history = connHistory.get(peer);
+
+        // add this connection to the list
+        if (etime - time > 0)
+            history.add(new Duration(time, etime));
+
+        CommunityDetection peerCD = this.getOtherDecisionEngine(peer).community;
+
+        // inform the community detection object that a connection was lost.
+        // The object might need the whole connection history at this point.
+        community.connectionLost(thisHost, peer, peerCD, history);
+
+        startTimestamps.remove(peer);
+    }
+
 //    public void connectionDown(DTNHost thisHost, DTNHost peer) {
-//        double time = startTimestamps.get(peer);
-////        Double time = startTimestamps.get(peer).doubleValue();
+//        Double timeObj = startTimestamps.get(peer); // Get the Double object
+//
+//        if (timeObj == null) {
+//
+//    //System.err.println("Error: Connection down called before connection up for peer " + peer.getAddress());
+//            return; // Atau lakukan tindakan penanganan kesalahan lain yang sesuai
+//        }
+//
+//        double time = timeObj.doubleValue(); // Unbox to double
 //        double etime = SimClock.getTime();
 //
 //        // Find or create the connection history list
@@ -165,38 +201,6 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
 //        startTimestamps.remove(peer);
 //    }
 
-public void connectionDown(DTNHost thisHost, DTNHost peer) {
-    Double timeObj = startTimestamps.get(peer); // Get the Double object
-
-    if (timeObj == null) {
-//        System.err.println("Error: Connection down called before connection up for peer " + peer.getAddress());
-        return; // Atau lakukan tindakan penanganan kesalahan lain yang sesuai
-    }
-
-    double time = timeObj.doubleValue(); // Unbox to double
-    double etime = SimClock.getTime();
-
-    // Find or create the connection history list
-    List<Duration> history;
-    if (!connHistory.containsKey(peer)) {
-        history = new LinkedList<Duration>();
-        connHistory.put(peer, history);
-    } else
-        history = connHistory.get(peer);
-
-    // add this connection to the list
-    if (etime - time > 0)
-        history.add(new Duration(time, etime));
-
-    CommunityDetection peerCD = this.getOtherDecisionEngine(peer).community;
-
-    // inform the community detection object that a connection was lost.
-    // The object might need the whole connection history at this point.
-    community.connectionLost(thisHost, peer, peerCD, history);
-
-    startTimestamps.remove(peer);
-}
-
     public boolean newMessage(Message m) {
         return true; // Always keep and attempt to forward a created message
     }
@@ -211,8 +215,9 @@ public void connectionDown(DTNHost thisHost, DTNHost peer) {
 
     @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-        return false;
+        return shouldSendMessageToHost(m, otherHost);
     }
+
 
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
         if (m.getTo() == otherHost) return true; // trivial to deliver to final dest
@@ -286,15 +291,27 @@ public void connectionDown(DTNHost thisHost, DTNHost peer) {
         return this.centrality.getGlobalCentrality(connHistory);
     }
 
-    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h) {
+    //    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h) {
+//        MessageRouter otherRouter = h.getRouter();
+//        assert otherRouter instanceof DecisionEngineRouter : "This router only works " +
+//                " with other routers of same type";
+//
+//        return (DistributedBubbleRap) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
+//    }
+    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h)
+    {
         MessageRouter otherRouter = h.getRouter();
         assert otherRouter instanceof DecisionEngineRouter : "This router only works " +
                 " with other routers of same type";
 
-        return (DistributedBubbleRap) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
+        return (DistributedBubbleRap) ((DecisionEngineRouter)otherRouter).getDecisionEngine();
     }
 
     public Set<DTNHost> getLocalCommunity() {
         return this.community.getLocalCommunity();
     }
+
+
+
+
 }

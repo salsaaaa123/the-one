@@ -271,6 +271,10 @@ public class SnFDecisionEngine implements RoutingDecisionEngine
 		return (peerLastSeen > myLastSeen + transitivityTimerThreshold);
 	}
 
+	@Override
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+		return false;
+	}
 
 
 	/**

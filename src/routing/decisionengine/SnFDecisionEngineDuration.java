@@ -6,17 +6,9 @@ import routing.MessageRouter;
 import routing.RoutingDecisionEngine;
 import routing.community.Duration;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-/**
- * An implementation of the Spray and Focus Routing protocol using the
- * Decision Engine framework.
- *
- * @author PJ Dillon, University of Pittsburgh
- * <p>
+/*
  * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
  */
 public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
@@ -52,7 +44,6 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
             transitivityTimerThreshold = defaultTransitivityThreshold;
 
         connHistory = new HashMap<DTNHost, List<Duration>>();
-
         startTimestamps = new HashMap<DTNHost, Double>();
     }
 
@@ -65,12 +56,39 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
 
     @Override
     public void connectionUp(DTNHost thisHost, DTNHost peer) {
-
+        // Catat waktu mulai koneksi
+//        double currentTime = SimClock.getTime();
+//        startTimestamps.put(peer, currentTime);
     }
 
     @Override
     public void connectionDown(DTNHost thisHost, DTNHost peer) {
+        // Pastikan waktu mulai koneksi ada
+        if (!startTimestamps.containsKey(peer)) {
+            System.err.println("Error: No start time found for peer " + peer +
+                    ", cannot record connection duration");
+            return; // Keluar dari method jika tidak ada waktu mulai
+        }
 
+        double time = startTimestamps.get(peer);
+        double etime = SimClock.getTime();
+
+        // Find or create the connection history list
+        List<Duration> history;
+        if (!connHistory.containsKey(peer)) {
+            history = new LinkedList<Duration>();
+            connHistory.put(peer, history);
+        } else {
+            history = connHistory.get(peer);
+        }
+
+        // add this connection to the list
+        if (etime - time > 0) {
+            history.add(new Duration(time, etime));
+        }
+
+        // Hapus start time karena koneksi sudah putus
+        startTimestamps.remove(peer);
     }
 
     @Override
@@ -83,16 +101,71 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         startTimestamps.put(peer, currentTime);
         de.startTimestamps.put(myHost, currentTime);
 
-        // Update informasi encounter
-        updateEncounter(myHost, peer, con);
-        de.updateEncounter(peer, myHost, con);
+        DecisionEngineRouter myRouter = (DecisionEngineRouter) myHost.getRouter();
+        List<Message> messages = new ArrayList<>(myRouter.getMessageCollection());
 
+        DTNHost destination = null;
+        for (Message msg : messages) {
+            if (msg.getTo().equals(peer)) { // Jika pesan ini akan dikirim ke peer
+                destination = msg.getTo();
+                break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
+            }
+            if (msg.getFrom().equals(peer)) { // Jika pesan ini akan dikirim ke peer
+                destination = msg.getTo();
+                break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
+            }
+        }
+        if(destination == null){
+            return;
+        }
+        Double connectionStartTime = startTimestamps.get(peer);
+        if (connectionStartTime == null) {
+            // Jika tidak ada waktu mulai, mungkin ada kesalahan
+            System.err.println("Error: No start time found for peer " + peer);
+            return;
+        }
+        Double connectionEndTime = currentTime;
+        Duration connectionDuration = new Duration(connectionStartTime, connectionEndTime);
+
+        if(connHistory.get(destination) == null){
+            connHistory.put(destination, new ArrayList<Duration>());
+        }
+
+        connHistory.get(destination).add(connectionDuration);
+
+        DecisionEngineRouter peerRouter = (DecisionEngineRouter) peer.getRouter();
+        List<Message> messagesPeer = new ArrayList<>(peerRouter.getMessageCollection());
+        DTNHost destinationPeer = null;
+
+        for (Message msg : messagesPeer) {
+            if (msg.getTo().equals(myHost)) { // Jika pesan ini akan dikirim ke peer
+                destinationPeer = msg.getTo();
+                break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
+            }
+            if (msg.getFrom().equals(myHost)) { // Jika pesan ini akan dikirim ke peer
+                destinationPeer = msg.getTo();
+                break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
+            }
+        }
+        if(destinationPeer == null){
+            return;
+        }
+        Double connectionStartTimePeer = de.startTimestamps.get(myHost);
+        if (connectionStartTimePeer == null) {
+            // Jika tidak ada waktu mulai, mungkin ada kesalahan
+            System.err.println("Error: No start time found for peer " + myHost);
+            return;
+        }
+
+        Duration connectionDurationPeer = new Duration(connectionStartTimePeer, connectionEndTime);
+        if(de.connHistory.get(destinationPeer) == null){
+            de.connHistory.put(destinationPeer, new ArrayList<Duration>());
+        }
+        de.connHistory.get(destinationPeer).add(connectionDurationPeer);
     }
 
     private void updateEncounter(DTNHost myHost, DTNHost peer, Connection con) {
-        DTNHost destination = null; // Gantilah dengan cara yang benar untuk mendapatkan tujuan pesan
-        // Misalnya, jika Anda memiliki cara untuk mengakses pesan yang sedang dalam proses:
-        // destination = getCurrentMessage().getTo();
+        DTNHost destination = null;
 
         if (destination == null) {
             // Jika tidak ada pesan yang terkait, jangan lakukan apa-apa
@@ -191,6 +264,11 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
 
         // 7. Forward jika otherHost memiliki Average Intercontact Time yang lebih kecil (Focus Phase)
         return otherAvgIntercontactTime < myAvgIntercontactTime;
+    }
+
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
     }
 
     @Override

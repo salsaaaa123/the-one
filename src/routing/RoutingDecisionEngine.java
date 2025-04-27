@@ -124,6 +124,17 @@ public interface RoutingDecisionEngine {
 	 *         `false` jika tidak.
 	 */
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost);
+	/**
+	 * Called to determine if the given Message should be sent to the given host.
+	 * This method will often be called multiple times in succession as the
+	 * DecisionEngineRouter loops through its respective Message or Connection
+	 * Collections.
+	 *
+	 * @param m Message to possibly sent
+	 * @param otherHost peer to potentially send the message to.
+	 * @return true if the message should be sent. False otherwise.
+	 */
+	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost);
 
 	/**
 	 * Dipanggil setelah pesan berhasil dikirim ke peer, untuk menentukan apakah pesan
