@@ -73,9 +73,9 @@ public class TotalContactReport extends Report implements ConnectionListener {
 //import core.MessageListener;
 //import core.Settings;
 //import core.UpdateListener;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
+//import java.routing.util.HashMap;
+//import java.routing.util.List;
+//import java.routing.util.Map;
 //
 ///**
 // * TotalContactListener - Menghitung total kontak antar node selama simulasi.

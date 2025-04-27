@@ -1,0 +1,85 @@
+# Setting test for ONE intact Connection Mode
+#Scenario information
+Scenario.name = PeopleRankDecisionEngineReality
+Scenario.simulateConnections = false
+Scenario.updateInterval = 1
+
+Scenario.endTime = 274883
+Report.warmup = 1
+Scenario.nrofHostGroups = 1
+
+#Interfaces informations
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
+btInterface.scanInterval = 120
+
+#Group Information
+## Buffer Size : 200 messages of 10 K ~ 2M
+Group.bufferSize = 20M
+
+## Router
+
+Group.router = DecisionEngineRouter
+#DecisionEngineRouter.decisionEngine = communitypeople.DistributedPeopleRank
+#
+## PeopleRank specific settings
+#DecisionEngineRouter.PeopleRankCentrality.Centrality = communitypeople.PeopleRankCentrality
+#DecisionEngineRouter.DistributedPeopleRank.CommunityDetection = communitypeople.ConnectionDurationCommunity
+#
+#DecisionEngineRouter.PeopleRankCentrality.dumpingFactor = 0.85
+#DecisionEngineRouter.ConnectionDurationCommunity.threshold = 800
+
+## Router
+# Pengaturan DecisionEngineRouter dan PeopleRank
+DecisionEngineRouter.decisionEngine = peoplerank.PeopleRankFrequencyEngine
+PeopleRankFrequencyEngine.dampingFactor = 0.85
+PeopleRankFrequencyEngine.frequencyThreshold = 2
+
+## TTL 24 hours=1440, 1 week= 10080, 3 weeks= 30240
+Group.msgTtl = 30240
+Group.nrofInterfaces = 1
+Group.interface1 = btInterface
+
+#Group1 Information
+Group1.groupID = A
+Group1.waitTime = 10, 30
+Group1.speed = 0.8, 1.4
+Group1.nrofHosts = 97
+Group1.nodeLocation = 10, 10
+Group1.movementModel = StationaryMovement
+
+#How many event generator
+Events.nrof = 2
+
+## Trace information
+Events1.class = ExternalEventsQueue
+Events1.filePath = /home/endos/Documents/IntelijIdea/the-one/ee/RealityConnectionTraceFinal.txt
+## Message creation parameters
+Events2.class = MessageEventGenerator
+Events2.interval = 580, 620
+Events2.size = 10k
+## range of message source/destination address
+Events2.hosts = 0, 96
+Events2.prefix = M
+
+# World's size for Movement Models without implicit size (width, height; meters)
+MovementModel.worldSize = 100, 100
+
+# seed for movement models' pseudo random number generator (default = 0)
+MovementModel.rngSeed = [2; 8372; 98092; 18293; 777]
+
+## Pengaturan Laporan
+# Jumlah laporan yang dihasilkan
+Report.nrofReports = 6
+# Direktori tempat laporan disimpan
+Report.reportDir = reports/DistributedPeopleRank/test1
+# Laporan yang akan dihasilkan
+Report.report1 = MessageStatsReport
+Report.report2 = MessageLatencyPerContactReport
+Report.report3 = MessageOverheadPerContactReport
+Report.report4 = MessagePercentaceDeliveryPerContactReport
+Report.report5 = MessageForwardingPerContactReport
+MessageForwardingPerContactReport.perTotalContact=600
+Report.report6 = AlgorithmicComparisonReport
+AlgorithmicComparisonReport.perTotalContact=600

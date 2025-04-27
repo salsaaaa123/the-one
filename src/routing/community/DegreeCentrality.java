@@ -6,6 +6,7 @@
  */
 package routing.community;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,5 +72,11 @@ public class DegreeCentrality implements Centrality
 	{
 		return new DegreeCentrality(this);
 	}
+
+	@Override
+	public double[] getGlobalCentralityHistory(Map<DTNHost, List<Duration>> connHistory, int interval) {
+		return new double[0];
+	}
+
 
 }

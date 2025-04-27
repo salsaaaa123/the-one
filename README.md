@@ -1,65 +1,65 @@
-<h1 align="center">🚀 The ONE v1.4.1 📡</h1>
-
-<p align="center">The ONE (Opportunistic Network Environment) adalah simulator yang dirancang untuk meneliti dan menganalisis jaringan toleran-delay (DTN). Dengan alat ini, Anda dapat:</p>
-
-<p align="center">
-  🗺️ Menghasilkan jejak mobilitas untuk node dalam simulasi <br>
-  💬 Menjalankan simulasi pertukaran pesan dengan berbagai protokol routing DTN <br>
-  📊 Memvisualisasikan hasil simulasi secara real-time dan menganalisisnya setelah simulasi selesai
-</p>
+<h1 align="center">🚀 The ONE v1.4.1 📡</h1> 
+<p align="center">The ONE (Opportunistic Network Environment) is a simulator designed to research and analyze delay-tolerant networks (DTN). With this tool, you can:</p> <p align="center"> 🗺️ Generate mobility traces for nodes in a simulation <br> 💬 Run message exchange simulations using various DTN routing protocols <br> 📊 Visualize simulation results in real-time and analyze them after the simulation ends </p>
 
 ---
 
-## 📖 Pendahuluan
-Sebelum menggunakan repositori ini, disarankan untuk terlebih dahulu memahami konsep dasar ONE Simulator dengan mencoba repositori latihan berikut:
+## 📖 Introduction
 
-🔗 **Latihan Awal:** [Opportunistic Network Environment](https://github.com/hendrowunga/Opportunistic-Network-Environment.git)
+Before using this repository, it is recommended that you first understand the basic concepts of the ONE Simulator by trying out the following practice repository:
 
-Repositori latihan ini akan membantu Anda memahami dasar-dasar penggunaan ONE Simulator sebelum mulai melakukan analisis dan eksperimen lebih lanjut.
+🔗 **Getting Started:** [Opportunistic Network Environment](https://github.com/hendrowunga/Opportunistic-Network-Environment.git)
 
-Setelah memahami dasar-dasar, Anda dapat mulai melakukan eksperimen dan analisis lebih lanjut dengan membuat laporan hasil simulasi dalam bentuk grafik.
+This practice repository will help you grasp the fundamentals of using the ONE Simulator before proceeding to more advanced analysis and experimentation.
 
-📂 **Laporan Simulasi:** [report](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/src/report)
+Once you understand the basics, you can begin conducting experiments and analyzing simulation results through graphical reports.
 
-📊 **Hasil Analisis & Grafik:** [Algorithmic Comparison](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/discussion/AlgorithmicComparison)
+📂 **Simulation Reports:** [report](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/src/report)
+
+📊 **Analysis & Graphs:** [Algorithmic Comparison](https://github.com/hendrowunga/Opportunistic-Network-Environment/tree/main/discussion/AlgorithmicComparison)
 
 ---
 
 ## 🏁 Quick Start
 
 ### ⚙️ Compiling
+To run the ONE Simulator from source code, you need to compile it using  **Gradle 8.10**. Make sure **Java 23 or newer**  is installed before proceeding.
 
-Untuk menjalankan ONE Simulator dari source code, Anda perlu mengompilasinya menggunakan **Gradle 8.10**. Pastikan **Java 23 atau lebih baru** sudah terinstal sebelum melanjutkan.
-
-#### **Langkah-langkah untuk Linux/macOS:**
+#### **For Linux/macOS:**
+```sh
+  ./gradlew clean build
+```
+or
 ```sh
   ./gradlew build
 ```
 
-#### **Langkah-langkah untuk Windows:**
+
+#### **For Windows:**
+```sh
+  gradlew.bat clean build
+```
+or
 ```sh
   gradlew.bat build
 ```
 
-Jika menggunakan **IntelliJ IDEA**, pastikan untuk menambahkan beberapa JAR library berikut ke dalam build path agar proses kompilasi berjalan dengan lancar:
+If you're using  **IntelliJ IDEA**, be sure to add the following JAR libraries to the build path to ensure successful compilation:
 
-1. Masuk ke: `Project Structure` -> `Dependencies`
-2. Pilih tab simbol `+ ( Add )`
-3. Klik `JARs or Directories`
-4. Tambahkan file berikut dari folder `lib/`:
+1. Go to: `Project Structure` -> `Dependencies`
+2. CLick the `+ ( Add )`
+3. Select `JARs or Directories`
+4. Add the following files from the `lib/` folder:
     - `DTNConsoleConnection.jar`
     - `ECLA.jar`
     - `junit-4.8.2.jar`
     - `uncommons-maths-1.2.1.jar`
-5. Klik "OK"
-
-Setelah langkah ini selesai, **IntelliJ IDEA** seharusnya dapat mengompilasi ONE tanpa kesalahan. ✅
+5. Click "OK"
 
 ---
 
 ### 🏃 Running
 
-ONE dapat dijalankan menggunakan skrip yang telah disediakan dalam repositori ini.
+ONE can be run using the provided scripts in this repository.
 
 #### **Linux/macOS:**
 ```sh
@@ -71,49 +71,48 @@ ONE dapat dijalankan menggunakan skrip yang telah disediakan dalam repositori in
     gradlew.bat run
 ```
 
-Untuk menjalankan simulasi dalam mode batch (tanpa antarmuka grafis):
+To run simulations in batch mode (without a graphical interface):
 ```sh
     ./gradlew run -b 1 default_settings.txt
 ```
 
-**Parameter yang tersedia:**
-- `-b <jumlah>`: Menjalankan simulasi dalam mode batch tanpa GUI.
-- `conf-files`: Nama file konfigurasi yang digunakan dalam simulasi.
+**Available Parameters:**
+- `-b <number>`: Runs the simulation in batch mode without GUI.
+- `conf-files`: The name of the configuration file used in the simulation.
 
 ---
 
 ### 🛠️ Configuring
 
-Simulasi dalam ONE dikendalikan oleh file konfigurasi. File ini adalah file teks biasa dengan format `key = value` yang memungkinkan Anda mengatur parameter simulasi sesuai kebutuhan.
+Simulations in ONE are controlled by configuration files. These are plain text files with `key = value` formatting that allow you to set various simulation parameters.
 
-Contoh pengaturan seed acak:
+Example of setting random seeds:
 ```ini
     MovementModel.rngSeed = [1; 2; 3; 4; 5]
 ```
-Konfigurasi di atas akan menjalankan simulasi dengan 5 seed berbeda untuk variasi skenario simulasi.
+The configuration above will run the simulation with 5 different seeds to vary the simulation scenarios.
 
-Untuk melihat contoh lengkap konfigurasi, lihat file `default_settings.txt` dan `snw_comparison_settings.txt` dalam repositori ini.
+To view complete configuration examples, refer to the `default_settings.txt` and `snw_comparison_settings.txt` files in this repository.
 
 ---
 
 ### 🔢 Run Indexing
 
-Run indexing memungkinkan Anda menjalankan berbagai konfigurasi hanya dengan satu file konfigurasi.
-Misalnya, jika Anda ingin menjalankan simulasi dengan berbagai nilai seed:
+Run indexing allows you to execute multiple configurations from a single configuration file. For example, to run simulations with different seed values:
 ```ini
     MovementModel.rngSeed = [1; 2; 3; 4; 5]
 ```
-Gunakan perintah berikut untuk menjalankan simulasi dalam mode batch:
+Use the following command to run the simulation in batch mode:
 ```sh
     ./gradlew run -b 5 my_config.txt
 ```
-Ini akan menjalankan simulasi secara otomatis dengan setiap nilai seed yang ditentukan.
+This will automatically run the simulation using each seed value specified.
 
 ---
 
 ## 📜 Dependencies
 
-Proyek ini menggunakan dependensi berikut untuk memastikan kelancaran eksekusi simulasi:
+This project uses the following dependencies to ensure smooth simulation execution:
 
 ```gradle
 plugins {
@@ -159,16 +158,18 @@ tasks.named<JavaExec>("run") {
 }
 ```
 
-Pastikan semua dependensi ada di folder `lib/` sebelum menjalankan proyek.
+Make sure all required dependencies are placed inside the `lib/` folder before running the project.
 
 ---
 
 ## 📌 Notes
 
-- Untuk menggunakan proyek ini, pastikan **Java 23 atau lebih baru** sudah terinstal.
-- Jika mengalami masalah saat menjalankan di Windows, jalankan perintah dari **Command Prompt (cmd) sebagai Administrator**.
-- Semua file konfigurasi dapat diedit sesuai kebutuhan untuk menyesuaikan simulasi.
+- Make sure `Java 23 or newer` is installed to use this project.
+
+- If you experience issues on Windows, try running commands from `Command Prompt (cmd) as Administrator`.
+
+- All configuration files can be customized as needed to tailor the simulation.
 
 
-<h1 align="center">🚀 Selamat bereksperimen! 🎉</h1>
+<h1 align="center"> Happy Experimenting! </h1> 
 

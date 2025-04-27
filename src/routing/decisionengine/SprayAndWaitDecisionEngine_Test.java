@@ -1,6 +1,11 @@
-package routing;
+/*
+ * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+ */
+
+package routing.decisionengine;
 
 import core.*; // Mengimpor kelas-kelas inti dari framework simulasi
+import routing.RoutingDecisionEngine;
 
 import java.util.HashMap; // Mengimpor kelas HashMap untuk menyimpan informasi
 import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasangan
@@ -13,9 +18,10 @@ import java.util.Map; // Mengimpor Map, yaitu cara menyimpan informasi berpasang
  * Strategi ini dirancang untuk jaringan yang terputus-putus di mana tidak selalu ada jalur langsung
  * antara sumber dan tujuan.
  * </p>
+ * @author PJ Dillon, University of Pittsburgh (original code)
  * @author Hendrowunga, Sanata Dharma University, Network Laboratory
  */
-public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
+public class SprayAndWaitDecisionEngine_Test implements RoutingDecisionEngine {
 
     /** Identifier untuk pengaturan jumlah salinan awal (nilai = "nrofCopies") */
     public static final String NROF_COPIES = "nrofCopies";
@@ -30,13 +36,13 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
     protected boolean isBinary; // Apakah menggunakan mode biner atau tidak
 
     // Menyimpan waktu pembuatan setiap pesan. Kunci adalah ID pesan, dan nilainya adalah waktu pembuatan.
-//    private final Map<String, Double> messageCreationTimes = new HashMap<>();
+    private final Map<String, Double> messageCreationTimes = new HashMap<>();
 
     /**
      * Konstruktor untuk kelas SprayAndWaitDecisionEngine.
      * @param s Objek Settings yang berisi pengaturan konfigurasi.
      */
-    public SprayAndWaitDecisionEngine(Settings s) {
+    public SprayAndWaitDecisionEngine_Test(Settings s) {
         Settings snwSettings = new Settings(SPRAYANDWAIT_NS); // Membuat objek Settings baru dengan namespace SprayAndWait
 
         // Logika untuk membaca jumlah salinan awal dari pengaturan:
@@ -69,7 +75,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      * Copy constructor.
      * @param r Objek SprayAndWaitDecisionEngine yang akan disalin.
      */
-    protected SprayAndWaitDecisionEngine(SprayAndWaitDecisionEngine r) {
+    protected SprayAndWaitDecisionEngine_Test(SprayAndWaitDecisionEngine_Test r) {
         this.initialNrofCopies = r.initialNrofCopies; // Salin jumlah salinan awal
         this.isBinary = r.isBinary; // Salin mode biner
     }
@@ -130,7 +136,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
            initialNrofCopies. Jika gagal, kode akan mencetak pesan kesalahan dan
            mengembalikan false, yang menandakan bahwa pesan tidak dapat diproses. */
 
-//        messageCreationTimes.put(m.getId(), SimClock.getTime()); // Simpan waktu pembuatan pesan
+        messageCreationTimes.put(m.getId(), SimClock.getTime()); // Simpan waktu pembuatan pesan
         /* Maksud: Kode ini menyimpan waktu pembuatan pesan dalam map messageCreationTimes.
            Ini digunakan untuk menghitung TTL (Time-To-Live) pesan nanti. */
 
@@ -165,11 +171,11 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
     public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
         boolean shouldSave = false; // Apakah pesan harus disimpan? Default: tidak
 
-//        // Pertama, periksa apakah pesan sudah kadaluarsa
-//        if (isMessageExpired(m)) {
-//            // Jika pesan sudah kadaluarsa, jangan simpan
-//            shouldSave = false; // Atur shouldSave ke false
-//        } else {
+        // Pertama, periksa apakah pesan sudah kadaluarsa
+        if (isMessageExpired(m)) {
+            // Jika pesan sudah kadaluarsa, jangan simpan
+            shouldSave = false; // Atur shouldSave ke false
+        } else {
             // Jika pesan belum kadaluarsa, lanjutkan pemeriksaan lain
 
             // Periksa apakah host ini sudah memiliki pesan dengan ID yang sama
@@ -188,7 +194,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
                     shouldSave = true; // Atur shouldSave ke true
                 }
             }
-//        }
+        }
 
         return shouldSave; // Kembalikan nilai shouldSave (true atau false)
     }
@@ -221,6 +227,11 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
 
         return shouldSend; // Kembalikan nilai shouldSend
     }
+
+    @Override
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        return false;
+    }
     /* Maksud: Method ini menentukan apakah pesan harus dikirim ke host lain atau tidak.
        Dalam strategi Spray and Wait, pesan hanya dikirim jika perangkat memiliki lebih
        dari satu salinan pesan. Ini adalah bagian dari fase "Spray" dalam strategi ini. */
@@ -233,41 +244,27 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
-        // Ambil thisHost dari properti pesan (ditambahkan oleh DecisionEngineRouter)
-        DTNHost thisHost = (DTNHost) m.getProperty("thisHost");
-        if (thisHost == null) {
-            System.out.println("Error: thisHost tidak ditemukan dalam properti pesan!"); // Jika thisHost tidak ditemukan, tampilkan pesan kesalahan
-            return false; // Jangan hapus pesan
-        }
 
-        boolean deleteMessage = false; // Apakah pesan harus dihapus? Default: tidak
-
-//        // Periksa apakah pesan sudah mencapai tujuan akhir
-//        if (isFinalDest(m, otherHost)) {
-//            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-//            deleteMessage = true; // Hapus pesan karena sudah sampai tujuan
-//        } else if (isMessageExpired(m)) { // Periksa apakah pesan sudah kadaluarsa
-//            messageCreationTimes.remove(m.getId()); // Hapus waktu pembuatan pesan dari map
-//            deleteMessage = true; // Hapus pesan karena sudah kadaluarsa
-//        } else { // Jika pesan belum mencapai tujuan akhir dan belum kadaluarsa
-            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY); // Dapatkan jumlah salinan pesan
-            if (copies == null) {
-                deleteMessage = true; // Jika tidak ada salinan, hapus pesan
-            } else {
-                if (copies <= 0) {
-                    deleteMessage = true; //JIka copy kurang dari sama dengan 0 , maka hapus
-                } else {
-                    deleteMessage = false; // Jika tidak, jangan hapus pesan
-                }
-
+            DTNHost thisHost = (DTNHost) m.getProperty("thisHost");
+            if (thisHost == null) {
+                System.out.println("Error: thisHost tidak ditemukan dalam properti pesan!");
+                return false;
             }
-//        }
-        return deleteMessage;
-        /*Maksud: Method ini menentukan apakah pesan yang baru saja dikirim harus
+
+            if (isFinalDest(m, otherHost) || isMessageExpired(m)) {
+                messageCreationTimes.remove(m.getId());
+                return true;
+            }
+
+            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY);
+            return copies == null || copies <= 0;
+
+            /*Maksud: Method ini menentukan apakah pesan yang baru saja dikirim harus
            dihapus dari memori perangkat ini atau tidak. Pesan dihapus berdasarkan beberapa
            kondisi, termasuk apakah pesan telah mencapai tujuan akhir, apakah TTL-nya
            telah kedaluwarsa, dan apakah masih ada salinan pesan yang tersisa. */
-    }
+        }
+
 
     /**
      * Menentukan apakah pesan lama harus dihapus.
@@ -310,19 +307,19 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      * @return true jika pesan sudah kedaluwarsa, false jika tidak.
      */
     private boolean isMessageExpired(Message m) {
-//        Double creationTime = messageCreationTimes.get(m.getId()); // Dapatkan waktu pembuatan pesan
-//        boolean messageExpired=false; //inisialisasi variable messageExpired
-//        if (creationTime == null) { //apakah creation Time nya kosong
-//            messageExpired = false;// Jika tidak ada waktu pembuatan, anggap pesan belum kadaluarsa (atau gunakan strategi lain)
-//        }else{
-//            double age = SimClock.getTime() - creationTime; // Hitung usia pesan
-//            if (age > m.getTtl()) { // Periksa apakah usia pesan melebihi TTL
-//                messageExpired = true;// Jika ya, kembalikan true (pesan kadaluarsa)
-//            }else{
-//                messageExpired = false;// Jika tidak, kembalikan false (pesan belum kadaluarsa)
-//            }
-//        }
-        return false;
+        Double creationTime = messageCreationTimes.get(m.getId()); // Dapatkan waktu pembuatan pesan
+        boolean messageExpired=false; //inisialisasi variable messageExpired
+        if (creationTime == null) { //apakah creation Time nya kosong
+            messageExpired = false;// Jika tidak ada waktu pembuatan, anggap pesan belum kadaluarsa (atau gunakan strategi lain)
+        }else{
+            double age = SimClock.getTime() - creationTime; // Hitung usia pesan
+            if (age > m.getTtl()) { // Periksa apakah usia pesan melebihi TTL
+                messageExpired = true;// Jika ya, kembalikan true (pesan kadaluarsa)
+            }else{
+                messageExpired = false;// Jika tidak, kembalikan false (pesan belum kadaluarsa)
+            }
+        }
+        return messageExpired;
           /* Maksud: Method ini memeriksa apakah pesan m telah kedaluwarsa atau tidak.
              Untuk melakukan ini, kode pertama-tama mencoba mendapatkan waktu
              pembuatan pesan dari map messageCreationTimes menggunakan ID pesan
@@ -343,7 +340,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public RoutingDecisionEngine replicate() {
-        return new SprayAndWaitDecisionEngine(this);
+        return new SprayAndWaitDecisionEngine_Test(this);
     }
     /* Maksud: Kode ini membuat dan mengembalikan salinan (replika) dari objek
        SprayAndWaitDecisionEngine saat ini. Ini penting karena setiap

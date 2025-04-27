@@ -254,4 +254,5 @@ public class SIMPLECommunityDetection implements RoutingDecisionEngine, Communit
 
 	public Set<DTNHost> getFamiliars() {return this.familiarSet;}
 	public Set<DTNHost> getLocalCommunity() {return this.localCommunity;}
+
 }
