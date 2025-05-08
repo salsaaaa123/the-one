@@ -19,14 +19,12 @@ public class DistributedBubbleRapUTS implements RoutingDecisionEngine, Community
 
     public DistributedBubbleRapUTS(Settings s) {
         if (s.contains(COMMUNITY_ALG_SETTING))
-            this.community = (CommunityDetection)
-                    s.createIntializedObject(s.getSetting(COMMUNITY_ALG_SETTING));
+            this.community = (CommunityDetection) s.createIntializedObject(s.getSetting(COMMUNITY_ALG_SETTING));
         else
             this.community = new SimpleCommunityDetection(s);
 
         if (s.contains(CENTRALITY_ALG_SETTING))
-            this.centrality = (Centrality)
-                    s.createIntializedObject(s.getSetting(CENTRALITY_ALG_SETTING));
+            this.centrality = (Centrality) s.createIntializedObject(s.getSetting(CENTRALITY_ALG_SETTING));
         else
             this.centrality = new SWindowCentrality(s); // Or another default
 
@@ -107,13 +105,14 @@ public class DistributedBubbleRapUTS implements RoutingDecisionEngine, Community
         return m.getTo() != thisHost;
     }
 
-    @Override
+    // @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
         return shouldSendMessageToHost(m, otherHost);
     }
 
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
-        if (m.getTo() == otherHost) return true; // trivial to deliver to final dest
+        if (m.getTo() == otherHost)
+            return true; // trivial to deliver to final dest
 
         /*
          * Here is where we decide when to forward along a message.
@@ -200,8 +199,6 @@ public class DistributedBubbleRapUTS implements RoutingDecisionEngine, Community
     @Override
     public double[] getGlobalPopularityHistory(DTNHost host, int interval) {
         if (centrality instanceof CWindowCentrality) {
-            int simTime = SimClock.getIntTime();
-            int maxInterval = simTime / interval + 1;
             return ((CWindowCentrality) centrality).getGlobalCentralityHistory(getConnHistory(), interval);
         } else {
             System.err.println("Error: Centrality algorithm is not CWindowCentrality");

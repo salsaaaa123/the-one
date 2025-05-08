@@ -1,5 +1,3 @@
-
-
 package routing.decisionengine;
 
 import core.*;
@@ -27,7 +25,8 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     public static final String SPRAYANDWAIT_NS = "SnWDecisionEngine";
     /**
-     * Kunci properti pesan untuk menyimpan jumlah salinan (nilai = "SnWDecisionEngine.copies")
+     * Kunci properti pesan untuk menyimpan jumlah salinan (nilai =
+     * "SnWDecisionEngine.copies")
      */
     public static final String MSG_COUNT_PROPERTY = SPRAYANDWAIT_NS + "." + "copies";
     /**
@@ -39,10 +38,10 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     protected boolean isBinary;
     /**
-     * Menyimpan waktu pembuatan setiap pesan. Kunci adalah ID pesan, dan nilainya adalah waktu pembuatan.
+     * Menyimpan waktu pembuatan setiap pesan. Kunci adalah ID pesan, dan nilainya
+     * adalah waktu pembuatan.
      */
     private final Map<String, Double> messageCreationTimes = new HashMap<>();
-
 
     /**
      * Konstruktor untuk kelas SprayAndWaitDecisionEngine.
@@ -51,14 +50,12 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     public SnWDecisionEngine(Settings s) {
         Settings snwSettings = new Settings(SPRAYANDWAIT_NS);
-//        initialNrofCopies = snwSettings.getInt(NROF_COPIES);
         if (snwSettings.contains(NROF_COPIES)) {
             initialNrofCopies = snwSettings.getInt(NROF_COPIES);
             System.out.println("initialNrofCopies: " + initialNrofCopies); // debug
         } else {
             this.initialNrofCopies = 2;
         }
-//        isBinary = snwSettings.getBoolean(BINARY_MODE);
 
         if (snwSettings.contains(BINARY_MODE)) {
             isBinary = snwSettings.getBoolean(BINARY_MODE);
@@ -92,7 +89,8 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
     }
 
     /**
-     * @param con  Objek {@link Connection} yang merepresentasikan koneksi yang baru dibuat.
+     * @param con  Objek {@link Connection} yang merepresentasikan koneksi yang baru
+     *             dibuat.
      * @param peer Host peer (host lain) yang terhubung melalui koneksi ini.
      */
     @Override
@@ -133,58 +131,45 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost) {
-        boolean shouldSave = false; // Oke, awalnya kita anggap gak perlu nyimpen pesan
+        boolean shouldSave = false;
 
-        // Cek dulu, pesan ini udah kadaluarsa belum?
         if (isMessageExpired(m)) {
-            shouldSave = false; // Udah basi? Yaudah, jangan simpan lah!
+            shouldSave = false;
         } else {
-            // Hmm, belum kadaluarsa nih, coba kita cek lagi lebih dalam...
-
-            // Eh, host ini udah punya pesan dengan ID yang sama belum?
             if (thisHost.getRouter().hasMessage(m.getId())) {
-                shouldSave = false; // Udah punya? Ya ngapain disimpan lagi, mubazir bro! wkwkwkw
+                shouldSave = false;
             } else {
-                // Oke, pesan ini unik! Tapi ada satu hal lagi yang perlu dicek...
-
-                // Pesan ini dikirim sama siapa sih? Host ini sendiri?
                 if (m.getFrom() == thisHost) {
-                    shouldSave = false; // Wah, pesan sendiri? Jangan simpan dong, nanti looping mulu!
+                    shouldSave = false;
                 } else {
-                    shouldSave = true; // Mantap! Pesan ini fresh & belum ada di sini, simpan aja!
+                    shouldSave = true;
                 }
             }
         }
 
-        return shouldSave; // Oke deh, kasih tahu hasil akhirnya: simpan atau tidak?
+        return shouldSave;
     }
-
 
     /**
      * @param m         Pesan yang akan dievaluasi untuk pengiriman.
-     * @param otherHost Host peer (host lain) yang berpotensi menjadi tujuan pengiriman.
-     * @param thisHost  Host yang menjalankan router ini (host lokal).
+     * @param otherHost Host peer (host lain) yang berpotensi menjadi tujuan
+     *                  pengiriman.
      * @return
      */
     @Override
-    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-        boolean shouldSend = false; // Apakah pesan kamu harus dikirim? default: tidak
-        Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY); // Tolong dapatkan jumlah salinan pesan
-        if (copies != null) { // Tolong periksa apakah jumlah pesan salinan tidak null,oh gk null niehh
-            if (copies > 1) { // gitu po, tapi bantu periksa lagi apakah jumlah salinan lebih besar dari 1
-                shouldSend = true; // Iya lebih, kirim pesan lahhhh
+    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
+        boolean shouldSend = false;
+        Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY);
+        if (copies != null) {
+            if (copies > 1) {
+                shouldSend = true;
             } else {
-                shouldSend = false; // aduh gk lebih nih, you jangan kirim pesan
+                shouldSend = false;
             }
         } else {
-            shouldSend = false; // Wah jumlah salinan null niehh, ah gk usah kirm pesan lah
+            shouldSend = false;
         }
-        return shouldSend; // Ok,sekarang kembalikan dong nilaiNya saya mau kirim nih
-    }
-
-    @Override
-    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
-        return false;
+        return shouldSend;
     }
 
     /**
@@ -194,50 +179,44 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      */
     @Override
     public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost) {
-        boolean deleteMessage = false; // Apakah pesan harus dihapus? Default: tidak
-        DTNHost thisHost = (DTNHost) m.getProperty("thisHost"); // Tolong ambil thisHost dari properti pesan
+        boolean deleteMessage = false;
 
-        if (thisHost == null) { // Loh kok thisHost gak ada?
-            System.out.println("Error: thisHost tidak ditemukan dalam properti pesan!"); // Wah error nih, kasih tahu user
-            return false; // Jangan hapus pesan lah, nanti error!
-        }
+        if (isFinalDest(m, otherHost)) {
+            messageCreationTimes.remove(m.getId());
+            deleteMessage = true;
+        } else if (isMessageExpired(m)) {
+            messageCreationTimes.remove(m.getId());
+            deleteMessage = true;
+        } else {
+            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY);
 
-        if (isFinalDest(m, otherHost)) { // Eh pesan udah sampai tujuan akhir kah?
-            messageCreationTimes.remove(m.getId()); // Iyalah, hapus waktu pembuatan pesan
-            deleteMessage = true; // Hapus pesan dong, udah gak perlu lagi
-        } else if (isMessageExpired(m)) { // Periksa lagi, pesan ini udah kadaluarsa belum ya?
-            messageCreationTimes.remove(m.getId()); // Udah? Yaudah hapus aja dari map
-            deleteMessage = true; // Hapus pesan, udah basi nih
-        } else { // Belum sampai tujuan & belum kadaluarsa, kita cek yang lain dulu
-            Integer copies = (Integer) m.getProperty(MSG_COUNT_PROPERTY); // Coba ambil jumlah salinan pesan dulu
-
-            if (copies == null) { // Loh, jumlah salinan pesan kok gak ada?
-                deleteMessage = true; // Ah hapus aja, udah gak jelas ini
-            } else if (copies <= 0) { // Eh jumlah salinan 0 atau negatif kah?
-                deleteMessage = true; // Iya nih, udah hapus aja pesannya
-            } else { // Oh ada salinannya? Aman kok, jangan hapus dulu
-                deleteMessage = false; // Pesan tetap disimpan ya!
+            if (copies == null) {
+                deleteMessage = true;
+            } else if (copies <= 0) {
+                deleteMessage = true;
+            } else {
+                deleteMessage = false;
             }
         }
 
-        return deleteMessage; // Oke, kasih tahu hasilnya apakah pesan dihapus atau tidak
+        return deleteMessage;
     }
-
 
     /**
      * @param m                Pesan yang dianggap sudah lama.
-     * @param hostReportingOld Host peer (host lain) yang melaporkan bahwa pesan tersebut sudah lama.
+     * @param hostReportingOld Host peer (host lain) yang melaporkan bahwa pesan
+     *                         tersebut sudah lama.
      * @return
      */
     @Override
     public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld) {
-        boolean deleteMessage = false; // ini, awalnya kita anggap pesannya gak perlu fihapus
-        if (isMessageExpired(m)) { // eh benar, pesannya udah kedaluwarsa belum ya?
-            deleteMessage = true; // Wah,udah basi! Hapus aja biar gak numpuk
+        boolean deleteMessage = false;
+        if (isMessageExpired(m)) {
+            deleteMessage = true;
         } else {
-            deleteMessage = false; // oh,masih fresh? Yaudah,biarin aja dulu
+            deleteMessage = false;
         }
-        return deleteMessage; // Oke, kasih tahu hasil akhirnya,dihapus gk nih?
+        return deleteMessage;
     }
 
     /**
@@ -255,19 +234,19 @@ public class SnWDecisionEngine implements RoutingDecisionEngine {
      * @return true jika pesan sudah kedaluwarsa, false jika tidak.
      */
     public boolean isMessageExpired(Message m) {
-        Double creationTime = messageCreationTimes.get(m.getId()); // Cek dulu ,kapan sih pesan ini dihapus?
-        boolean messageExpired = false; // Awalnya kita anggap pesannya masih fresh,belum basi
-        if (creationTime == null) { // LOh,kok gak ada waktu pembuatannya?
-            messageExpired = false; // Hmm,anggap aja belum kedaluwarsa
+        Double creationTime = messageCreationTimes.get(m.getId());
+        boolean messageExpired = false;
+        if (creationTime == null) {
+            messageExpired = false;
         } else {
-            double age = SimClock.getTime() - creationTime; // Hitung usia pesan,udah tua belum nih?
-            if (age > m.getTtl()) { // Eh, lebih tua dari batas waktu hidupnya kah?
-                messageExpired = true;  // Iya, udah terlalu tua! Buang aja deh
+            double age = SimClock.getTime() - creationTime;
+            if (age > m.getTtl()) {
+                messageExpired = true;
             } else {
-                messageExpired = false; // Masih muda nih, biarin aja lanjut hidup
+                messageExpired = false;
             }
         }
-        return messageExpired; // Oke, kasih tahu hasilnya, expired atau masih bisa dipakai?
+        return messageExpired;
     }
 
     /**

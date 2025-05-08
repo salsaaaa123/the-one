@@ -43,7 +43,7 @@ Group.msgTtl = 600
 # Jumlah host dalam grup
 Group.nrofHosts = 100
 
-DecisionEngineRouter.decisionEngine = community.DistributedBubbleRap_UTS
+DecisionEngineRouter.decisionEngine = community.DistributedBubbleRap
 DecisionEngineRouter.communityDetectAlg = routing.community.KCliqueCommunityDetection
 DecisionEngineRouter.K = 5
 DecisionEngineRouter.familiarThreshold = 700
@@ -77,13 +77,12 @@ MovementModel.warmup = 1000
 
 ## Pengaturan Laporan
 # Jumlah laporan yang dihasilkan
-Report.nrofReports = 3
+Report.nrofReports = 2
 # Direktori tempat laporan disimpan
-Report.reportDir = reports/Reality/uts
+Report.reportDir = reports/Reality/BubbleRap
 # Waktu pemanasan untuk laporan (data sebelum waktu ini tidak disertakan)
 Report.warmup = 1000
 # Laporan yang akan dihasilkan
 Report.report1 = MessageStatsReport
 Report.report2 = CommunityDetectionReport
-Report.report3 = utsReport
 

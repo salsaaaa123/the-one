@@ -1,0 +1,119 @@
+##########################################################################################
+### SCENARIO SETTINGS
+##########################################################################################
+
+# Nama scenario untuk mencerminkan penggunaan trace
+Scenario.name = ProphetRouterWithPreP %%Group.msgTtl%%
+# *** PENTING: Jangan simulasikan koneksi, baca dari trace ***
+Scenario.simulateConnections = false
+# Interval update (biasanya kecil untuk trace)
+Scenario.updateInterval = 1
+# Waktu akhir harus sesuai dengan waktu akhir di file trace
+Scenario.endTime = 274883
+
+# Jumlah grup host mungkin tidak relevan jika host didefinisikan oleh trace,
+# tapi bisa digunakan untuk mengatur router/buffer per node jika ID node diketahui.
+# Untuk simple, set ke 1 jika semua pakai router/buffer sama, atau sesuaikan.
+Scenario.nrofHostGroups = 1
+
+##########################################################################################
+### Interface Settings
+##########################################################################################
+# Pengaturan interface (transmitSpeed, transmitRange) menjadi TIDAK RELEVAN
+# karena koneksi ditentukan oleh trace, bukan simulasi jangkauan.
+# Anda bisa mengomentarinya atau menghapusnya.
+# btInterface.type = SimpleBroadcastInterface
+# btInterface.transmitSpeed = 250k
+# btInterface.transmitRange = 10
+# longRangeInterface.type = SimpleBroadcastInterface
+# longRangeInterface.transmitSpeed = 250k
+# longRangeInterface.transmitRange = 1000
+
+##########################################################################################
+### GROUP SETTINGS
+##########################################################################################
+# Pengaturan Grup menjadi kurang penting untuk pergerakan/koneksi.
+# Fokus utama adalah pengaturan Router dan Buffer.
+# Jumlah host harus sesuai dengan jumlah host unik di file trace.
+
+# Pengaturan umum jika semua host sama
+Group.router = ProphetRouterWithPreP
+# Atur buffer sesuai kebutuhan (misal 50M seperti di paper)
+Group.bufferSize = 50M
+# Pengaturan movement model dan speed TIDAK RELEVAN
+# Group.movementModel = ...
+# Group.speed = ...
+# Pengaturan interface TIDAK RELEVAN
+# Group.nrofInterfaces = 1
+# Group.interface1 = btInterface
+# Jumlah host harus sesuai data trace
+Group.nrofHosts = 100
+Group.msgTtl = [600;1800;3600;7200]
+
+# Jika perlu pengaturan berbeda per host (misal buffer), gunakan Group1, Group2, dst.
+# dan pastikan pemetaan host di Events sesuai.
+
+##########################################################################################
+### Message creation parameters (Menggunakan Blok REALITY)
+##########################################################################################
+
+# Gunakan blok definisi Events untuk reality data
+Events.nrof = 2
+# Event 1: Membaca koneksi DAN mungkin pesan dari trace
+Events1.class = ExternalEventsQueue
+# Path ke file trace koneksi (pastikan benar)
+Events1.filePath = /home/endos/Documents/DTN/the-one-pitt/discussion/Haggle3-Infocom5.txt
+
+# Pengaturan interval/size/hosts mungkin tidak semua relevan jika hanya membaca koneksi,
+# tergantung implementasi ExternalEventsQueue. Sesuaikan jika trace juga berisi event pesan.
+# Events1.interval = 25,35 # Mungkin tidak relevan
+# Events1.size = 500k,1M    # Mungkin tidak relevan
+# Events1.hosts = 0,97     # PASTIKAN RANGE HOST SESUAI TRACE
+# Events1.prefix = E         # Prefix untuk pesan dari trace (jika ada)
+
+# Event 2: Menambahkan pesan lain jika diinginkan (opsional)
+Events2.class = MessageEventGenerator
+Events2.interval = 580,620
+Events2.size = 500k,750k
+ Events2.hosts = 0,99
+Events2.prefix = M
+
+##########################################################################################
+### Movement model settings
+##########################################################################################
+# Semua pengaturan Movement Model menjadi TIDAK RELEVAN saat simulateConnections = false
+# Anda bisa mengomentari atau menghapus seluruh bagian ini.
+# MovementModel.rngSeed = 5
+# MovementModel.worldSize = 4500, 3400
+# MovementModel.warmup = 1000
+# MapBasedMovement.nrofMapFiles = 4
+# MapBasedMovement.mapFile1 = data.wkt
+# ...
+
+##########################################################################################
+### Reports Settings
+##########################################################################################
+
+Report.nrofReports = 2
+# Warmup mungkin tidak relevan untuk trace, set ke 0
+Report.warmup = 0
+Report.reportDir = reports/ProphetRouterWithPreP_Haggle3
+Report.report1 = MessageStatsReport
+Report.report2 = AlgorithmicComparisonReport
+
+##########################################################################################
+### Router Configuration
+##########################################################################################
+
+# Parameter PROPHET tetap relevan
+ProphetRouterWithPreP.secondsInTimeUnit = 30
+ProphetRouterWithPreP.beta = 0.25
+# Atur sendQueue jika diperlukan (misal FIFO)
+Group.sendQueue = 1
+
+##########################################################################################
+### Optimization settings (Biarkan default atau sesuai kebutuhan)
+##########################################################################################
+# Pengaturan ini mungkin masih relevan
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true

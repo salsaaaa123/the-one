@@ -2,6 +2,7 @@
  * @(#)SprayAndFocusRouter.java
  *
  * Copyright 2010 by University of Pittsburgh, released under GPLv3.
+ *
  */
 package routing;
 
@@ -16,26 +17,17 @@ import core.*;
  *
  * @author PJ Dillon, University of Pittsburgh
  */
-public class SprayAndFocusRouter extends ActiveRouter {
-	/**
-	 * SprayAndFocus router's settings name space ({@value})
-	 */
+public class SprayAndFocusRouter extends ActiveRouter
+{
+	/** SprayAndFocus router's settings name space ({@value})*/
 	public static final String SPRAYANDFOCUS_NS = "SprayAndFocusRouter";
-	/**
-	 * identifier for the initial number of copies setting ({@value})
-	 */
+	/** identifier for the initial number of copies setting ({@value})*/
 	public static final String NROF_COPIES_S = "nrofCopies";
-	/**
-	 * identifier for the difference in timer values needed to forward on a message copy
-	 */
+	/** identifier for the difference in timer values needed to forward on a message copy */
 	public static final String TIMER_THRESHOLD_S = "transitivityTimerThreshold";
-	/**
-	 * Message property key for the remaining available copies of a message
-	 */
+	/** Message property key for the remaining available copies of a message */
 	public static final String MSG_COUNT_PROP = "SprayAndFocus.copies";
-	/**
-	 * Message property key for summary vector messages exchanged between direct peers
-	 */
+	/** Message property key for summary vector messages exchanged between direct peers */
 	public static final String SUMMARY_XCHG_PROP = "SprayAndFocus.protoXchg";
 
 	protected static final String SUMMARY_XCHG_IDPREFIX = "summary";
@@ -45,18 +37,17 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	protected int initialNrofCopies;
 	protected double transitivityTimerThreshold;
 
-	/**
-	 * Stores information about nodes with which this host has come in contact
-	 */
+	/** Stores information about nodes with which this host has come in contact */
 	protected Map<DTNHost, EncounterInfo> recentEncounters;
 	protected Map<DTNHost, Map<DTNHost, EncounterInfo>> neighborEncounters;
 
-	public SprayAndFocusRouter(Settings s) {
+	public SprayAndFocusRouter(Settings s)
+	{
 		super(s);
 		Settings snf = new Settings(SPRAYANDFOCUS_NS);
 		initialNrofCopies = snf.getInt(NROF_COPIES_S);
 
-		if (snf.contains(TIMER_THRESHOLD_S))
+		if(snf.contains(TIMER_THRESHOLD_S))
 			transitivityTimerThreshold = snf.getDouble(TIMER_THRESHOLD_S);
 		else
 			transitivityTimerThreshold = defaultTransitivityThreshold;
@@ -70,7 +61,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	 *
 	 * @param r The router from which settings should be copied
 	 */
-	public SprayAndFocusRouter(SprayAndFocusRouter r) {
+	public SprayAndFocusRouter(SprayAndFocusRouter r)
+	{
 		super(r);
 		this.initialNrofCopies = r.initialNrofCopies;
 
@@ -79,7 +71,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	}
 
 	@Override
-	public MessageRouter replicate() {
+	public MessageRouter replicate()
+	{
 		return new SprayAndFocusRouter(this);
 	}
 
@@ -87,7 +80,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	 * Called whenever a connection goes up or comes down.
 	 */
 	@Override
-	public void changedConnection(Connection con) {
+	public void changedConnection(Connection con)
+	{
 		super.changedConnection(con);
 
 		/*
@@ -103,14 +97,18 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		DTNHost peer = con.getOtherNode(thisHost);
 
 		//do this when con is up and goes down (might have been up for awhile)
-		if (recentEncounters.containsKey(peer)) {
+		if(recentEncounters.containsKey(peer))
+		{
 			EncounterInfo info = recentEncounters.get(peer);
 			info.updateEncounterTime(SimClock.getTime());
-		} else {
+		}
+		else
+		{
 			recentEncounters.put(peer, new EncounterInfo(SimClock.getTime()));
 		}
 
-		if (!con.isUp()) {
+		if(!con.isUp())
+		{
 			neighborEncounters.remove(peer);
 			return;
 		}
@@ -128,30 +126,33 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	}
 
 	@Override
-	public boolean createNewMessage(Message m) {
+	public boolean createNewMessage(Message m)
+	{
 		makeRoomForNewMessage(m.getSize());
 
-		m.addProperty(MSG_COUNT_PROP, Integer.valueOf(initialNrofCopies));
+		m.addProperty(MSG_COUNT_PROP, Double.valueOf(initialNrofCopies));
 		addToMessages(m, true);
 		return true;
 	}
 
 	@Override
-	public Message messageTransferred(String id, DTNHost from) {
+	public Message messageTransferred(String id, DTNHost from)
+	{
 		Message m = super.messageTransferred(id, from);
 
 		/*
 		 * Here we update our last encounter times based on the information sent
 		 * from our peer.
 		 */
-		Map<DTNHost, EncounterInfo> peerEncounters = (Map<DTNHost, EncounterInfo>) m.getProperty(SUMMARY_XCHG_PROP);
-		if (isDeliveredMessage(m) && peerEncounters != null) {
+		Map<DTNHost, EncounterInfo> peerEncounters = (Map<DTNHost, EncounterInfo>)m.getProperty(SUMMARY_XCHG_PROP);
+		if(isDeliveredMessage(m) && peerEncounters != null)
+		{
 			double distTo = getHost().getLocation().distance(from.getLocation());
 			double speed = from.getPath() == null ? 0 : from.getPath().getSpeed();
 
-			if (speed == 0.0) return m;
+			if(speed == 0.0) return m;
 
-			double timediff = distTo / speed;
+			double timediff = distTo/speed;
 
 			/*
 			 * We save the peer info for the utility based forwarding decisions, which are
@@ -159,9 +160,10 @@ public class SprayAndFocusRouter extends ActiveRouter {
 			 */
 			neighborEncounters.put(from, peerEncounters);
 
-			for (Map.Entry<DTNHost, EncounterInfo> entry : peerEncounters.entrySet()) {
+			for(Map.Entry<DTNHost, EncounterInfo> entry : peerEncounters.entrySet())
+			{
 				DTNHost h = entry.getKey();
-				if (h == getHost()) continue;
+				if(h == getHost()) continue;
 
 				EncounterInfo peerEncounter = entry.getValue();
 				EncounterInfo info = recentEncounters.get(h);
@@ -174,14 +176,16 @@ public class SprayAndFocusRouter extends ActiveRouter {
 				 * fixed timestamps here to accomplish the same effect, but the computations
 				 * here are consequently a little different from the paper.
 				 */
-				if (!recentEncounters.containsKey(h)) {
+				if(!recentEncounters.containsKey(h))
+				{
 					info = new EncounterInfo(peerEncounter.getLastSeenTime() - timediff);
 					recentEncounters.put(h, info);
 					continue;
 				}
 
 
-				if (info.getLastSeenTime() + timediff < peerEncounter.getLastSeenTime()) {
+				if(info.getLastSeenTime() + timediff < peerEncounter.getLastSeenTime())
+				{
 					recentEncounters.get(h).updateEncounterTime(peerEncounter.getLastSeenTime() -
 							timediff);
 				}
@@ -191,9 +195,9 @@ public class SprayAndFocusRouter extends ActiveRouter {
 
 		//Normal message beyond here
 
-		Integer nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
+		Integer nrofCopies = (Integer)m.getProperty(MSG_COUNT_PROP);
 
-		nrofCopies = (int) Math.ceil(nrofCopies / 2.0);
+		nrofCopies = (int)Math.ceil(nrofCopies/2.0);
 
 		m.updateProperty(MSG_COUNT_PROP, nrofCopies);
 
@@ -201,7 +205,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	}
 
 	@Override
-	protected void transferDone(Connection con) {
+	protected void transferDone(Connection con)
+	{
 		Integer nrofCopies;
 		String msgId = con.getMessage().getId();
 		/* get this router's copy of the message */
@@ -211,7 +216,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 			return; // ..start of transfer -> no need to reduce amount of copies
 		}
 
-		if (msg.getProperty(SUMMARY_XCHG_PROP) != null) {
+		if(msg.getProperty(SUMMARY_XCHG_PROP) != null)
+		{
 			deleteMessage(msgId, false);
 			return;
 		}
@@ -221,8 +227,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		 * we apparently just transferred the msg (focus phase), then we should
 		 * delete it.
 		 */
-		nrofCopies = (Integer) msg.getProperty(MSG_COUNT_PROP);
-		if (nrofCopies > 1)
+		nrofCopies = (Integer)msg.getProperty(MSG_COUNT_PROP);
+		if(nrofCopies > 1)
 			nrofCopies /= 2;
 		else
 			deleteMessage(msgId, false);
@@ -231,8 +237,10 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	}
 
 
+
 	@Override
-	public void update() {
+	public void update()
+	{
 		super.update();
 		if (!canStartTransfer() || isTransferring()) {
 			return; // nothing to transfer or is currently transferring
@@ -244,17 +252,21 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		}
 
 		List<Message> spraylist = new ArrayList<Message>();
-		List<Tuple<Message, Connection>> focuslist = new LinkedList<Tuple<Message, Connection>>();
+		List<Tuple<Message,Connection>> focuslist = new LinkedList<Tuple<Message,Connection>>();
 
-		for (Message m : getMessageCollection()) {
-			if (m.getProperty(SUMMARY_XCHG_PROP) != null) continue;
+		for (Message m : getMessageCollection())
+		{
+			if(m.getProperty(SUMMARY_XCHG_PROP) != null) continue;
 
-			Integer nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
+			Integer nrofCopies = (Integer)m.getProperty(MSG_COUNT_PROP);
 			assert nrofCopies != null : "SnF message " + m + " didn't have " +
 					"nrof copies property!";
-			if (nrofCopies > 1) {
+			if (nrofCopies > 1)
+			{
 				spraylist.add(m);
-			} else {
+			}
+			else
+			{
 				/*
 				 * Here we implement the single copy utility-based forwarding scheme.
 				 * The utility function is the last encounter time of the msg's
@@ -268,14 +280,14 @@ public class SprayAndFocusRouter extends ActiveRouter {
 				//Get the timestamp of the last time this Host saw the destination
 				double thisLastSeen = getLastEncounterTimeForHost(dest);
 
-				for (Connection c : getHost())
+				for(Connection c : getHost())
 				//for(Connection c : getConnections())
 				{
 					DTNHost peer = c.getOtherNode(getHost());
 					Map<DTNHost, EncounterInfo> peerEncounters = neighborEncounters.get(peer);
 					double peerLastSeen = 0.0;
 
-					if (peerEncounters != null && peerEncounters.containsKey(dest))
+					if(peerEncounters != null && peerEncounters.containsKey(dest))
 						peerLastSeen = neighborEncounters.get(peer).get(dest).getLastSeenTime();
 
 					/*
@@ -283,42 +295,33 @@ public class SprayAndFocusRouter extends ActiveRouter {
 					 * one with the newest encounter time.
 					 */
 
-					if (peerLastSeen > maxPeerLastSeen) {
+					if(peerLastSeen > maxPeerLastSeen)
+					{
 						toSend = c;
 						maxPeerLastSeen = peerLastSeen;
 					}
 
 				}
-				if (toSend != null && maxPeerLastSeen > thisLastSeen + transitivityTimerThreshold) {
+				if (toSend != null && maxPeerLastSeen > thisLastSeen + transitivityTimerThreshold)
+				{
 					focuslist.add(new Tuple<Message, Connection>(m, toSend));
 				}
 			}
 		}
 
 		//arbitrarily favor spraying
-		if (tryMessagesToAllConnections(spraylist) == null) {  // Change here: Fix the method name
-			if (tryMessagesForConnected(focuslist) != null) {
+		if(tryMessagesToAllConnections(spraylist) == null)
+		{
+			if(tryMessagesForConnected(focuslist) != null)
+			{
 
 			}
 		}
 	}
 
-	/**
-	 * Method to try to send messages for all connections
-	 * @param messages list of message to send
-	 * @return connections that started a transfer or null if no connection accepted a message.
-	 */
-	protected Connection tryMessagesToAllConnections(List<Message> messages){
-		List<Connection> connections = getConnections();
-		if (connections.size() == 0 || this.getNrofMessages() == 0) {
-			return null;
-		}
-
-		return tryMessagesToConnections(messages, connections);
-	}
-
-	protected double getLastEncounterTimeForHost(DTNHost host) {
-		if (recentEncounters.containsKey(host))
+	protected double getLastEncounterTimeForHost(DTNHost host)
+	{
+		if(recentEncounters.containsKey(host))
 			return recentEncounters.get(host).getLastSeenTime();
 		else
 			return 0.0;
@@ -331,22 +334,27 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	 *
 	 * @author PJ Dillon, University of Pittsburgh
 	 */
-	protected class EncounterInfo {
+	protected class EncounterInfo
+	{
 		protected double seenAtTime;
 
-		public EncounterInfo(double atTime) {
+		public EncounterInfo(double atTime)
+		{
 			this.seenAtTime = atTime;
 		}
 
-		public void updateEncounterTime(double atTime) {
+		public void updateEncounterTime(double atTime)
+		{
 			this.seenAtTime = atTime;
 		}
 
-		public double getLastSeenTime() {
+		public double getLastSeenTime()
+		{
 			return seenAtTime;
 		}
 
-		public void updateLastSeenTime(double atTime) {
+		public void updateLastSeenTime(double atTime)
+		{
 			this.seenAtTime = atTime;
 		}
 	}

@@ -2,7 +2,7 @@
  * @(#)DistributedBubbleRap.java
  *
  * Copyright 2010 by University of Pittsburgh, released under GPLv3.
- *
+ * 
  */
 package routing.community;
 
@@ -14,18 +14,23 @@ import routing.MessageRouter;
 import routing.RoutingDecisionEngine;
 
 /**
- * <p>Implements the Distributed BubbleRap Routing Algorithm from Hui et al.
+ * <p>
+ * Implements the Distributed BubbleRap Routing Algorithm from Hui et al.
  * 2008 (Bibtex record included for convenience). The paper is a bit fuzzy on
  * thevactual implementation details. Choices exist for methods of community
  * detection (SIMPLE, K-CLIQUE, MODULARITY) and local centrality approximation
- * (DEGREE, S-WINDOW, C-WINDOW).</p>
- *
- * <p>In general, each node maintains an idea of it's local community, a group
+ * (DEGREE, S-WINDOW, C-WINDOW).
+ * </p>
+ * 
+ * <p>
+ * In general, each node maintains an idea of it's local community, a group
  * of nodes it meets with frequently. It also approximates its centrality within
  * the social network defined by this local community and within the global
- * social network defined by all nodes.</p>
- *
- * <p>When a node has a message for a destination, D, and D is not part of its
+ * social network defined by all nodes.
+ * </p>
+ * 
+ * <p>
+ * When a node has a message for a destination, D, and D is not part of its
  * local community, it forwards the message to "more globally central" nodes,
  * those that estimate a higher global centrality value. The intuition here is
  * that nodes in the center of the social network are more likely to contact the
@@ -33,37 +38,35 @@ import routing.RoutingDecisionEngine;
  * central nodes until a node is found that reports D in its local community.
  * At this point, the message is only routed with in the nodes of the local
  * community and propagated towards more locally central nodes or the
- * destination until delivered.<p>
- *
+ * destination until delivered.
+ * <p>
+ * 
  * <pre>
  * \@inproceedings{1374652,
- * 	Address = {New York, NY, USA},
- * 	Author = {Hui, Pan and Crowcroft, Jon and Yoneki, Eiko},
- * 	Booktitle = {MobiHoc '08: Proceedings of the 9th ACM international symposium
- * 		on Mobile ad hoc networking and computing},
- * 	Doi = {http://doi.acm.org/10.1145/1374618.1374652},
- * 	Isbn = {978-1-60558-073-9},
- * 	Location = {Hong Kong, Hong Kong, China},
- * 	Pages = {241--250},
- * 	Publisher = {ACM},
- * 	Title = {BUBBLE Rap: Social-based Forwarding in Delay Tolerant Networks},
- * 	Url = {http://portal.acm.org/ft_gateway.cfm?id=1374652&type=pdf&coll=GUIDE&dl=GUIDE&CFID=55195392&CFTOKEN=93998863},
- * 	Year = {2008}
+ *	Address = {New York, NY, USA},
+ *	Author = {Hui, Pan and Crowcroft, Jon and Yoneki, Eiko},
+ *	Booktitle = {MobiHoc '08: Proceedings of the 9th ACM international symposium 
+ *		on Mobile ad hoc networking and computing},
+ *	Doi = {http://doi.acm.org/10.1145/1374618.1374652},
+ *	Isbn = {978-1-60558-073-9},
+ *	Location = {Hong Kong, Hong Kong, China},
+ *	Pages = {241--250},
+ *	Publisher = {ACM},
+ *	Title = {BUBBLE Rap: Social-based Forwarding in Delay Tolerant Networks},
+ *	Url = {http://portal.acm.org/ft_gateway.cfm?id=1374652&type=pdf&coll=GUIDE&dl=GUIDE&CFID=55195392&CFTOKEN=93998863},
+ *	Year = {2008}
  * }
  * </pre>
- *
+ * 
  * @author PJ Dillon, University of Pittsburgh
+ *
  */
-public class DistributedBubbleRap implements RoutingDecisionEngine, CommunityDetectionEngine {
-    /**
-     * Community Detection Algorithm to employ -setting id {@value}
-     */
+public class DistributedBubbleRap
+        implements RoutingDecisionEngine, CommunityDetectionEngine {
+    /** Community Detection Algorithm to employ -setting id {@value} */
     public static final String COMMUNITY_ALG_SETTING = "communityDetectAlg";
-    /**
-     * Centrality Computation Algorithm to employ -setting id {@value}
-     */
+    /** Centrality Computation Algorithm to employ -setting id {@value} */
     public static final String CENTRALITY_ALG_SETTING = "centralityAlg";
-
 
     protected Map<DTNHost, Double> startTimestamps;
     protected Map<DTNHost, List<Duration>> connHistory;
@@ -76,33 +79,25 @@ public class DistributedBubbleRap implements RoutingDecisionEngine, CommunityDet
      * defined in the Settings object parameter. The class looks for the class
      * names of the community detection and centrality algorithms that should be
      * employed used to perform the routing.
-     *
+     * 
      * @param s Settings to configure the object
      */
     public DistributedBubbleRap(Settings s) {
         if (s.contains(COMMUNITY_ALG_SETTING))
-            this.community = (CommunityDetection)
-                    s.createIntializedObject(s.getSetting(COMMUNITY_ALG_SETTING));
+            this.community = (CommunityDetection) s.createIntializedObject(s.getSetting(COMMUNITY_ALG_SETTING));
         else
             this.community = new SimpleCommunityDetection(s);
 
         if (s.contains(CENTRALITY_ALG_SETTING))
-            this.centrality = (Centrality)
-                    s.createIntializedObject(s.getSetting(CENTRALITY_ALG_SETTING));
+            this.centrality = (Centrality) s.createIntializedObject(s.getSetting(CENTRALITY_ALG_SETTING));
         else
             this.centrality = new SWindowCentrality(s);
-
-
-        startTimestamps = new HashMap<DTNHost, Double>();
-        connHistory = new HashMap<DTNHost, List<Duration>>();
-
-
     }
 
     /**
      * Constructs a DistributedBubbleRap Decision Engine from the argument
      * prototype.
-     *
+     * 
      * @param proto Prototype DistributedBubbleRap upon which to base this object
      */
     public DistributedBubbleRap(DistributedBubbleRap proto) {
@@ -112,23 +107,15 @@ public class DistributedBubbleRap implements RoutingDecisionEngine, CommunityDet
         connHistory = new HashMap<DTNHost, List<Duration>>();
     }
 
-//    public void connectionUp(DTNHost thisHost, DTNHost peer) {
-//    }
-public void connectionUp(DTNHost thisHost, DTNHost peer) {
-    DTNHost myHost = thisHost;
-    DistributedBubbleRap de = this.getOtherDecisionEngine(peer);
-
-    this.startTimestamps.put(peer, SimClock.getTime());
-    de.startTimestamps.put(myHost, SimClock.getTime());
-
-    this.community.newConnection(myHost, peer, de.community);
-}
+    public void connectionUp(DTNHost thisHost, DTNHost peer) {
+    }
 
     /**
      * Starts timing the duration of this new connection and informs the community
      * detection object that a new connection was formed.
-     *
-     * @see routing.RoutingDecisionEngine#doExchangeForNewConnection(core.Connection, core.DTNHost)
+     * 
+     * @see routing.RoutingDecisionEngine#doExchangeForNewConnection(core.Connection,
+     *      core.DTNHost)
      */
     public void doExchangeForNewConnection(Connection con, DTNHost peer) {
         DTNHost myHost = con.getOtherNode(peer);
@@ -141,10 +128,7 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
     }
 
     public void connectionDown(DTNHost thisHost, DTNHost peer) {
-        Double time = startTimestamps.get(peer);
-        if (time == null) {
-            return;
-        }
+        double time = startTimestamps.get(peer);
         double etime = SimClock.getTime();
 
         // Find or create the connection history list
@@ -168,39 +152,6 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
         startTimestamps.remove(peer);
     }
 
-//    public void connectionDown(DTNHost thisHost, DTNHost peer) {
-//        Double timeObj = startTimestamps.get(peer); // Get the Double object
-//
-//        if (timeObj == null) {
-//
-//    //System.err.println("Error: Connection down called before connection up for peer " + peer.getAddress());
-//            return; // Atau lakukan tindakan penanganan kesalahan lain yang sesuai
-//        }
-//
-//        double time = timeObj.doubleValue(); // Unbox to double
-//        double etime = SimClock.getTime();
-//
-//        // Find or create the connection history list
-//        List<Duration> history;
-//        if (!connHistory.containsKey(peer)) {
-//            history = new LinkedList<Duration>();
-//            connHistory.put(peer, history);
-//        } else
-//            history = connHistory.get(peer);
-//
-//        // add this connection to the list
-//        if (etime - time > 0)
-//            history.add(new Duration(time, etime));
-//
-//        CommunityDetection peerCD = this.getOtherDecisionEngine(peer).community;
-//
-//        // inform the community detection object that a connection was lost.
-//        // The object might need the whole connection history at this point.
-//        community.connectionLost(thisHost, peer, peerCD, history);
-//
-//        startTimestamps.remove(peer);
-//    }
-
     public boolean newMessage(Message m) {
         return true; // Always keep and attempt to forward a created message
     }
@@ -213,18 +164,13 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
         return m.getTo() != thisHost;
     }
 
-    @Override
-    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-        return shouldSendMessageToHost(m, otherHost);
-    }
-
-
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost) {
-        if (m.getTo() == otherHost) return true; // trivial to deliver to final dest
+        if (m.getTo() == otherHost)
+            return true; // trivial to deliver to final dest
 
         /*
          * Here is where we decide when to forward along a message.
-         *
+         * 
          * DiBuBB works such that it first forwards to the most globally central
          * nodes in the network until it finds a node that has the message's
          * destination as part of it's local community. At this point, it uses
@@ -274,11 +220,6 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
         return new DistributedBubbleRap(this);
     }
 
-    @Override
-    public void update(DTNHost thisHost) {
-
-    }
-
     protected boolean commumesWithHost(DTNHost h) {
         return community.isHostInCommunity(h);
     }
@@ -291,27 +232,21 @@ public void connectionUp(DTNHost thisHost, DTNHost peer) {
         return this.centrality.getGlobalCentrality(connHistory);
     }
 
-    //    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h) {
-//        MessageRouter otherRouter = h.getRouter();
-//        assert otherRouter instanceof DecisionEngineRouter : "This router only works " +
-//                " with other routers of same type";
-//
-//        return (DistributedBubbleRap) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
-//    }
-    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h)
-    {
+    private DistributedBubbleRap getOtherDecisionEngine(DTNHost h) {
         MessageRouter otherRouter = h.getRouter();
         assert otherRouter instanceof DecisionEngineRouter : "This router only works " +
                 " with other routers of same type";
 
-        return (DistributedBubbleRap) ((DecisionEngineRouter)otherRouter).getDecisionEngine();
+        return (DistributedBubbleRap) ((DecisionEngineRouter) otherRouter).getDecisionEngine();
     }
 
     public Set<DTNHost> getLocalCommunity() {
         return this.community.getLocalCommunity();
     }
 
-
-
-
+    @Override
+    public void update(DTNHost thisHost) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'update'");
+    }
 }

@@ -27,112 +27,72 @@ import core.Tuple;
  * Superclass for message routers.
  */
 public abstract class MessageRouter {
-
-    /**
-     * Message buffer size -setting id ({@value}). Integer value in bytes.
-     */
+    /** Message buffer size -setting id ({@value}). Integer value in bytes. */
     public static final String B_SIZE_S = "bufferSize";
     /**
-     * Message TTL -setting id ({@value}). Value is in minutes and must be an
-     * integer.
+     * Message TTL -setting id ({@value}). Value is in minutes and must be
+     * an integer.
      */
     public static final String MSG_TTL_S = "msgTtl";
     /**
-     * Message/fragment sending queue type -setting id ({@value}). This setting
-     * affects the order the messages and fragments are sent if the routing
-     * protocol doesn't define any particular order (e.g, if more than one
-     * message can be sent directly to the final recipient). Valid values
-     * are<BR>
+     * Message/fragment sending queue type -setting id ({@value}).
+     * This setting affects the order the messages and fragments are sent if the
+     * routing protocol doesn't define any particular order (e.g, if more than
+     * one message can be sent directly to the final recipient).
+     * Valid values are<BR>
      * <UL>
-     * <LI/> 1 : random (message order is randomized every time; default option)
-     * <LI/> 2 : FIFO (most recently received messages are sent last)
+     * <LI/>1 : random (message order is randomized every time; default option)
+     * <LI/>2 : FIFO (most recently received messages are sent last)
      * </UL>
      */
     public static final String SEND_QUEUE_MODE_S = "sendQueue";
 
-    /**
-     *
-     */
-    public static final String NODE_RANDOM = "randomNode";
-
-    /**
-     * Setting value for random queue mode
-     */
+    /** Setting value for random queue mode */
     public static final int Q_MODE_RANDOM = 1;
-    /**
-     * Setting value for FIFO queue mode
-     */
+    /** Setting value for FIFO queue mode */
     public static final int Q_MODE_FIFO = 2;
 
-    /**
-     * Receive return value for OK
-     */
+    /** Receive return value for OK */
     public static final int RCV_OK = 0;
-    /**
-     * Receive return value for busy receiver
-     */
+    /** Receive return value for busy receiver */
     public static final int TRY_LATER_BUSY = 1;
-    /**
-     * Receive return value for an old (already received) message
-     */
+    /** Receive return value for an old (already received) message */
     public static final int DENIED_OLD = -1;
-    /**
-     * Receive return value for not enough space in the buffer for the msg
-     */
+    /** Receive return value for not enough space in the buffer for the msg */
     public static final int DENIED_NO_SPACE = -2;
-    /**
-     * Receive return value for messages whose TTL has expired
-     */
+    /** Receive return value for messages whose TTL has expired */
     public static final int DENIED_TTL = -3;
-    /**
-     * Receive return value for unspecified reason
-     */
+    /** Receive return value for unspecified reason */
     public static final int DENIED_UNSPECIFIED = -999;
+
     public static final int DENIED_DELIVERED = -4;
+    public static final int DENIED_ALREADY_IN_VR = -5;
+    public static final int DENIED_CHECKIN = -6;
+
     protected List<MessageListener> mListeners;
-    /**
-     * The messages being transferred with msgID_hostName keys
-     */
+    /** The messages being transferred with msgID_hostName keys */
     private HashMap<String, Message> incomingMessages;
-    /**
-     * The messages this router is carrying
-     */
+    /** The messages this router is carrying */
     private HashMap<String, Message> messages;
-    /**
-     * The messages this router has received as the final recipient
-     */
+    /** The messages this router has received as the final recipient */
     protected HashMap<String, Message> deliveredMessages;
-    /**
-     * Host where this router belongs to
-     */
+    /** Host where this router belongs to */
     private DTNHost host;
-    /**
-     * size of the buffer
-     */
+    /** size of the buffer */
     private int bufferSize;
-    /**
-     * TTL for all messages
-     */
+    /** TTL for all messages */
     protected int msgTtl;
-    /**
-     * Queue mode for sending messages
-     */
+    /** Queue mode for sending messages */
     private int sendQueueMode;
 
-    /**
-     * applications attached to the host
-     */
+    /** applications attached to the host */
     private HashMap<String, Collection<Application>> applications = null;
 
-    private int nodeSelfish;
-
-    protected LinkedList<Integer> nodeList;
-
     /**
-     * Constructor. Creates a new message router based on the settings in the
-     * given Settings object. Size of the message buffer is read from
+     * Constructor. Creates a new message router based on the settings in
+     * the given Settings object. Size of the message buffer is read from
      * {@link #B_SIZE_S} setting. Default value is Integer.MAX_VALUE.
-     *
+     * 
      * @param s The settings object
      */
     public MessageRouter(Settings s) {
@@ -140,9 +100,6 @@ public abstract class MessageRouter {
         this.msgTtl = Message.INFINITE_TTL;
         this.applications = new HashMap<String, Collection<Application>>();
 
-        if (s.contains(NODE_RANDOM)) {
-            this.nodeSelfish = s.getInt(NODE_RANDOM);
-        }
         if (s.contains(B_SIZE_S)) {
             this.bufferSize = s.getInt(B_SIZE_S);
         }
@@ -152,8 +109,8 @@ public abstract class MessageRouter {
         if (s.contains(SEND_QUEUE_MODE_S)) {
             this.sendQueueMode = s.getInt(SEND_QUEUE_MODE_S);
             if (sendQueueMode < 1 || sendQueueMode > 2) {
-                throw new SettingsError("Invalid value for "
-                        + s.getFullPropertyName(SEND_QUEUE_MODE_S));
+                throw new SettingsError("Invalid value for " +
+                        s.getFullPropertyName(SEND_QUEUE_MODE_S));
             }
         } else {
             sendQueueMode = Q_MODE_RANDOM;
@@ -162,40 +119,31 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Initializes the router; i.e. sets the host this router is in and message
-     * listeners that need to be informed about message related events etc.
-     *
+     * Initializes the router; i.e. sets the host this router is in and
+     * message listeners that need to be informed about message related
+     * events etc.
+     * 
      * @param host       The host this router is in
      * @param mListeners The message listeners
      */
-    public void init(DTNHost host, List<MessageListener> mListeners) {
+    public void initialize(DTNHost host, List<MessageListener> mListeners) {
         this.incomingMessages = new HashMap<String, Message>();
         this.messages = new HashMap<String, Message>();
         this.deliveredMessages = new HashMap<String, Message>();
         this.mListeners = mListeners;
         this.host = host;
-//        Random rnd = new Random();
-//        for (int i = 0; i < 5; i++) {
-//            if (i > 0 && nodeList.contains(nodeList.get(i - 1))) {
-//                nodeList.add(rnd.nextInt(nodeSelfish));
-//            } else {
-//                return;
-//            }
-//        }
-        System.setProperty("java.routing.util.Arrays.useLegacyMergeSort", "true");
     }
 
     /**
      * Copy-constructor.
-     *
+     * 
      * @param r Router to copy the settings from.
      */
     protected MessageRouter(MessageRouter r) {
         this.bufferSize = r.bufferSize;
         this.msgTtl = r.msgTtl;
         this.sendQueueMode = r.sendQueueMode;
-        this.nodeSelfish = r.nodeSelfish;
-        this.nodeList = r.nodeList;
+
         this.applications = new HashMap<String, Collection<Application>>();
         for (Collection<Application> apps : r.applications.values()) {
             for (Application app : apps) {
@@ -205,8 +153,9 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Updates router. This method should be called (at least once) on every
-     * simulation interval to update the status of transfer(s).
+     * Updates router.
+     * This method should be called (at least once) on every simulation
+     * interval to update the status of transfer(s).
      */
     public void update() {
         for (Collection<Application> apps : this.applications.values()) {
@@ -218,14 +167,14 @@ public abstract class MessageRouter {
 
     /**
      * Informs the router about change in connections state.
-     *
+     * 
      * @param con The connection that changed
      */
     public abstract void changedConnection(Connection con);
 
     /**
      * Returns a message by ID.
-     *
+     * 
      * @param id ID of the message
      * @return The message
      */
@@ -235,25 +184,22 @@ public abstract class MessageRouter {
 
     /**
      * Checks if this router has a message with certain id buffered.
-     *
+     * 
      * @param id Identifier of the message
      * @return True if the router has message with this id, false if not
      */
-//	protected boolean hasMessage(String id) {
-//		return this.messages.containsKey(id);
-//	}
     public boolean hasMessage(String id) {
         return this.messages.containsKey(id);
     }
 
     /**
      * Returns true if a full message with same ID as the given message has been
-     * received by this host as the <strong>final</strong> recipient (at least
-     * once).
-     *
+     * received by this host as the <strong>final</strong> recipient
+     * (at least once).
+     * 
      * @param m message we're interested of
-     * @return true if a message with the same ID has been received by this host
-     * as the final recipient.
+     * @return true if a message with the same ID has been received by
+     *         this host as the final recipient.
      */
     protected boolean isDeliveredMessage(Message m) {
         return (this.deliveredMessages.containsKey(m.getId()));
@@ -265,7 +211,7 @@ public abstract class MessageRouter {
      * could be deleted (or added) while iterating through the collection, a
      * copy of the collection should be made to avoid concurrent modification
      * exceptions.
-     *
+     * 
      * @return a reference to the messages of this router in collection
      */
     public Collection<Message> getMessageCollection() {
@@ -274,7 +220,7 @@ public abstract class MessageRouter {
 
     /**
      * Returns the number of messages this router has
-     *
+     * 
      * @return How many messages this router has
      */
     public int getNrofMessages() {
@@ -283,7 +229,7 @@ public abstract class MessageRouter {
 
     /**
      * Returns the size of the message buffer.
-     *
+     * 
      * @return The size or Integer.MAX_VALUE if the size isn't defined.
      */
     public int getBufferSize() {
@@ -294,9 +240,9 @@ public abstract class MessageRouter {
      * Returns the amount of free space in the buffer. May return a negative
      * value if there are more messages in the buffer than should fit there
      * (because of creating new messages).
-     *
-     * @return The amount of free space (Integer.MAX_VALUE if the buffer size
-     * isn't defined)
+     * 
+     * @return The amount of free space (Integer.MAX_VALUE if the buffer
+     *         size isn't defined)
      */
     public int getFreeBufferSize() {
         int occupancy = 0;
@@ -314,38 +260,34 @@ public abstract class MessageRouter {
 
     /**
      * Returns the host this router is in
-     *
+     * 
      * @return The host object
      */
-    public DTNHost getHost() {
+    protected DTNHost getHost() {
         return this.host;
     }
-//    protected DTNHost getHost() {
-//        return this.host;
-//    }
 
     /**
      * Start sending a message to another host.
-     *
+     * 
      * @param id Id of the message to send
      * @param to The host to send the message to
      */
     public void sendMessage(String id, DTNHost to) {
         Message m = getMessage(id);
         Message m2;
-        if (m == null) {
-            throw new SimError("no message for id "
-                    + id + " to send at " + this.host);
-        }
+        if (m == null)
+            throw new SimError("no message for id " +
+                    id + " to send at " + this.host);
 
-        m2 = m.replicate();    // send a replicate of the message
+        m2 = m.replicate(); // send a replicate of the message
         to.receiveMessage(m2, this.host);
     }
 
     /**
      * Requests for deliverable message from this router to be sent trough a
      * connection.
-     *
+     * 
      * @param con The connection to send the messages trough
      * @return True if this router started a transfer, false if not
      */
@@ -355,12 +297,13 @@ public abstract class MessageRouter {
 
     /**
      * Try to start receiving a message from another host.
-     *
+     * 
      * @param m    Message to put in the receiving buffer
      * @param from Who the message is from
      * @return Value zero if the node accepted the message (RCV_OK), value less
-     * than zero if node rejected the message (e.g. DENIED_OLD), value bigger
-     * than zero if the other node should try later (e.g. TRY_LATER_BUSY).
+     *         than zero if node rejected the message (e.g. DENIED_OLD), value
+     *         bigger
+     *         than zero if the other node should try later (e.g. TRY_LATER_BUSY).
      */
     public int receiveMessage(Message m, DTNHost from) {
         Message newMessage = m.replicate();
@@ -376,10 +319,10 @@ public abstract class MessageRouter {
     }
 
     /**
-     * This method should be called (on the receiving host) after a message was
-     * successfully transferred. The transferred message is put to the message
-     * buffer unless this host is the final recipient of the message.
-     *
+     * This method should be called (on the receiving host) after a message
+     * was successfully transferred. The transferred message is put to the
+     * message buffer unless this host is the final recipient of the message.
+     * 
      * @param id   Id of the transferred message
      * @param from Host the message was from (previous hop)
      * @return The message that this host received
@@ -390,8 +333,8 @@ public abstract class MessageRouter {
         boolean isFirstDelivery; // is this first delivered instance of the msg
 
         if (incoming == null) {
-            throw new SimError("No message with ID " + id + " in the incoming "
-                    + "buffer of " + this.host);
+            throw new SimError("No message with ID " + id + " in the incoming " +
+                    "buffer of " + this.host);
         }
 
         incoming.setReceiveTime(SimClock.getTime());
@@ -402,17 +345,16 @@ public abstract class MessageRouter {
             // Note that the order of applications is significant
             // since the next one gets the output of the previous.
             outgoing = app.handle(outgoing, this.host);
-            if (outgoing == null) {
+            if (outgoing == null)
                 break; // Some app wanted to drop the message
-            }
         }
 
         Message aMessage = (outgoing == null) ? (incoming) : (outgoing);
         // If the application re-targets the message (changes 'to')
         // then the message is not considered as 'delivered' to this host.
         isFinalRecipient = aMessage.getTo() == this.host;
-        isFirstDelivery = isFinalRecipient
-                && !isDeliveredMessage(aMessage);
+        isFirstDelivery = isFinalRecipient &&
+                !isDeliveredMessage(aMessage);
 
         if (!isFinalRecipient && outgoing != null) {
             // not the final recipient and app doesn't want to drop the message
@@ -431,9 +373,9 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Puts a message to incoming messages buffer. Two messages with the same ID
-     * are distinguished by the from host.
-     *
+     * Puts a message to incoming messages buffer. Two messages with the
+     * same ID are distinguished by the from host.
+     * 
      * @param m    The message to put
      * @param from Who the message was from (previous hop).
      */
@@ -444,7 +386,7 @@ public abstract class MessageRouter {
     /**
      * Removes and returns a message with a certain ID from the incoming
      * messages buffer or null if such message wasn't found.
-     *
+     * 
      * @param id   ID of the message
      * @param from The host that sent this message (previous hop)
      * @return The found message or null if such message wasn't found
@@ -454,9 +396,9 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Returns true if a message with the given ID is one of the currently
-     * incoming messages, false if not
-     *
+     * Returns true if a message with the given ID is one of the
+     * currently incoming messages, false if not
+     * 
      * @param id ID of the message
      * @return True if such message is incoming right now
      */
@@ -465,9 +407,9 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Adds a message to the message buffer and informs message listeners about
-     * new message (if requested).
-     *
+     * Adds a message to the message buffer and informs message listeners
+     * about new message (if requested).
+     * 
      * @param m          The message to add
      * @param newMessage If true, message listeners are informed about a new
      *                   message, if false, nothing is informed.
@@ -484,7 +426,7 @@ public abstract class MessageRouter {
 
     /**
      * Removes and returns a message from the message buffer.
-     *
+     * 
      * @param id Identifier of the message to remove
      * @return The removed message or null if message for the ID wasn't found
      */
@@ -496,17 +438,18 @@ public abstract class MessageRouter {
     /**
      * This method should be called (on the receiving host) when a message
      * transfer was aborted.
-     *
+     * 
      * @param id             Id of the message that was being transferred
      * @param from           Host the message was from (previous hop)
-     * @param bytesRemaining Nrof bytes that were left before the transfer would
-     *                       have been ready; or -1 if the number of bytes is not known
+     * @param bytesRemaining Nrof bytes that were left before the transfer
+     *                       would have been ready; or -1 if the number of bytes is
+     *                       not known
      */
     public void messageAborted(String id, DTNHost from, int bytesRemaining) {
         Message incoming = removeFromIncomingBuffer(id, from);
         if (incoming == null) {
-            throw new SimError("No incoming message for id " + id
-                    + " to abort in " + this.host);
+            throw new SimError("No incoming message for id " + id +
+                    " to abort in " + this.host);
         }
 
         for (MessageListener ml : this.mListeners) {
@@ -516,10 +459,10 @@ public abstract class MessageRouter {
 
     /**
      * Creates a new message to the router.
-     *
+     * 
      * @param m The message to create
-     * @return True if the creation succeeded, false if not (e.g. the message
-     * was too big for the buffer)
+     * @return True if the creation succeeded, false if not (e.g.
+     *         the message was too big for the buffer)
      */
     public boolean createNewMessage(Message m) {
         m.setTtl(this.msgTtl);
@@ -528,20 +471,20 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Deletes a message from the buffer and informs message listeners about the
-     * event
-     *
+     * Deletes a message from the buffer and informs message listeners
+     * about the event
+     * 
      * @param id   Identifier of the message to delete
      * @param drop If the message is dropped (e.g. because of full buffer) this
-     *             should be set to true. False value indicates e.g. remove of message
+     *             should be set to true. False value indicates e.g. remove of
+     *             message
      *             because it was delivered to final destination.
      */
     public void deleteMessage(String id, boolean drop) {
         Message removed = removeFromMessages(id);
-        if (removed == null) {
-            throw new SimError("no message for id "
-                    + id + " to remove at " + this.host);
-        }
+        if (removed == null)
+            throw new SimError("no message for id " +
+                    id + " to remove at " + this.host);
 
         for (MessageListener ml : this.mListeners) {
             ml.messageDeleted(removed, this.host, drop);
@@ -552,23 +495,20 @@ public abstract class MessageRouter {
      * Sorts/shuffles the given list according to the current sending queue
      * mode. The list can contain either Message or Tuple<Message, Connection>
      * objects. Other objects cause error.
-     *
+     * 
      * @param list The list to sort or shuffle
      * @return The sorted/shuffled list
      */
-    @SuppressWarnings(value = "unchecked")
-    /* ugly way to make this generic */
-    protected List sortByQueueMode(List list) {
+    @SuppressWarnings(value = "unchecked") /* ugly way to make this generic */
+    protected List<Object> sortByQueueMode(List<Object> list) {
         switch (sendQueueMode) {
             case Q_MODE_RANDOM:
                 Collections.shuffle(list, new Random(SimClock.getIntTime()));
                 break;
             case Q_MODE_FIFO:
                 Collections.sort(list,
-                        new Comparator() {
-                            /**
-                             * Compares two tuples by their messages' receiving time
-                             */
+                        new Comparator<Object>() {
+                            /** Compares two tuples by their messages' receiving time */
                             public int compare(Object o1, Object o2) {
                                 double diff;
                                 Message m1, m2;
@@ -580,8 +520,8 @@ public abstract class MessageRouter {
                                     m1 = (Message) o1;
                                     m2 = (Message) o2;
                                 } else {
-                                    throw new SimError("Invalid type of objects in "
-                                            + "the list");
+                                    throw new SimError("Invalid type of objects in " +
+                                            "the list");
                                 }
 
                                 diff = m1.getReceiveTime() - m2.getReceiveTime();
@@ -601,13 +541,13 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Gives the order of the two given messages as defined by the current queue
-     * mode
-     *
+     * Gives the order of the two given messages as defined by the current
+     * queue mode
+     * 
      * @param m1 The first message
      * @param m2 The second message
      * @return -1 if the first message should come first, 1 if the second
-     * message should come first, or 0 if the ordering isn't defined
+     *         message should come first, or 0 if the ordering isn't defined
      */
     protected int compareByQueueMode(Message m1, Message m2) {
         switch (sendQueueMode) {
@@ -628,18 +568,19 @@ public abstract class MessageRouter {
 
     /**
      * Returns routing information about this router.
-     *
+     * 
      * @return The routing information.
      */
     public RoutingInfo getRoutingInfo() {
         RoutingInfo ri = new RoutingInfo(this);
-        RoutingInfo incoming = new RoutingInfo(this.incomingMessages.size()
-                + " incoming message(s)");
-        RoutingInfo delivered = new RoutingInfo(this.deliveredMessages.size()
-                + " delivered message(s)");
+        RoutingInfo incoming = new RoutingInfo(this.incomingMessages.size() +
+                " incoming message(s)");
+        RoutingInfo delivered = new RoutingInfo(this.deliveredMessages.size() +
+                " delivered message(s)");
 
-        RoutingInfo cons = new RoutingInfo(host.getConnections().size()
-                + " connection(s)");
+        // RoutingInfo cons = new RoutingInfo(host.getConnections().size() +
+        RoutingInfo cons = new RoutingInfo(host.getConnectionCount() +
+                " connection(s)");
 
         ri.addMoreInfo(incoming);
         ri.addMoreInfo(delivered);
@@ -654,6 +595,7 @@ public abstract class MessageRouter {
         }
 
         for (Connection c : host.getConnections()) {
+            // for (Connection c : host.getConnections()) {
             cons.addMoreInfo(new RoutingInfo(c));
         }
 
@@ -698,21 +640,23 @@ public abstract class MessageRouter {
     }
 
     /**
-     * Creates a replicate of this router. The replicate has the same settings
-     * as this router but empty buffers and routing tables.
-     *
+     * Creates a replicate of this router. The replicate has the same
+     * settings as this router but empty buffers and routing tables.
+     * 
      * @return The replicate
      */
-    public abstract MessageRouter replicate();
+    // public abstract MessageRouter replicate();
 
     /**
      * Returns a String presentation of this router
-     *
+     * 
      * @return A String presentation of this router
      */
     public String toString() {
-        return getClass().getSimpleName() + " of "
-                + this.getHost().toString() + " with " + getNrofMessages()
+        return getClass().getSimpleName() + " of " +
+                this.getHost().toString() + " with " + getNrofMessages()
                 + " messages";
     }
+
+    public abstract MessageRouter replicate();
 }

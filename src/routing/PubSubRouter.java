@@ -4,7 +4,8 @@ import java.util.*;
 
 import core.*;
 
-public class PubSubRouter extends ActiveRouter {
+public class PubSubRouter extends ActiveRouter
+{
 	public static final String PUBSUB_NS = "PubSubRouter";
 	public static final String ENGINE_SETTING = "decisionEngine";
 
@@ -20,26 +21,40 @@ public class PubSubRouter extends ActiveRouter {
 
 	protected List<Tuple<Message, Connection>> outgoingMessages;
 
-	public PubSubRouter(Settings s) {
+	public PubSubRouter(Settings s)
+	{
 		super(s);
 
 		Settings routeSettings = new Settings(PUBSUB_NS);
 
 		outgoingMessages = new LinkedList<Tuple<Message, Connection>>();
 
-		decider = (RoutingDecisionEngine) routeSettings.createIntializedObject(
+		decider = (RoutingDecisionEngine)routeSettings.createIntializedObject(
 				"routing." + routeSettings.getSetting(ENGINE_SETTING));
 	}
 
-	public PubSubRouter(PubSubRouter r) {
+	public PubSubRouter(PubSubRouter r)
+	{
 		super(r);
 		outgoingMessages = new LinkedList<Tuple<Message, Connection>>();
 
 		decider = r.decider.replicate();
 	}
 
+	/*protected void init()
+	{
+		Settings routeSettings = new Settings(PUBSUB_NS);
+
+		outgoingMessages = new LinkedList<Tuple<Message, Connection>>();
+
+		decider = (RoutingDecisionEngine)routeSettings.createIntializedObject(
+				"routing." +
+				routeSettings.getSetting(ENGINE_SETTING));
+	}*/
+
 	@Override
-	public MessageRouter replicate() {
+	public MessageRouter replicate()
+	{
 		return new PubSubRouter(this);
 	}
 
@@ -49,8 +64,10 @@ public class PubSubRouter extends ActiveRouter {
 	 * @see routing.ActiveRouter#createNewMessage(core.Message)
 	 */
 	@Override
-	public boolean createNewMessage(Message m) {
-		if (decider.newMessage(m)) {
+	public boolean createNewMessage(Message m)
+	{
+		if(decider.newMessage(m))
+		{
 			makeRoomForNewMessage(m.getSize());
 			addToMessages(m, true);
 			return true;
@@ -59,42 +76,52 @@ public class PubSubRouter extends ActiveRouter {
 	}
 
 	@Override
-	public void changedConnection(Connection con) {
+	public void changedConnection(Connection con)
+	{
 		DTNHost myHost = getHost();
 		DTNHost otherNode = con.getOtherNode(myHost);
-		if (con.isUp()) {
+		if(con.isUp())
+		{
 			decider.connectionUp(myHost, otherNode);
 
 			Collection<Message> msgs = getMessageCollection();
-			for (Message m : msgs) {
-				if (decider.shouldSendMessageToHost(m, otherNode, myHost)) // Added myHost as the third argument
-					outgoingMessages.add(new Tuple<Message, Connection>(m, con));
+			for(Message m : msgs)
+			{
+				if(decider.shouldSendMessageToHost(m, otherNode))
+					outgoingMessages.add(new Tuple<Message,Connection>(m, con));
 			}
-		} else {
+		}
+		else
+		{
 			decider.connectionDown(myHost, otherNode);
 
-			for (Iterator<Tuple<Message, Connection>> i = outgoingMessages.iterator();
-				 i.hasNext(); ) {
+			for(Iterator<Tuple<Message,Connection>> i = outgoingMessages.iterator();
+				i.hasNext();)
+			{
 				Tuple<Message, Connection> t = i.next();
-				if (t.getValue() == con)
+				if(t.getValue() == con)
 					i.remove();
 			}
 		}
 	}
 
 	@Override
-	protected int startTransfer(Message m, Connection con) {
+	protected int startTransfer(Message m, Connection con)
+	{
 		int retVal;
 
-		if (!con.isReadyForTransfer()) {
+		if (!con.isReadyForTransfer())
+		{
 			return TRY_LATER_BUSY;
 		}
 
 		retVal = con.startTransfer(getHost(), m);
 		if (retVal == RCV_OK) { // started transfer
 			addToSendingConnections(con);
-		} else if (deleteDelivered && retVal == DENIED_OLD &&
-				decider.shouldDeleteOldMessage(m, con.getOtherNode(getHost()))) {
+		}
+		else if (deleteDelivered && retVal == DENIED_OLD &&
+				decider.shouldDeleteOldMessage(m, con.getOtherNode(getHost())))
+		{
 			/* final recipient has already received the msg -> delete it */
 			System.out.println("Host: " + getHost().getAddress() + " deleting msg: " +
 					m.getId() + " bc host: " + con.getOtherNode(getHost()).getAddress() +
@@ -108,7 +135,8 @@ public class PubSubRouter extends ActiveRouter {
 	}
 
 	@Override
-	public Message messageTransferred(String id, DTNHost from) {
+	public Message messageTransferred(String id, DTNHost from)
+	{
 		Message incoming = removeFromIncomingBuffer(id, from);
 //		String pubname = (String) incoming.getProperty(PUBNAME_PROP);
 
@@ -116,7 +144,7 @@ public class PubSubRouter extends ActiveRouter {
 //				" received message " + incoming.getId() + " for pub: " + pubname);
 
 		if (incoming == null) {
-			throw new SimError("No message with ID " + id + " in the incoming " +
+			throw new SimError("No message with ID " + id + " in the incoming "+
 					"buffer of " + getHost());
 		}
 
@@ -130,26 +158,28 @@ public class PubSubRouter extends ActiveRouter {
 			if (outgoing == null) break; // Some app wanted to drop the message
 		}
 
-		Message aMessage = (outgoing == null) ? (incoming) : (outgoing);
+		Message aMessage = (outgoing==null)?(incoming):(outgoing);
 
 
 		//boolean isSubscriber = mySubscriptions.contains(pubname);
 		boolean isFirstDelivery = decider.isFinalDest(aMessage, getHost()) &&
 				!isDeliveredMessage(aMessage);
 
-		if (outgoing != null && decider.shouldSaveReceivedMessage(aMessage, getHost())) {
+		if (outgoing!=null && decider.shouldSaveReceivedMessage(aMessage, getHost()))
+		{
 			// not the final recipient and app doesn't want to drop the message
 			// -> put to buffer
 			addToMessages(aMessage, false);
 
-			for (Connection c : getHost())
+			for(Connection c : getHost())
 			//for(Connection c : getConnections())
 			{
 				DTNHost other = c.getOtherNode(getHost());
-				if (decider.shouldSendMessageToHost(aMessage, other, getHost())) // Added getHost()
+				if(decider.shouldSendMessageToHost(aMessage, other))
 					outgoingMessages.add(new Tuple<Message, Connection>(aMessage, c));
 			}
-		} else if (isFirstDelivery) {
+		}
+		else if (isFirstDelivery) {
 			this.deliveredMessages.put(id, aMessage);
 		}
 
@@ -162,12 +192,14 @@ public class PubSubRouter extends ActiveRouter {
 	}
 
 	@Override
-	protected void transferDone(Connection con) {
+	protected void transferDone(Connection con)
+	{
 		Message transferred = con.getMessage();
 
 		removeMsgAndConFromOutgoingQueue(transferred, con);
 
-		if (decider.shouldDeleteSentMessage(transferred, con.getOtherNode(getHost()))) {
+		if(decider.shouldDeleteSentMessage(transferred, con.getOtherNode(getHost())))
+		{
 			System.out.println("Host:" + getHost().getAddress() + " deleting msg: " +
 					transferred.getId());
 			this.deleteMessage(transferred.getId(), false);
@@ -175,44 +207,50 @@ public class PubSubRouter extends ActiveRouter {
 	}
 
 	@Override
-	public void update() {
+	public void update()
+	{
 		super.update();
-		if (!canStartTransfer() || isTransferring()) {
+		if (!canStartTransfer() ||isTransferring()) {
 			return; // nothing to transfer or is currently transferring
 		}
 
 		tryMessagesForConnected(outgoingMessages);
 
-		for (Iterator<Tuple<Message, Connection>> i = outgoingMessages.iterator();
-			 i.hasNext(); ) {
+		for(Iterator<Tuple<Message, Connection>> i = outgoingMessages.iterator();
+			i.hasNext();)
+		{
 			Tuple<Message, Connection> t = i.next();
-			if (!this.hasMessage(t.getKey().getId())) {
+			if(!this.hasMessage(t.getKey().getId()))
+			{
 				i.remove();
 			}
 		}
 	}
 
-	public RoutingDecisionEngine getDecisionEngine() {
+	public RoutingDecisionEngine getDecisionEngine()
+	{
 		return this.decider;
 	}
 
-	protected void removeMsgAndConFromOutgoingQueue(Message m, Connection con) {
-		for (Iterator<Tuple<Message, Connection>> i = outgoingMessages.iterator();
-			 i.hasNext(); ) {
+	protected void removeMsgAndConFromOutgoingQueue(Message m, Connection con)
+	{
+		for(Iterator<Tuple<Message, Connection>> i = outgoingMessages.iterator();
+			i.hasNext();)
+		{
 			Tuple<Message, Connection> t = i.next();
-			if (t.getKey().equals(m) &&
-					t.getValue().equals(con)) {
+			if(t.getKey().equals(m) &&
+					t.getValue().equals(con))
+			{
 				i.remove();
 				break;
 			}
 		}
 	}
 
-
 	/**
 	 * A PRoPHET-based routing algorithm for publish/subscribe routing
-	 *
 	 * @author knightcode
+	 *
 	 */
 	/*class ProphetDecisionEngine implements RoutingDecisionEngine
 	{
@@ -423,8 +461,8 @@ public class PubSubRouter extends ActiveRouter {
 	/**
 	 * A Spray and Focus routing algorithm for subject based publish/subscribe
 	 * routing
-	 *
 	 * @author PJ Dillon
+	 *
 	 */
 	/*class SnFDecisionEngine implements RoutingDecisionEngine
 	{

@@ -1,6 +1,6 @@
-/* 
+/*
  * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details. 
+ * Released under GPLv3. See LICENSE.txt for details.
  */
 package routing;
 
@@ -13,7 +13,7 @@ import core.Settings;
  * (or fragments) and forwards it to the first available contact.
  */
 public class FirstContactRouter extends ActiveRouter {
-	
+
 	/**
 	 * Constructor. Creates a new message router based on the settings in
 	 * the given Settings object.
@@ -22,7 +22,7 @@ public class FirstContactRouter extends ActiveRouter {
 	public FirstContactRouter(Settings s) {
 		super(s);
 	}
-	
+
 	/**
 	 * Copy constructor.
 	 * @param r The router prototype where setting values are copied from
@@ -30,41 +30,41 @@ public class FirstContactRouter extends ActiveRouter {
 	protected FirstContactRouter(FirstContactRouter r) {
 		super(r);
 	}
-	
+
 	@Override
 	protected int checkReceiving(Message m) {
-		int recvCheck = super.checkReceiving(m); 
-		
+		int recvCheck = super.checkReceiving(m);
+
 		if (recvCheck == RCV_OK) {
 			/* don't accept a message that has already traversed this node */
 			if (m.getHops().contains(getHost())) {
 				recvCheck = DENIED_OLD;
 			}
 		}
-		
+
 		return recvCheck;
 	}
-			
+
 	@Override
 	public void update() {
 		super.update();
 		if (isTransferring() || !canStartTransfer()) {
-			return; 
+			return;
 		}
-		
+
 		if (exchangeDeliverableMessages() != null) {
-			return; 
+			return;
 		}
-		
+
 		tryAllMessagesToAllConnections();
 	}
-	
+
 	@Override
 	protected void transferDone(Connection con) {
 		/* don't leave a copy for the sender */
 		this.deleteMessage(con.getMessage().getId(), false);
 	}
-		
+
 	@Override
 	public FirstContactRouter replicate() {
 		return new FirstContactRouter(this);

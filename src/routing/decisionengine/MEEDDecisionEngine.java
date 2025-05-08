@@ -7,45 +7,40 @@ import routing.*;
 
 public class MEEDDecisionEngine implements RoutingDecisionEngine
 {
-	
+
 	protected Map<Tuple<DTNHost, DTNHost>, Double> avgWaitingTimes;
 
 	public MEEDDecisionEngine(Settings s)
 	{
-		
+
 	}
-	
+
 	public MEEDDecisionEngine(MEEDDecisionEngine meed)
 	{
-		
+
 	}
-	
+
 	public RoutingDecisionEngine replicate()
 	{
 		return new MEEDDecisionEngine(this);
 	}
 
-	@Override
-	public void update(DTNHost thisHost) {
-
-	}
-
 	public void connectionDown(DTNHost thisHost, DTNHost peer)
 	{
-	// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
 
 	}
 
 	public void connectionUp(DTNHost thisHost, DTNHost peer)
 	{
-	// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
 
 	}
 
 	public void doExchangeForNewConnection(Connection con, DTNHost peer)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public boolean isFinalDest(Message m, DTNHost aHost)
@@ -66,6 +61,11 @@ public class MEEDDecisionEngine implements RoutingDecisionEngine
 		return false;
 	}
 
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
 	{
 		// TODO Auto-generated method stub
@@ -75,11 +75,6 @@ public class MEEDDecisionEngine implements RoutingDecisionEngine
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost)
 	{
 		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
 		return false;
 	}
 
