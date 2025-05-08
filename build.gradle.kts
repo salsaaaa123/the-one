@@ -40,8 +40,13 @@ tasks.named<JavaExec>("run") {
     jvmArgs = listOf("-Xmx512M")  // Alokasi memori yang cukup
 
     classpath = sourceSets.main.get().runtimeClasspath  // Pakai classpath yang benar dari Gradle
+/*
+* Jangan anda ganti ini
+* args = listOf("1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
+*/
+//    args = listOf("1", "default_settings.txt")  
 
-    args = listOf("-b","1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/Epidemic/EpidemicDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/SprayAndWait/SprayAndWaitDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/Prophet/ProphetDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
@@ -55,7 +60,14 @@ tasks.named<JavaExec>("run") {
 //    args = listOf("-b","1", "config/bublerap/bublerap_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/bublerap/settings_reality-bubblerap.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/PeopleRank/PeopleRankDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-
+//    args = listOf("-b","1", "config/Prophet/prophet_settings_dec.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/Prophet/prophet2_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","1", "config/Prophet/eunhaklee-prophetplus.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","6", "config/Prophet/prophetRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","6", "config/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
+   args = listOf("-b","6", "config/Prophet/prophetOriginal_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("-b","6", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("1", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 }
 
 

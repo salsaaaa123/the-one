@@ -1,6 +1,6 @@
-/* 
+/*
  * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details. 
+ * Released under GPLv3. See LICENSE.txt for details.
  */
 package routing;
 
@@ -23,14 +23,14 @@ import core.Tuple;
  * Implementation of PRoPHET router as described in 
  * <I>Probabilistic routing in intermittently connected networks</I> by
  * Anders Lindgren et al.
- * 
- * 
+ *
+ *
  * This version tries to estimate a good value of protocol parameters from
  * a timescale parameter given by the user, and from the encounters the node
  * sees during simulation.
  * Refer to Karvo and Ott, <I>Time Scales and Delay-Tolerant Routing 
  * Protocols</I> Chants, 2008 
- * 
+ *
  */
 public class ProphetRouterWithEstimation extends ActiveRouter {
 	/** delivery predictability initialization constant*/
@@ -42,14 +42,14 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	/** default P target */
 	public static final double DEFAULT_PTARGET = .2;
 
-	/** Prophet router's setting namespace ({@value})*/ 
+	/** Prophet router's setting namespace ({@value})*/
 	public static final String PROPHET_NS = "ProphetRouterWithEstimation";
 	/**
 	 * Number of seconds in time scale.*/
 	public static final String TIME_SCALE_S ="timeScale";
 	/**
 	 * Target P_avg
-	 * 
+	 *
 	 */
 	public static final String P_AVG_TARGET_S = "targetPavg";
 
@@ -141,7 +141,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 			DTNHost otherHost = con.getOtherNode(getHost());
 			if (updateIET(otherHost)) {
 				updateParams();
-			} 
+			}
 			updateDeliveryPredFor(otherHost);
 			updateTransitivePreds(otherHost);
 		}
@@ -151,7 +151,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	 * Updates the interencounter time estimates
 	 * @param host
 	 */
-	private boolean updateIET(DTNHost host) {		
+	private boolean updateIET(DTNHost host) {
 		/* First estimate the mean InterEncounter Time */
 		double currentTime = SimClock.getTime();
 		if (meetings.containsKey(host)) {
@@ -160,14 +160,14 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 
 			nrofSamples++;
 			meanIET = (((double)nrofSamples -1) / (double)nrofSamples) * meanIET
-			+ (1 / (double)nrofSamples) * timeDiff;
+					+ (1 / (double)nrofSamples) * timeDiff;
 			meetings.put(host, currentTime);
 			return true;
 		} else {
 			/* nothing to update */
 			meetings.put(host,currentTime);
 			return false;
-		}		
+		}
 	}
 
 	/**
@@ -184,7 +184,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 		double zetadiff;
 		int ozeta;
 		double pstable;
-		double pavg;		
+		double pavg;
 		double ee;
 		double bdiff;
 		int ob;
@@ -207,7 +207,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 		if (meanIET == 0) {
 			System.out.printf("Mean IET == 0\n");
 			return;
-		}			
+		}
 
 		System.out.printf("prophetfindparams(%d,%f,%f);\n",timescale,ptavg,meanIET);
 		b = 1e-5;
@@ -220,7 +220,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 		while (cond == false) {
 			pstable = (1-zeta)/(Math.exp(b*meanIET)-zeta);
 			pavg = (1/(b*meanIET)) * (1-zeta*(1-pstable)) *
-			(1- Math.exp( -b*meanIET));
+					(1- Math.exp( -b*meanIET));
 
 			if (Double.isNaN(pavg)) {
 				pavg = 1;
@@ -258,7 +258,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 
 			//System.out.printf("Zeta: %f Zetadiff: %f\n",zeta,zetadiff);
 			ee = 1;
-			bdiff = .1;			
+			bdiff = .1;
 			ob = 0;
 			zcount = 0; // if 100 iterations won't help, lets increase zeta...
 			bcheck = false;
@@ -266,8 +266,8 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 
 				pstable = (1-zeta)/(Math.exp(b*meanIET)-zeta);
 				pnzero = Math.exp(-b*meanIET) * (1-zeta) *
-				((1-Math.pow(zeta*Math.exp(-b*meanIET),ntarg-1))/
-						(1-zeta*Math.exp(-b*meanIET)));
+						((1-Math.pow(zeta*Math.exp(-b*meanIET),ntarg-1))/
+								(1-zeta*Math.exp(-b*meanIET)));
 				pnone = Math.pow(zeta*Math.exp(-b*meanIET),ntarg) + pnzero;
 				eezero = Math.abs(pnzero-pstable);
 				eeone  = Math.abs(pnone -pstable);
@@ -349,12 +349,12 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	 */
 	private void updateTransitivePreds(DTNHost host) {
 		MessageRouter otherRouter = host.getRouter();
-		assert otherRouter instanceof ProphetRouterWithEstimation : "PRoPHET only works " + 
-		" with other routers of same type";
+		assert otherRouter instanceof ProphetRouterWithEstimation : "PRoPHET only works " +
+				" with other routers of same type";
 
 		double pForHost = getPredFor(host); // P(a,b)
-		Map<DTNHost, Double> othersPreds = 
-			((ProphetRouterWithEstimation)otherRouter).getDeliveryPreds();
+		Map<DTNHost, Double> othersPreds =
+				((ProphetRouterWithEstimation)otherRouter).getDeliveryPreds();
 
 		for (Map.Entry<DTNHost, Double> e : othersPreds.entrySet()) {
 			if (e.getKey() == getHost()) {
@@ -409,7 +409,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 			return;
 		}
 
-		tryOtherMessages();		
+		tryOtherMessages();
 	}
 
 	/**
@@ -418,8 +418,8 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	 * @return The return value of {@link #tryMessagesForConnected(List)}
 	 */
 	private Tuple<Message, Connection> tryOtherMessages() {
-		List<Tuple<Message, Connection>> messages = 
-			new ArrayList<Tuple<Message, Connection>>(); 
+		List<Tuple<Message, Connection>> messages =
+				new ArrayList<Tuple<Message, Connection>>();
 
 		Collection<Message> msgCollection = getMessageCollection();
 
@@ -442,7 +442,7 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 					// the other node has higher probability of delivery
 					messages.add(new Tuple<Message, Connection>(m,con));
 				}
-			}			
+			}
 		}
 
 		if (messages.size() == 0) {
@@ -459,19 +459,19 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	 * their delivery probability by the host on the other side of the 
 	 * connection (GRTRMax)
 	 */
-	private class TupleComparator implements Comparator 
-	<Tuple<Message, Connection>> {
+	private class TupleComparator implements Comparator
+			<Tuple<Message, Connection>> {
 
 		public int compare(Tuple<Message, Connection> tuple1,
-				Tuple<Message, Connection> tuple2) {
+						   Tuple<Message, Connection> tuple2) {
 			// delivery probability of tuple1's message with tuple1's connection
 			double p1 = ((ProphetRouterWithEstimation)tuple1.getValue().
 					getOtherNode(getHost()).getRouter()).getPredFor(
-							tuple1.getKey().getTo());
+					tuple1.getKey().getTo());
 			// -"- tuple2...
 			double p2 = ((ProphetRouterWithEstimation)tuple2.getValue().
 					getOtherNode(getHost()).getRouter()).getPredFor(
-							tuple2.getKey().getTo());
+					tuple2.getKey().getTo());
 
 			// bigger probability should come first
 			if (p2-p1 == 0) {
@@ -491,14 +491,14 @@ public class ProphetRouterWithEstimation extends ActiveRouter {
 	public RoutingInfo getRoutingInfo() {
 		ageDeliveryPreds();
 		RoutingInfo top = super.getRoutingInfo();
-		RoutingInfo ri = new RoutingInfo(preds.size() + 
-		" delivery prediction(s)");
+		RoutingInfo ri = new RoutingInfo(preds.size() +
+				" delivery prediction(s)");
 
 		for (Map.Entry<DTNHost, Double> e : preds.entrySet()) {
 			DTNHost host = e.getKey();
 			Double value = e.getValue();
 
-			ri.addMoreInfo(new RoutingInfo(String.format("%s : %.6f", 
+			ri.addMoreInfo(new RoutingInfo(String.format("%s : %.6f",
 					host, value)));
 		}
 

@@ -13,14 +13,9 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 		return null;
 	}
 
-	@Override
-	public void update(DTNHost thisHost) {
-
-	}
-
 	public void connectionDown(DTNHost thisHost, DTNHost peer)
 	{
-	// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
 
 	}
 
@@ -32,7 +27,7 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 	public void doExchangeForNewConnection(Connection con, DTNHost peer)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public boolean isFinalDest(Message m, DTNHost aHost)
@@ -53,6 +48,11 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 		return false;
 	}
 
+	@Override
+	public void update(DTNHost thisHost) {
+
+	}
+
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
 	{
 		// TODO Auto-generated method stub
@@ -65,17 +65,12 @@ public class LocationAidedDecisionEngine implements RoutingDecisionEngine
 		return false;
 	}
 
-	@Override
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-		return false;
-	}
-
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost)
 	{
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
+
 	private class EncounterInfo
 	{
 		double locationTimestamp;

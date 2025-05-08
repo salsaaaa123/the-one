@@ -31,7 +31,7 @@ public class ProphetRouterWithPreP extends ActiveRouter {
     /**
      * Prophet router's setting namespace ({@value})
      */
-    public static final String PROPHET_NS = "ProphetRouter";
+    public static final String PROPHET_NS = "ProphetRouterWithPreP";
     /**
      * Number of seconds in time unit -setting id ({@value}).
      * How many seconds one time unit is when calculating aging of
@@ -104,25 +104,46 @@ public class ProphetRouterWithPreP extends ActiveRouter {
         this.prevPreds = new HashMap<>();
     }
 
+    // @Override
+    // public int receiveMessage(Message m, DTNHost from) {
+    // // Ambil dan simpan prediktabilitas saat ini SEBELUM memproses lebih lanjut
+    // // Ini menangkap P(penerima, tujuan) pada saat penerimaan.
+    // DTNHost destination = m.getTo();
+    // double currentPredForDest = getPredFor(destination); // Mengambil P(A,D)
+    // penerima
+    //
+    // int receptionStatus = super.receiveMessage(m, from);
+    //
+    // // Jika pesan berhasil diterima (bukan duplikat, buffer cukup)
+    // if (receptionStatus == RCV_OK) {
+    // // Simpan prediktabilitas SAAT PENERIMAAN sebagai preP untuk tujuan ini.
+    // // Ini meng-overwrite preP sebelumnya jika ada pesan lain untuk tujuan yg
+    // sama diterima.
+    // this.prevPreds.put(destination, currentPredForDest); // Menyimpan P(A,D)
+    // sebagai preP(A,D)
+    // }
+    //
+    // return receptionStatus;
+    // }
 
-    @Override
-    public int receiveMessage(Message m, DTNHost from) {
-        // Ambil dan simpan prediktabilitas saat ini SEBELUM memproses lebih lanjut
-        // Ini menangkap P(penerima, tujuan) pada saat penerimaan.
-        DTNHost destination = m.getTo();
-        double currentPredForDest = getPredFor(destination); // Mengambil P(A,D) penerima
-
-        int receptionStatus = super.receiveMessage(m, from);
-
-        // Jika pesan berhasil diterima (bukan duplikat, buffer cukup)
-        if (receptionStatus == RCV_OK) {
-            // Simpan prediktabilitas SAAT PENERIMAAN sebagai preP untuk tujuan ini.
-            // Ini meng-overwrite preP sebelumnya jika ada pesan lain untuk tujuan yg sama diterima.
-            this.prevPreds.put(destination, currentPredForDest); // Menyimpan P(A,D) sebagai preP(A,D)
-        }
-
-        return receptionStatus;
-    }
+    //
+    // @Override
+    // public Message messageTransferred(String id, DTNHost from) {
+    // Message m = super.messageTransferred(id, from);
+    //
+    //
+    // if (m != null) {
+    // DTNHost destination = m.getTo();
+    // // Ambil prediktabilitas SAAT INI (setelah transfer selesai)
+    // // Pastikan aging sudah diperhitungkan jika getPredFor memanggilnya
+    // double predAtTransferEnd = getPredFor(destination);
+    //
+    // // Simpan nilai ini sebagai preP untuk tujuan tersebut
+    // this.prevPreds.put(destination, predAtTransferEnd);
+    // }
+    //
+    // return m;
+    // }
 
     @Override
     public void changedConnection(Connection con) {
@@ -174,8 +195,7 @@ public class ProphetRouterWithPreP extends ActiveRouter {
                 " with other routers of same type";
 
         double pForHost = getPredFor(host); // P(a,b)
-        Map<DTNHost, Double> othersPreds =
-                ((ProphetRouterWithPreP) otherRouter).getDeliveryPreds();
+        Map<DTNHost, Double> othersPreds = ((ProphetRouterWithPreP) otherRouter).getDeliveryPreds();
 
         for (Map.Entry<DTNHost, Double> e : othersPreds.entrySet()) {
             if (e.getKey() == getHost()) {
@@ -240,7 +260,7 @@ public class ProphetRouterWithPreP extends ActiveRouter {
      * Returns the previous prediction preP(this, host) value for a destination,
      * or null if no preP value is recorded (e.g., message originated here).
      *
-     * @param destinationHost The destination host to look the preP for
+     * @param //destinationHost The destination host to look the preP for
      * @return the preP value, or null if not set
      */
     public Double getPrevPredFor(DTNHost destinationHost) {
@@ -249,83 +269,228 @@ public class ProphetRouterWithPreP extends ActiveRouter {
     }
 
     /**
+     * Merekam prediktabilitas pengiriman saat ini ke tujuan yang diberikan
+     * sebagai nilai preP baru untuk tujuan tersebut.
+     * Metode ini dipanggil oleh router PENGIRIM.
+     *
+     * @param destination Tujuan akhir dari pesan yang akan diteruskan.
+     */
+    public void recordCurrentPredictabilityAsPreP(DTNHost destination) {
+        double currentPredForDest = getPredFor(destination);
+        this.prevPreds.put(destination, currentPredForDest);
+    }
+
+    /**
      * Tries to send all other messages to all connected hosts ordered by
      * their delivery probability
      *
      * @return The return value of {@link #tryMessagesForConnected(List)}
      */
-    private Tuple<Message, Connection> tryOtherMessages() {
-        List<Tuple<Message, Connection>> messages =
-                new ArrayList<Tuple<Message, Connection>>();
+    // private Tuple<Message, Connection> tryOtherMessages() {
+    // List<Tuple<Message, Connection>> messages =
+    // new ArrayList<Tuple<Message, Connection>>();
+    //
+    // Collection<Message> msgCollection = getMessageCollection();
+    //
+    // /* for all connected hosts collect all messages that have a higher
+    // probability of delivery by the other host */
+    //// for (Connection con : getHost()) {
+    // for (Connection con : getConnections()) {
+    // DTNHost other = con.getOtherNode(getHost());
+    //// MessageRouter othRouterUncasted = other.getRouter();
+    //// if (!(othRouterUncasted instanceof ProphetRouterWithPreP)) {
+    //// continue;
+    //// }
+    // ProphetRouterWithPreP othRouter = (ProphetRouterWithPreP) other.getRouter();
+    //
+    // if (othRouter.isTransferring()) {
+    // continue; // skip hosts that are transferring
+    // }
+    //
+    // for (Message m : msgCollection) {
+    // DTNHost destinationD = m.getTo(); // Tujuan akhir pesan ( D)
+    //// if (m.getTo() == other) {
+    //// continue;
+    //// }
+    // // Jangan proses jika pesan untuk node B itu sendiri
+    // if (destinationD == other) {
+    // continue;
+    // }
+    // // Jangan proses jika node B sudah punya pesan ini
+    // if (othRouter.hasMessage(m.getId())) {
+    // continue; // skip messages that the other one has
+    // }
+    // // --- MULAI LOGIKA INTI FLOWCHART (untuk B != D) ---
+    //
+    // // Dapatkan P(A, D): Prediktabilitas node ini (A) ke tujuan D.
+    // double p_ad = getPredFor(destinationD);
+    // // Dapatkan P(B, D): Prediktabilitas node kontak (B) ke tujuan D.
+    // double p_bd = othRouter.getPredFor(destinationD);
+    //
+    // /*
+    // * Implementasi Flowchart Langkah 5: Apakah P(B,D) > P(A,D) ?
+    // * Cek apakah Node B saat ini lebih baik daripada Node A untuk mencapai D.
+    // */
+    // if (p_bd > p_ad) {
+    // /*
+    // * Jika Ya (P(B,D) > P(A,D)), Node B berpotensi jadi penerus.
+    // * Sekarang terapkan syarat tambahan dari protokol ini (cek preP).
+    // */
+    //
+    // // Dapatkan preP(A, D): Prediktabilitas historis Node A ke D
+    // // yang disimpan saat Node A menerima pesan ini (atau pesan lain untuk D).
+    // Double preP_ad = getPrevPredFor(destinationD);
+    //
+    // // Flag untuk menandai apakah pesan ini akhirnya boleh diforward atau tidak.
+    // boolean forwardThisMessage = false;
+    //
+    // /*
+    // * Implementasi Flowchart Langkah 6: Apakah Node A punya informasi preP(A,D)?
+    // * Cek apakah ada catatan historis untuk tujuan D.
+    // */
+    // if (preP_ad == null) {
+    // /*
+    // * Jika Tidak (preP_ad tidak ada): Ini biasanya berarti pesan ini
+    // * berasal dari Node A sendiri. Tidak ada pembanding historis.
+    // * Karena syarat P(B,D) > P(A,D) sudah terpenuhi, kita putuskan
+    // * untuk meneruskan pesan. Flowchart -> Ya (Boleh Forward).
+    // */
+    // forwardThisMessage = true;
+    // } else {
+    // /*
+    // * Jika Ya (preP_ad ada): Ada standar historis. Kita perlu
+    // * membandingkan performa Node B saat ini dengan standar tersebut.
+    // * Lanjut ke langkah berikutnya.
+    // */
+    //
+    // /*
+    // * Implementasi Flowchart Langkah 7: Apakah P(B,D) >= preP(A,D) ?
+    // * Cek apakah Node B saat ini setidaknya sama baiknya atau lebih baik
+    // * daripada 'standar' historis Node A (preP_ad).
+    // */
+    // if (p_bd >= preP_ad) {
+    // /*
+    // * Jika Ya: Node B memenuhi kedua syarat (lebih baik dari A saat ini
+    // * DAN lebih baik/sama dengan standar historis).
+    // * Flowchart -> Ya (Boleh Forward).
+    // */
+    // forwardThisMessage = true;
+    // } else {
+    // /*
+    // * Jika Tidak: Node B mungkin lebih baik dari A sekarang, tapi
+    // * tidak cukup baik dibandingkan standar historis (preP).
+    // * Flowchart -> Tidak (Jangan Forward).
+    // * Flag forwardThisMessage tetap false.
+    // */
+    // forwardThisMessage = false; // Eksplisit (opsional, sudah false by default)
+    // }
+    // } // Akhir dari blok cek preP_ad
+    //
+    // /*
+    // * Setelah melalui semua cek logika flowchart, jika flag forwardThisMessage
+    // * adalah true, tambahkan pesan dan koneksi ini ke daftar kandidat
+    // * yang akan diurutkan dan dicoba kirim.
+    // */
+    // if (forwardThisMessage) {
+    // messages.add(new Tuple<Message, Connection>(m, con));
+    // }
+    //
+    // } // End dari blok if (p_bd > p_ad)
+    // } // End loop 'for (Message m ...)'
+    // } // End Connection con ...)'
+    //
+    // // Jika tidak ada pesan yang memenuhi syarat untuk diteruskan, selesai.
+    // if (messages.size() == 0) {
+    // return null;
+    // }
+    //
+    // /*
+    // * Ada pesan kandidat. Urutkan pesan-pesan ini berdasarkan kriteria
+    // * di TupleComparator (prioritas utama: P(B,D) tertinggi,
+    // * prioritas kedua: ID pesan jika P(B,D) sama).
+    // */
+    // Collections.sort(messages, new TupleComparator());
+    //
+    // /*
+    // * Coba kirim pesan dari daftar yang sudah terurut melalui koneksi yang
+    // sesuai.
+    // * Metode tryMessagesForConnected akan mencoba mengirim pesan pertama,
+    // * jika berhasil ia akan mengembalikan Tuple-nya, jika gagal (misal koneksi
+    // sibuk),
+    // * ia akan mencoba pesan berikutnya, dst.
+    // */
+    // return tryMessagesForConnected(messages);
+    // }
 
+    private Tuple<Message, Connection> tryOtherMessages() {
+        List<Tuple<Message, Connection>> messages = new ArrayList<>(); // Gunakan diamond operator
         Collection<Message> msgCollection = getMessageCollection();
 
-		/* for all connected hosts collect all messages that have a higher
-		   probability of delivery by the other host */
-//        for (Connection con : getHost()) {
-        for (Connection con : getConnections()) {
-            DTNHost other = con.getOtherNode(getHost());
-            MessageRouter othRouterUncasted = other.getRouter();
-            if (!(othRouterUncasted instanceof ProphetRouterWithPreP)) {
+        for (Connection con : getHost().getConnections()) {
+            DTNHost other = con.getOtherNode(getHost()); // Node B
+            // Pastikan casting aman
+            if (!(other.getRouter() instanceof ProphetRouterWithPreP))
                 continue;
-            }
             ProphetRouterWithPreP othRouter = (ProphetRouterWithPreP) other.getRouter();
 
+            // Lewati jika node lain sedang sibuk
             if (othRouter.isTransferring()) {
-                continue; // skip hosts that are transferring
+                continue;
             }
 
             for (Message m : msgCollection) {
-                DTNHost destinationD = m.getTo(); // Tujuan akhir pesan ( D)
-//                if (m.getTo() == other) {
-//                    continue;
-//                }
-                // Jangan proses jika pesan untuk node B itu sendiri (sudah dihandle exchangeDeliverableMessages)
+                DTNHost destinationD = m.getTo(); // Node D (tujuan akhir)
+
+                // Lewati jika node lain adalah tujuan akhir
                 if (destinationD == other) {
                     continue;
                 }
-                // Jangan proses jika node B sudah punya pesan ini
+                // Lewati jika node lain sudah punya pesan ini
                 if (othRouter.hasMessage(m.getId())) {
-                    continue; // skip messages that the other one has
+                    continue;
                 }
-                // --- Terapkan Logika Forwarding Prophet + preP ---
-                double p_ad = getPredFor(destinationD);      // P(A, D) - A = this
-                double p_bd = othRouter.getPredFor(destinationD); // P(B, D) - B = nodeB
 
-                // 1. Cek Kondisi Dasar Prophet:(PB,D) > P(A,D)
-                if (p_bd > p_ad) {
-                    // 2. cek Kondisi PreP
-                    Double preP_ad = getPrevPredFor(destinationD);// Ambil preP(A, D)
+                // Dapatkan prediktabilitas
+                double p_ad = getPredFor(destinationD); // P(A, D)
+                double p_bd = othRouter.getPredFor(destinationD); // P(B, D)
+
+                // Logika Flowchart Inti
+                if (p_bd > p_ad) { // Langkah 5: P(B,D) > P(A,D)?
+                    Double preP_ad = getPrevPredFor(destinationD); // Ambil preP(A, D)
                     boolean forwardThisMessage = false;
 
-                    if (preP_ad == null) {
-                        // preP(A,D) tidak ada (misal: pesan berasal dari A, hop pertama)
-                        // Forward diizinkan hanya berdasarkan P(B,D) > P(A,D) ( flowchart=YA )
+                    if (preP_ad == null) { // Langkah 6: Ada info preP(A,D)? Tidak -> Boleh forward
                         forwardThisMessage = true;
-                    } else {
-                        // 3. preP(A,D) ada. Cek kondisi tambahan: P(B,D) >= preP(A,D)
-                        if (p_bd >= preP_ad) {
-                            forwardThisMessage = true; // Boleh forward (flowchart: Ya)
-                        } else {
-                            // Kondisi P(B,D) >= preP(A,D) gagal
-                            forwardThisMessage = false;// Tidak boleh forward (flowchart: Tidak)
+                    } else { // Ada info preP(A,D)
+                        if (p_bd >= preP_ad) { // Langkah 7: P(B,D) >= preP(A,D)? Ya -> Boleh forward
+                            forwardThisMessage = true;
                         }
+                        // Jika Langkah 7 Tidak, forwardThisMessage tetap false
                     }
+
+                    // Jika diputuskan untuk forward berdasarkan logika di atas
                     if (forwardThisMessage) {
-                        messages.add(new Tuple<Message, Connection>(m, con));
+                        // 1. Tambahkan ke daftar kandidat
+                        messages.add(new Tuple<>(m, con)); // Gunakan diamond operator
+
+                        // 2. Panggil metode di Node B untuk merekam preP-nya
+                        // (Pendekatan memicu dari pengirim)
+                        othRouter.recordCurrentPredictabilityAsPreP(destinationD);
                     }
+                } // End if (p_bd > p_ad)
+            } // End for (Message m ...)
+        } // End for (Connection con ...)
 
-                }
-            }
-        }
-
-        if (messages.size() == 0) {
+        // Jika tidak ada kandidat pesan, keluar
+        if (messages.isEmpty()) { // Gunakan isEmpty()
             return null;
         }
 
-        // sort the message-connection tuples
+        // Urutkan kandidat pesan (pastikan TupleComparator sudah diperbaiki)
         Collections.sort(messages, new TupleComparator());
-        return tryMessagesForConnected(messages);    // try to send messages
+
+        // Coba kirim pesan sesuai urutan
+        return tryMessagesForConnected(messages);
     }
 
     /**
@@ -333,18 +498,15 @@ public class ProphetRouterWithPreP extends ActiveRouter {
      * their delivery probability by the host on the other side of the
      * connection (GRTRMax)
      */
-    private class TupleComparator implements Comparator
-            <Tuple<Message, Connection>> {
+    private class TupleComparator implements Comparator<Tuple<Message, Connection>> {
 
         public int compare(Tuple<Message, Connection> tuple1,
-                           Tuple<Message, Connection> tuple2) {
+                Tuple<Message, Connection> tuple2) {
             // delivery probability of tuple1's message with tuple1's connection
-            double p1 = ((ProphetRouterWithPreP) tuple1.getValue().
-                    getOtherNode(getHost()).getRouter()).getPredFor(
+            double p1 = ((ProphetRouterWithPreP) tuple1.getValue().getOtherNode(getHost()).getRouter()).getPredFor(
                     tuple1.getKey().getTo());
             // -"- tuple2...
-            double p2 = ((ProphetRouterWithPreP) tuple2.getValue().
-                    getOtherNode(getHost()).getRouter()).getPredFor(
+            double p2 = ((ProphetRouterWithPreP) tuple2.getValue().getOtherNode(getHost()).getRouter()).getPredFor(
                     tuple2.getKey().getTo());
 
             // bigger probability should come first

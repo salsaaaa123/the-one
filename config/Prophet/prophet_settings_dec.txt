@@ -39,7 +39,9 @@ longRangeInterface.transmitRange = 1000
 
 # Router umum untuk semua grup
 Group.router = ProphetRouterWithPreP
-Group.sendQueue = 2
+Group.sendQueue = 1
+#Group.msgTtl = 600
+
 
 # Group1 (pedestrian) specific settings
 # Identifier Grup
@@ -134,13 +136,15 @@ MapBasedMovement.mapFile4 = data/shops.wkt
 ##########################################################################################
 
 # Jumlah laporan yang akan dibuat
-Report.nrofReports = 1
+Report.nrofReports = 2
 # Waktu pemanasan sebelum laporan dihitung (samakan dengan MovementModel.warmup)
 Report.warmup = 1000
 # Direktori output laporan
 Report.reportDir = reports/ProphetRouterWithPreP_PaperScenario
 # Kelas laporan yang digunakan
 Report.report1 = MessageStatsReport
+Report.report2 = AlgorithmicComparisonReport
+
 
 ##########################################################################################
 ### Router Configuration

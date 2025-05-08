@@ -215,7 +215,7 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
 
         double totalDuration = 0;
         for (Duration duration : durations) {
-            totalDuration += duration.getEnd() - duration.getStart();
+            totalDuration += duration.end - duration.start;
         }
 
         return totalDuration / durations.size(); // Rata-rata durasi per kontak
@@ -242,7 +242,7 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         return m.getTo() != thisHost;
     }
 
-    @Override
+//    @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
         // 1. Cek apakah otherHost adalah tujuan akhir
         if (m.getTo() == otherHost) return true;

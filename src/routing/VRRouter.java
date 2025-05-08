@@ -1,7 +1,11 @@
 package routing;
 
 import java.util.*;
+//import java.awt.*;
+//import java.awt.geom.*;
+//import java.text.*;
 import core.*;
+//import gui.playfield.*;
 
 /**
  * Implementation of the Virtual Repository routing protocol. VR routing makes
@@ -16,9 +20,11 @@ import core.*;
  * @author PJ Dillon
  *
  */
-public class VRRouter extends ActiveRouter {
+public class VRRouter extends ActiveRouter
+{
 	public static final String VRROUTER_NS = "VRRouter";
 	public static final String CHECKIN_NAME = "checkInInterval";
+	//	public static final String CHECKIN_TTL_NAME = "checkInTTL";
 	public static final String RADIUS_NAME = "vrRadius";
 	public static final String NEIGHBOREXP_NAME = "neighborExpireInterval";
 	public static final String MAX_VR_AREA_S = "maxVRArea";
@@ -32,6 +38,7 @@ public class VRRouter extends ActiveRouter {
 	public static final String MESSAGE_LOOK_TIMEOUT_P = "VRRouter.lookTimeout";
 
 	public static final int defaultCheckInInterval = 300;  //seconds
+	//	public static final int defaultCheckInTTL = 5;  //minutes
 	public static final double defaultVrRadius = 50.0; //meters
 	public static final int defaultExpirationInterval = 300; //seconds
 
@@ -44,18 +51,16 @@ public class VRRouter extends ActiveRouter {
 	protected static int vrOriginX;
 	protected static int vrOriginY;
 	protected static int checkInInterval;
+	protected static int checkInTTL;
 	protected static double vrRadius;
 	protected static int neighborExpirationInterval;
-
-	// Tambahkan deklarasi variabel yang hilang
-	public static final int DENIED_ALREADY_IN_VR = -10;
-	public static final int DENIED_CHECKIN = -11;
 
 	/*
 	 * For now, the hashing scheme assumes we're using a rectangular movement
 	 * area.
 	 */
-	static {
+	static
+	{
 		Settings s = new Settings(VRROUTER_NS);
 
 		int[] vrAreaSize = s.getCsvInts(MAX_VR_AREA_S);
@@ -72,6 +77,13 @@ public class VRRouter extends ActiveRouter {
 		else {
 			checkInInterval = defaultCheckInInterval;
 		}
+
+//		if(s.contains(CHECKIN_TTL_NAME)) {
+//			checkInTTL = s.getInt(CHECKIN_TTL_NAME);
+//		}
+//		else {
+//			checkInTTL = defaultCheckInTTL;
+//		}
 
 		if(s.contains(RADIUS_NAME)) {
 			vrRadius = s.getDouble(RADIUS_NAME);
@@ -92,19 +104,24 @@ public class VRRouter extends ActiveRouter {
 	 * hash functions for the router; takes a node's address and returns a Coord
 	 * object indicating the focus of the node's VR.
 	 */
-	public static Coord hash(DTNHost node) {
+	public static Coord hash(DTNHost node)
+	{
 		double x = hashX(node),
 				y = hashY(node, x);
 		return new Coord(x, y);
 	}
 
-	private static double hashX(DTNHost node) {
+	private static double hashX(DTNHost node)
+	{
 		int addr = node.getAddress();
+//		return node.hashCode() / ((double)Integer.MAX_VALUE) * worldSizeX;
 		return maxVrX * (A* addr - Math.floor(A * addr)) + vrOriginX;
 	}
 
-	private static double hashY(DTNHost node, double x) {
+	private static double hashY(DTNHost node, double x)
+	{
 		int addr = node.getAddress();
+//		return node.hashCode() / ((double)Integer.MAX_VALUE) * worldSizeY;
 		return maxVrY * (A*(x+1)*addr - Math.floor(A *(x+1)* addr)) + vrOriginY;
 	}
 
@@ -112,7 +129,8 @@ public class VRRouter extends ActiveRouter {
 	 * Helper to drawn the VRs in the GUI.
 	 * @return
 	 */
-	public static double getVRRadius() {
+	public static double getVRRadius()
+	{
 		return vrRadius;
 	}
 
@@ -125,7 +143,8 @@ public class VRRouter extends ActiveRouter {
 	 * @param m
 	 * @return
 	 */
-	private static boolean isHostInMsgVR(DTNHost host, Message m) {
+	private static boolean isHostInMsgVR(DTNHost host, Message m)
+	{
 		Coord hostLoc = host.getLocation();
 		Coord vrHome = hash(m.getTo());
 
@@ -138,21 +157,20 @@ public class VRRouter extends ActiveRouter {
 	}
 
 	/**
-	 * Stores the location of all currently connected neighbors. If any
-	 * entry exists here, then the actual location of a destination is known
-	 * and any data messages should be forwarded towards this location.
-	 * Check-in messages should, however, always be directed towards the
-	 * destination's VR.
+	 * Stores the location of all currently connected neighbors. If any entry
+	 * exists here, then the actual location of a destination is known and any
+	 * data messages should be forwarded towards this location. Check-in messages
+	 * should, however, always be directed towards the destination's VR.
 	 */
 	protected Map<DTNHost, NeighborEntry> neighborhood;
 
 	/**
 	 * Stores the IDs of messages that have been delivered to their final
 	 * destination, which is not necessarily this host. This info is used to
-	 * inform nodes of a message's completion. Thus, if a node is carrying
-	 * one of these messages and it tries to send to a neighbor, it will be
-	 * informed that the message has already been delivered and it can be
-	 * deleted from the buffer.
+	 * inform nodes of a message's completion. Thus, if a node is carrying one of
+	 * these messages and it tries to send to a neighbor, it will be informed that
+	 * the message has already been delivered and it can be deleted from the
+	 * buffer.
 	 */
 	protected Set<String> finishedMessages;
 
@@ -167,7 +185,8 @@ public class VRRouter extends ActiveRouter {
 	 * Creates an instance of the Virtual Repository Router
 	 * @param s Settings for the router
 	 */
-	public VRRouter(Settings s) {
+	public VRRouter(Settings s)
+	{
 		super(s);
 		init();
 	}
@@ -176,20 +195,41 @@ public class VRRouter extends ActiveRouter {
 	 * Copy Constructor
 	 * @param vr the prototype from where the Settings are copied
 	 */
-	public VRRouter(VRRouter vr) {
+	public VRRouter(VRRouter vr)
+	{
 		super(vr);
 		init();
 	}
 
-	protected void init() {
+	protected void init()
+	{
 		neighborhood = new HashMap<DTNHost, NeighborEntry>();
 		finishedMessages = new HashSet<String>();
 		nextCheckInTime = SimClock.getTime() + (double)(checkInInterval * 2) * Math.random();
 		checkInSeqNum = 0;
 	}
 
+/*	@Override
+	public void draw(Graphics2D g2)
+	{
+		Coord home = VRRouter.hash(getHost());
+		double rad = VRRouter.getVRRadius();
+
+		Ellipse2D.Double repArea = new Ellipse2D.Double(PlayFieldGraphic.scale(home.getX()-rad),
+				PlayFieldGraphic.scale(home.getY()-rad), PlayFieldGraphic.scale(2*rad), PlayFieldGraphic.scale(2*rad));
+		g2.setColor(Color.blue);
+		g2.draw3DRect(PlayFieldGraphic.scale(home.getX()-1), PlayFieldGraphic.scale(home.getY()-1),
+				PlayFieldGraphic.scale(3), PlayFieldGraphic.scale(3), true);
+
+		g2.draw(repArea);
+		g2.setColor(Color.red);
+		g2.drawString("h"+getHost().toString(), PlayFieldGraphic.scale(home.getX()),
+				PlayFieldGraphic.scale(home.getY()));
+	}*/
+
 	@Override
-	public boolean createNewMessage(Message m) {
+	public boolean createNewMessage(Message m)
+	{
 		DTNHost to = m.getTo();
 
 		makeRoomForNewMessage(m.getSize());
@@ -210,16 +250,18 @@ public class VRRouter extends ActiveRouter {
 	}
 
 	/**
-	 * Adds a new check-in message to this host's buffer. The message is
-	 * directed towards the VR for this host. The destination for this message
-	 * is also set to this host, and the checkReceiving() method ensures that no
-	 * host attempts to return the message to this host.
+	 * Adds a new check-in message to this host's buffer. The message is directed
+	 * towards the VR for this host. The destination for this message is also set
+	 * to this host, and the checkReceiving() method ensures that no host attempts
+	 * to return the message to this host.
 	 */
-	protected void createCheckInMessage() {
+	protected void createCheckInMessage()
+	{
 		DTNHost thisHost = getHost();
 		Message m = new Message(thisHost, thisHost, CHECKIN_ID_PREFIX + checkInID++, 64);
 
 		m.setResponseSize(0);
+//		m.setTtl(checkInTTL);
 
 		m.addProperty(MESSAGE_CHECKIN_SEQNUM_P, checkInSeqNum++);
 		m.addProperty(MESSAGE_LOOK_P, false);
@@ -232,12 +274,29 @@ public class VRRouter extends ActiveRouter {
 		addToMessages(m, true);
 	}
 
+/*	@Override
+	protected int checkReceiving(Message m)
+	{
+		VRMessage vrm = (VRMessage) m;
+		if( vrm.isCheckInMessage()) {
+			if (vrm.getTo().equals(getHost())) {
+				return DENIED_OLD;
+			}
+		}
+
+		if(finishedMessages.contains(vrm.getId()))
+			return DENIED_FINISHED;
+
+		return super.checkReceiving(m);
+	}*/
+
 	/*
-	 * Called when another host, from, wants to send the given message to
-	 * this host.
+	 * Called when another host, from, wants to send the given message to this
+	 * host.
 	 */
 	@Override
-	public int receiveMessage(Message m, DTNHost from) {
+	public int receiveMessage(Message m, DTNHost from)
+	{
 		if(hasMessage(m.getId()) && isHostInMsgVR(getHost(), m) && !isHostInMsgVR(from, m))
 			return DENIED_ALREADY_IN_VR;
 		if(isCheckInMessage(m) && m.getTo().equals(getHost()))
@@ -253,57 +312,78 @@ public class VRRouter extends ActiveRouter {
 	 * connection to its peer.
 	 */
 	@Override
-	protected int startTransfer(Message m, Connection con) {
+	protected int startTransfer(Message m, Connection con)
+	{
 		/*
-		 * We need to know if the peer to which we're trying to send knows
-		 * that the message is already
+		 * We need to know if the peer to which we're trying to send knows that the
+		 * message is already
 		 */
 		int retVal = super.startTransfer(m, con);
 
-		if(retVal == DENIED_DELIVERED) {
+		if(retVal == DENIED_DELIVERED)
+		{
+//			System.out.println("Peer says msg " + m.getId() + " is finished");
 			finishedMessages.add(m.getId());
 			if(hasMessage(m.getId()))
 				deleteMessage(m.getId(), false);
 		}
-		else if(retVal == DENIED_ALREADY_IN_VR && hasMessage(m.getId())) {
+		else if(retVal == DENIED_ALREADY_IN_VR && hasMessage(m.getId()))
+		{
 			deleteMessage(m.getId(), false);
 		}
+		/*System.out.print("Start Transfer " + getHost().getAddress() + " to " +
+				con.getOtherNode(getHost()).getAddress() + ": ");
+		switch(retVal)
+		{
+		case DENIED_FINISHED: System.out.println("DENIED_FINISHED"); break;
+		case DENIED_ALREADY_IN_VR: System.out.println("DENIED_ALREADY_IN_VR"); break;
+		case DENIED_OLD: System.out.println("DENIED_OLD"); break;
+		case RCV_OK: System.out.println("RCV_OK"); break;
+		}*/
 		return retVal;
 	}
 
 	@Override
-	public Message messageTransferred(String id, DTNHost from) {
+	public Message messageTransferred(String id, DTNHost from)
+	{
 		Message vrm = super.messageTransferred(id, from);
+//		System.out.println(vrm.toString() + " transfered to host: " + getHost().getAddress());
 
 		/*
-		 * This is a hack. messagedTransferred is called at the receiving end
-		 * of a connection over which the message was just transferred. To
-		 * simulate an ACK, which is trivial in this scenario, we're reaching
-		 * into the sending node and deleted the message.
+		 * This is a hack. messagedTransferred is called at the receiving end of
+		 * a connection over which the message was just transferred. To simulate an
+		 * ACK, which is trivial in this scenario, we're reaching into the sending
+		 * node and deleted the message.
 		 *
 		 * This is a custody transfer.
 		 */
-		ackMessage(vrm, from);
+		((ActiveRouter)from.getRouter()).ackMessage(vrm, getHost());
 
 		/*
-		 * If this is a check-in message, then we need to add the location
-		 * contained within it along with the source host of the message to our
-		 * neighborhood.
+		 * If this is a check-in message, then we need to add the location contained
+		 * within it along with the source host of the message to our neighborhood.
 		 */
-		if(isCheckInMessage(vrm) && removeOldCheckInMsgs(vrm)) {
+		if(isCheckInMessage(vrm) && removeOldCheckInMsgs(vrm))
+		{
 			Coord homeloc = getCheckInLocation(vrm);
 			neighborhood.put(vrm.getFrom(),
 					new NeighborEntry(homeloc, vrm.getCreationTime()));
 
-			if(isHostInMsgVR(getHost(), vrm)) {
-				for(Message m : this.getMessageCollection()) {
-					if(!isCheckInMessage(m) && m.getTo() == vrm.getFrom()) {
+			if(isHostInMsgVR(getHost(), vrm))
+			{
+				for(Message m : this.getMessageCollection())
+				{
+					if(!isCheckInMessage(m) && m.getTo() == vrm.getFrom())
+					{
 						doLook(m, homeloc, vrm.getCreationTime());
 					}
 				}
 			}
 		}
-		else if(neighborhood.containsKey(vrm.getTo()) && !isLooking(vrm)) {
+		else if(neighborhood.containsKey(vrm.getTo()) && !isLooking(vrm))
+		{
+//			System.out.println("Host:" + getHost().getAddress() + " starting Look " +
+//					vrm.getId());
 			NeighborEntry entry = neighborhood.get(vrm.getTo());
 			doLook(vrm, entry.getLocation(), entry.getLocationTimestamp());
 		}
@@ -312,39 +392,48 @@ public class VRRouter extends ActiveRouter {
 	}
 
 	/**
-	 * Called by a peer node when a message is sent from here to the node. It
-	 * acts as an acknowledgment for the message. The peer passes in a
-	 * reference to itself as the 'from' argument. If the peer is the final
-	 * destination of the message, we can add the message to our list of
-	 * finished messages. In all cases, when the peer has received the
-	 * message, we can delete it from our buffer.
+	 * Called by a peer node when a message is sent from here to the node. It acts
+	 * as an acknowledgment for the message. The peer passes in a reference to itself
+	 * as the 'from' argument. If the peer is the final destination of the message,
+	 * we can add the message to our list of finished messages. In all cases, when
+	 * the peer has received the message, we can delete it from our buffer.
 	 *
 	 * @param vrm Message being acknowledged
 	 * @param from Peer acknowledging the message
 	 */
-	public void ackMessage(Message vrm, DTNHost from) {
-		if(from == vrm.getTo()) {
+	public void ackMessage(Message vrm, DTNHost from)
+	{
+		if(from == vrm.getTo())
+		{
 			finishedMessages.add(vrm.getId());
 			if(hasMessage(vrm.getId()))
 				deleteMessage(vrm.getId(), false);
 			return;
 		}
 
-		if((!isHostInMsgVR(getHost(), vrm) || isLooking(vrm)) && hasMessage(vrm.getId())) {
+		if((!isHostInMsgVR(getHost(), vrm) || isLooking(vrm)) && hasMessage(vrm.getId()))
+		{
+//			System.out.println("Host " + getHost().getAddress() + " deleting " +
+//					vrm.getId() + ".. outside its VR");
 			deleteMessage(vrm.getId(), false);
 		}
 	}
 
-	protected boolean removeOldCheckInMsgs(Message newCheckin) {
-		for(Message m : getMessageCollection()) {
+	protected boolean removeOldCheckInMsgs(Message newCheckin)
+	{
+		for(Message m : getMessageCollection())
+		{
 			// delete any older checkIn messages (or this message if it's older)
 			if(m != newCheckin &&
 					isCheckInMessage(m) &&
-					m.getTo() == newCheckin.getTo()) {
-				if(getCheckInSequenceNumber(newCheckin) > getCheckInSequenceNumber(m)) {
+					m.getTo() == newCheckin.getTo())
+			{
+				if(getCheckInSequenceNumber(newCheckin) > getCheckInSequenceNumber(m))
+				{
 					deleteMessage(m.getId(), false);
 				}
-				else {
+				else
+				{
 					deleteMessage(newCheckin.getId(), false);
 					return false;
 				}
@@ -354,44 +443,54 @@ public class VRRouter extends ActiveRouter {
 		return true;
 	}
 
-	protected Coord getFocus(Message m) {
+	protected Coord getFocus(Message m)
+	{
 		return (Coord) m.getProperty(MESSAGE_FOCUS_P);
 	}
 
-	protected boolean isCheckInMessage(Message m) {
+	protected boolean isCheckInMessage(Message m)
+	{
 		return m.getProperty(MESSAGE_IS_CHECKIN_P) != null;
 	}
 
-	protected Coord getCheckInLocation(Message m) {
+	protected Coord getCheckInLocation(Message m)
+	{
 		return (Coord) m.getProperty(MESSAGE_HOME_LOC_P);
 	}
 
-	protected boolean isLooking(Message m) {
+	protected boolean isLooking(Message m)
+	{
 		return ((Boolean)m.getProperty(MESSAGE_LOOK_P)).booleanValue();
 	}
 
-	protected long getCheckInSequenceNumber(Message m) {
+	protected long getCheckInSequenceNumber(Message m)
+	{
 		return ((Long) m.getProperty(MESSAGE_CHECKIN_SEQNUM_P)).longValue();
 	}
 
-	protected void doLook(Message m, Coord toLoc, double locationTime) {
+	protected void doLook(Message m, Coord toLoc, double locationTime)
+	{
 		m.updateProperty(MESSAGE_LOOK_P, true);
 		m.updateProperty(MESSAGE_FOCUS_P, toLoc);
 		m.updateProperty(MESSAGE_LOOK_TIMEOUT_P, 2*SimClock.getTime()-locationTime+600);
+//		System.out.println("Starting look: " + m.getId() + ' '+toLoc);
 	}
 
-	protected void expireLook(Message m, double timeNow) {
-		if(!isLooking(m)) return;
+	protected void expireLook(Message m, double timeNow)
+	{
+		if(!isLooking(m))return;
 
 		double timeout = ((Double)m.getProperty(VRRouter.MESSAGE_LOOK_TIMEOUT_P)).doubleValue();
-		if(timeout < timeNow) {
+		if(timeout < timeNow)
+		{
 			m.updateProperty(MESSAGE_LOOK_P, false);
 			m.updateProperty(MESSAGE_FOCUS_P, hash(m.getTo()));
 		}
 	}
 
 	@Override
-	public void update() {
+	public void update()
+	{
 		super.update();
 
 		/*
@@ -400,8 +499,9 @@ public class VRRouter extends ActiveRouter {
 		 */
 		{
 			double time = SimClock.getTime();
-			if(time > nextCheckInTime) {
+			if(time > nextCheckInTime /*&& this.getHost().getAddress() == 18*/) {
 				createCheckInMessage();
+				//nextCheckInTime = Integer.MAX_VALUE;
 				nextCheckInTime = time + VRRouter.checkInInterval;
 			}
 
@@ -413,12 +513,13 @@ public class VRRouter extends ActiveRouter {
 			return; // nothing to transfer or is currently transferring
 
 		/*
-		 * try messages that could be delivered to final recipient, i.e.
-		 * all messages whose final destination is a peer to which we're a
-		 * currently connected.
+		 * try messages that could be delivered to final recipient, i.e. all
+		 * messages whose final destination is a peer to which we're a currently
+		 * connected.
 		 */
 		{
-			if (exchangeDeliverableMessages() != null) {
+			if (exchangeDeliverableMessages() != null)
+			{
 				return;
 			}
 		}
@@ -434,7 +535,8 @@ public class VRRouter extends ActiveRouter {
 		 *   2. Are we inside the VR for this message or not.
 		 *
 		 */
-		for(Message m : msgCollection) {
+		for(Message m : msgCollection)
+		{
 			DTNHost to = m.getTo(); //Note: the (peer) DTNHost knows its coordinate
 			//location in the simulation, but an actual
 			//implementation may not have this info for its
@@ -443,11 +545,12 @@ public class VRRouter extends ActiveRouter {
 			Coord msgDest;
 			boolean isDestOutsideNeighborhood =
 					!neighborhood.containsKey(to) || isCheckInMessage(m);
-			if(isDestOutsideNeighborhood) {
+			if(isDestOutsideNeighborhood)
+			{
 				/*
-				 * this host doesn't know the actual location or this is a
-				 * check-in msg and the actual location should be ignored, use
-				 * hashed location stored in message.
+				 * this host doesn't know the actual location or this is a check-in msg
+				 * and the actual location should be ignored, use hashed location stored
+				 * in message.
 				 */
 				msgDest = getFocus(m);
 			}
@@ -462,7 +565,22 @@ public class VRRouter extends ActiveRouter {
 					msgDest.getY() - here.getY());
 			boolean isThisHostInVR = distToMsgDest < vrRadius;
 
-			for(Connection c : getConnections()) {  // Use getConnections() untuk iterasi
+//			double myDirectionAngle = myDest.equals(here) ? Double.NaN :
+//				Math.atan2(myDest.getY() - here.getY(), myDest.getX() - here.getX());
+
+//			double msgDirectionFromHere = Math.atan2(msgDest.getY() - here.getY(),
+//					msgDest.getX() - here.getX());
+
+//			boolean myMovingTowards = myDirectionAngle != Double.NaN &&
+//				Math.abs(myDirectionAngle - msgDirectionFromHere) < Math.PI / 4;
+
+//			double mySpeed = getHost().getSpeed(),
+//						 mySpeedX = mySpeed * Math.cos(myDirectionAngle),
+//						 mySpeedY = mySpeed * Math.sin(myDirectionAngle);
+
+			for(Connection c : getHost())
+			//for(Connection c : getConnections())
+			{
 				DTNHost peer = c.getOtherNode(getHost());
 				if(((ActiveRouter)peer.getRouter()).isTransferring())
 					continue;
@@ -470,13 +588,13 @@ public class VRRouter extends ActiveRouter {
 				Coord peerLoc = peer.getLocation();
 
 				/*
-				 * If both this host and the peer are in the VR for the msg and
-				 * we don't have the actual location of the destination node,
-				 * then we need to transfer the msg to the peer. This
-				 * essentially broadcasts the message to all peers inside the
-				 * VR.
+				 * If both this host and the peer are in the VR for the msg and we don't
+				 * have the actual location of the destination node, then we need to
+				 * transfer the msg to the peer. This essentially broadcasts the message
+				 * to all peers inside the VR.
 				 */
-				if(isDestOutsideNeighborhood && isHostInMsgVR(peer, m)) {
+				if(isDestOutsideNeighborhood && isHostInMsgVR(peer, m))
+				{
 					messages.add(new Tuple<Message, Connection>(m, c));
 					continue;
 				}
@@ -486,27 +604,92 @@ public class VRRouter extends ActiveRouter {
 				double peerDistToMsgDest = Math.hypot(msgDest.getX() - peerLoc.getX(),
 						msgDest.getY() - peerLoc.getY());
 
-				if(distToMsgDest > peerDistToMsgDest) {
+//				double peerDirectionAngle = peerLoc.equals(peerDest) ? Double.NaN :
+//					Math.atan2(peerDest.getY() - peerLoc.getY(), peerDest.getX() -
+//							peerLoc.getX());
+
+//				double msgDirFromPeer =	Math.atan2(msgDest.getY() - peerLoc.getY(),
+//						msgDest.getX() - peerLoc.getX());
+
+//				boolean peerMovingTowards = peerDirectionAngle != Double.NaN &&
+//					Math.abs(peerDirectionAngle - msgDirFromPeer) < Math.PI / 4;
+
+//				double peerSpeed = peer.getSpeed(),
+//							 peerRelSpeedX = peerSpeed * Math.cos(peerDirectionAngle) - mySpeedX,
+//							 peerRelSpeedY = peerSpeed * Math.sin(peerDirectionAngle) - mySpeedY,
+//							 peerRelDirAngle = peerSpeed == 0.0 && mySpeed == 0.0 ? Double.NaN :
+//								 Math.atan2(peerRelSpeedY, peerRelSpeedX);
+
+//				boolean peerRelMovingTowards = peerRelDirAngle != Double.NaN &&
+//					Math.abs(peerRelDirAngle - msgDirFromPeer) < Math.PI / 4;
+
+				if(distToMsgDest > peerDistToMsgDest)
+				{
+					/*if(myMovingTowards && peerMovingTowards && peerDistToMsgDest <
+							distToMsgDest)
+					{
+						System.out.println("Host " + getHost().getAddress() +
+								" trying send "+ vrm.getId() +" to " + peer.getAddress() + " bc peerdist:" +
+								peerDistToMsgDest + " < hostdist:" + distToMsgDest);
+					}
+					if(!myMovingTowards && !peerMovingTowards && peerDistToMsgDest <
+							distToMsgDest)
+						System.out.println("Host " + getHost().getAddress() +
+								" trying send "+vrm.getId()+" to " + peer.getAddress() +
+								" bc both moving away and peerdist:" +
+								peerDistToMsgDest + " < hostdist:" + distToMsgDest);
+					if(!myMovingTowards && peerMovingTowards)
+						System.out.println("Host " + getHost().getAddress() +
+								" trying send "+vrm.getId()+" to " + peer.getAddress() +
+								" bc peer is moving towards and " + getHost().getAddress() +
+								" is not");
+					if(peerRelMovingTowards || peerDistToMsgDest < distToMsgDest && !myMovingTowards)
+						System.out.println("Relative velocity indicates transfer");*/
+					/*if(peerRelMovingTowards)
+						System.out.println("Host " + getHost().getAddress() +
+								" trying send "+ vrm.getId() +" to " + peer.getAddress() +
+								" bc relative velocity");
+					if(peerDistToMsgDest < distToMsgDest && !myMovingTowards)
+						System.out.println("Host " + getHost().getAddress() +
+								" trying send "+vrm.getId()+" to " + peer.getAddress() +
+								" bc " + getHost().getAddress() + " moving away and peerdist:" +
+								peerDistToMsgDest + " < hostdist:" + distToMsgDest);*/
+					/*if(!vrm.isCheckInMessage())
+					{
+						System.out.println("Host: " + getHost().getAddress() + " msg: " + vrm.getId()
+								+ " look: " + vrm.isLooking() + " msgDest: " + msgDest.toString() +
+								"peer closer" + " knowDest: " + !isDestOutsideNeighborhood);
+					}*/
 					messages.add(new Tuple<Message, Connection>(m, c));
+//					msgForwardNotFound = true;
 				}
 			}
 		}
 
 		{
 			Collections.shuffle(messages);
-			if((tryMessagesForConnected(messages)) != null) {
+//			Tuple<Message, Connection> t;
+			if((tryMessagesForConnected(messages)) != null)
+			{
+//				System.out.println("Sending " +t.getKey().toString() + " from " +
+//					getHost().getAddress() + " to " + t.getValue().getOtherNode(getHost()).getAddress());
+
 			}
 		}
 	}
 
-	private void updateNeighborhood(double time) {
-		for(Connection conn : getConnections()) {  // Use getConnections() untuk iterasi
+	private void updateNeighborhood(double time)
+	{
+		for(Connection conn : getHost())
+		//for(Connection conn : getConnections())
+		{
 			DTNHost otherHost = conn.getOtherNode(getHost());
 			neighborhood.put(otherHost, new NeighborEntry(otherHost.getLocation(), time));
 		}
 
 		for(Iterator<Map.Entry<DTNHost, NeighborEntry>> i =
-			neighborhood.entrySet().iterator(); i.hasNext();) {
+			neighborhood.entrySet().iterator(); i.hasNext();)
+		{
 			Map.Entry<DTNHost, NeighborEntry> e = i.next();
 			if(e.getValue().isExpired(time)) {
 				i.remove();
@@ -514,52 +697,62 @@ public class VRRouter extends ActiveRouter {
 		}
 	}
 
-	private void updateMessageCollection(double time) {
-		for(Message m : this.getMessageCollection()) {
+	private void updateMessageCollection(double time)
+	{
+		for(Message m : this.getMessageCollection())
+		{
 			expireLook(m, time);
 		}
 	}
 
 	@Override
-	public MessageRouter replicate() {
+	public MessageRouter replicate()
+	{
 		return new VRRouter(this);
 	}
 
 	/**
-	 * Entry for the neighborhood map. Each entry contains a stored location
-	 * for an associated DTNHost (the key of the map) and a time when this
-	 * entry should expire and be removed from the map.
+	 * Entry for the neighborhood map. Each entry contains a stored location for
+	 * an associated DTNHost (the key of the map) and a time when this entry
+	 * should expire and be removed from the map.
 	 *
 	 * @author PJ Dillon
 	 */
-	protected class NeighborEntry {
+	protected class NeighborEntry
+	{
 		private Coord knownLocation;
 		private double locationTimestamp; //time at which the neighbor was at knownlocation
 		private int expirationTime;
 
-		NeighborEntry(Coord location, double timestampOfLocation) {
+		NeighborEntry(Coord location, double timestampOfLocation)
+		{
 			knownLocation = location;
 			locationTimestamp = timestampOfLocation;
 			setExpiration();
 		}
 
-		public Coord getLocation() {
+		public Coord getLocation()
+		{
 			return knownLocation;
 		}
 
-		public double getLocationTimestamp() {
+		public double getLocationTimestamp()
+		{
 			return locationTimestamp;
 		}
 
-		public boolean isExpired(double timeNow) {
+		public boolean isExpired(double timeNow)
+		{
 			return expirationTime < timeNow;
 		}
 
-		public void refresh() {
+		public void refresh()
+		{
 			setExpiration();
 		}
 
-		private void setExpiration() {
+		private void setExpiration()
+		{
 			expirationTime = SimClock.getIntTime() +
 					VRRouter.neighborExpirationInterval;
 		}
