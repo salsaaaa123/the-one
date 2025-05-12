@@ -65,7 +65,7 @@ tasks.named<JavaExec>("run") {
 //    args = listOf("-b","1", "config/Prophet/eunhaklee-prophetplus.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
-   args = listOf("-b","6", "config/Prophet/prophetOriginal_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//   args = listOf("-b","6", "config/Prophet/prophetOriginal_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("1", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 }
