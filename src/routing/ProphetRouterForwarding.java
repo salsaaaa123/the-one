@@ -65,9 +65,7 @@ public class ProphetRouterForwarding extends ActiveRouter {
 	 */
 	public static final String QUEUEING_POLICY_S = "queueingPolicy";
 
-	/** the value of nrof seconds in time unit -setting */
 	private int secondsInTimeUnit;
-	/** value of beta setting */
 	private double beta;
 
 	/** delivery predictabilities */
@@ -76,22 +74,14 @@ public class ProphetRouterForwarding extends ActiveRouter {
 	private double lastAgeUpdate;
 
 	private ForwardingStrategyEnum forwardingStrategyEnum;
-
-	/** The selected queueing policy */
 	private QueueingPolicyEnum queueingPolicyEnum;
 
 	/** Map to store forward counts for MOFO policy */
 	private Map<String, Integer> forwardedCounts;
-
 	/** Map to store forwarding progress for MOPR policy (FP = sum of P(B,D)) */
 	private Map<String, Double> forwardProgresses;
 
-	/**
-	 * The router instance this router was copied from (if replicated) - DITAMBAHKAN
-	 * untuk fix NPE
-	 */
-	// transient agar tidak diserialisasi jika simulator mendukung serialisasi
-	private transient ProphetRouterForwarding sourceRouterForCopy;
+	private Random coinRandom;
 
 	/**
 	 * Constructor. Creates a new message router based on the settings in
@@ -127,6 +117,8 @@ public class ProphetRouterForwarding extends ActiveRouter {
 		initPolicyMaps();
 
 		initPreds();
+		// this.lastAgeUpdate = SimClock.getTime(); // Initialize lastAgeUpdate
+		this.coinRandom = new Random(SimClock.getIntTime()); // Initialize random for COIN
 	}
 
 	/**
@@ -138,12 +130,13 @@ public class ProphetRouterForwarding extends ActiveRouter {
 		super(r);
 		this.secondsInTimeUnit = r.secondsInTimeUnit;
 		this.forwardingStrategyEnum = r.forwardingStrategyEnum;
+		// this.lastAgeUpdate = r.lastAgeUpdate;
 		this.beta = r.beta;
 		this.queueingPolicyEnum = r.queueingPolicyEnum;
+		this.coinRandom = new Random(SimClock.getIntTime());
 
 		initPreds();
 		initPolicyMaps();
-		this.sourceRouterForCopy = r;
 	}
 
 	/**
@@ -161,35 +154,6 @@ public class ProphetRouterForwarding extends ActiveRouter {
 	private void initPolicyMaps() {
 		this.forwardedCounts = new HashMap<>();
 		this.forwardProgresses = new HashMap<>();
-	}
-
-	/**
-	 * Copies policy state (forward counts, FP) from a source router. - METODE BARU
-	 * - DITAMBAHKAN untuk fix NPE
-	 * Should be called AFTER the router and its messages are initialized/copied.
-	 * 
-	 * @param sourceRouter The router to copy state from.
-	 */
-	private void copyPolicyStateFrom(ProphetRouterForwarding sourceRouter) {
-		// Pastikan sourceRouter tidak null dan memiliki map state
-		if (sourceRouter == null || sourceRouter.forwardedCounts == null || sourceRouter.forwardProgresses == null) {
-			// Ini bukan salinan atau sumber tidak valid, tidak perlu menyalin state.
-			return;
-		}
-
-		// Iterate melalui pesan di router BARU ini (this.getMessageCollection())
-		// dan salin state terkait dari router SUMBER (sourceRouter)
-		// Ini berasumsi bahwa pesan di router baru memiliki ID yang sama
-		// dengan pesan di router sumber dari mana mereka disalin.
-		for (Message m : this.getMessageCollection()) {
-			String msgId = m.getId();
-			if (sourceRouter.forwardedCounts.containsKey(msgId)) {
-				this.forwardedCounts.put(msgId, sourceRouter.forwardedCounts.get(msgId));
-			}
-			if (sourceRouter.forwardProgresses.containsKey(msgId)) {
-				this.forwardProgresses.put(msgId, sourceRouter.forwardProgresses.get(msgId));
-			}
-		}
 	}
 
 	@Override
@@ -250,7 +214,9 @@ public class ProphetRouterForwarding extends ActiveRouter {
 			}
 
 			double pOld = getPredFor(e.getKey()); // P(a,c)_old
-			double pNew = pOld + (1 - pOld) * pForHost * e.getValue() * beta;
+			double pNew = pOld + (1 - pOld) * pForHost * e.getValue() * beta; // P(a,c) = P(a,c)_old + (1 -
+																	// P(a,c)_old) * P(a,b) * P(b,c) *
+																	// BETA
 			preds.put(e.getKey(), pNew);
 		}
 	}
@@ -323,18 +289,19 @@ public class ProphetRouterForwarding extends ActiveRouter {
 			DTNHost other = con.getOtherNode(getHost());
 			ProphetRouterForwarding othRouter = (ProphetRouterForwarding) other.getRouter();
 
-			// Ensure the oher router is also ProphetRouterForwarding,unless the strategy is
+			// Ensure the oher router is also ProphetRouterForwarding,unless the strategy
+			// is
 			// coin
-			if (!(othRouter instanceof ProphetRouterForwarding)
-					&& forwardingStrategyEnum != ForwardingStrategyEnum.COIN) {
-				// System.err.println("Warning: Skipping non-Prophet router for non-COIN
-				// strategy.");
-				continue;
-			}
-			ProphetRouterForwarding othProphetRouterForwarding = null;
-			if (forwardingStrategyEnum != ForwardingStrategyEnum.COIN) {
-				othProphetRouterForwarding = (ProphetRouterForwarding) othRouter;
-			}
+			// if (forwardingStrategyEnum != ForwardingStrategyEnum.COIN
+			// && !(othRouter instanceof ProphetRouterForwarding)) {
+			// // System.err.println("Warning: Skipping non-Prophet router for non-COIN
+			// // strategy.");
+			// continue;
+			// }
+			// ProphetRouterForwarding othProphetRouterForwarding = null;
+			// if (othRouter instanceof ProphetRouterForwarding) {
+			// othProphetRouterForwarding = (ProphetRouterForwarding) othRouter;
+			// }
 
 			if (othRouter.isTransferring()) {
 				continue; // skip hosts that are transferring
@@ -347,19 +314,36 @@ public class ProphetRouterForwarding extends ActiveRouter {
 				boolean shouldConsider = false;
 				switch (forwardingStrategyEnum) {
 					case COIN:
-						// fOR coin, and all messages to the lis,random choice happens later
-						shouldConsider = true;
+						// *** REVISED COIN LOGIC with NULL CHECK ***
+						// Ensure coinRandom is initialized before use
+						if (this.coinRandom == null) {
+							// System.err.println(
+							// "WARNING: coinRandom was NULL for COIN strategy! Re-initializing in
+							// tryOtherMessages for router "
+							// + getHost() + ".");
+							this.coinRandom = new Random(SimClock.getIntTime());
+						}
+						if (this.coinRandom.nextDouble() > 0.5) {
+							shouldConsider = true;
+						}
 						break;
 					case GRTR: // Fall-through intentional
 					case GRTRSort: // Fall-through intentional
 					case GRTRMax:
 						// For GRTR-based strategies, apply the P(B,D) > P(A,D) filter
-						if (othProphetRouterForwarding != null) { // Should always be true here due to outer check
-							if (othProphetRouterForwarding.getPredFor(m.getTo()) > getPredFor(m.getTo())) {
+						// othProphetRouterForwarding is guaranteed to be non-null here by the outer
+						// check
+						if (othRouter instanceof ProphetRouterForwarding) {
+							ProphetRouterForwarding othProphetRouter = (ProphetRouterForwarding) othRouter;
+							if (othProphetRouter.getPredFor(m.getTo()) > getPredFor(m.getTo())) {
 								shouldConsider = true;
 							}
 						}
+						// Jika peer bukan Prophet, pesan tidak lolos filter GRTR/Sort/Max.
 						break;
+					default:
+						// Should not happen with current enums, but good practice
+						throw new SimError("Unknown forwarding strategy: " + forwardingStrategyEnum);
 				}
 				if (shouldConsider) {
 					messages.add(new Tuple<Message, Connection>(m, con));
@@ -371,25 +355,19 @@ public class ProphetRouterForwarding extends ActiveRouter {
 			return null;
 		}
 
-		// Sort or shuffle the messages based on strategy
+		// --- Sort the list of potential transfers based on strategy (if required) ---
 		switch (forwardingStrategyEnum) {
 			case COIN:
-				// For COIN, shuffle the list of all potential messages
-				Collections.shuffle(messages, new Random(SimClock.getIntTime())); // Use SimClock time for
-																		// repeatability in simulation
-				break;
 			case GRTR:
-				// GRTR orders based on queue mode. The list is already implicitly ordered
-				// as messages were added from the message collection (which is linked hash set
-				// usually preserving insertion order, though not guaranteed in all sets)
-				// or we explicitly sort by queue mode here. Let's sort by queue mode
-				// for explicit behavior matching compareByQueueMode.
-				Collections.sort(messages, new GRTRTupleComparator());
+				// COIN's selection is already probabilistic during list population.
+				// GRTR relies on the linear scan order from msgCollection iteration.
 				break;
 			case GRTRSort:
+				// Sort by P(B,D) - P(A,D) difference (descending)
 				Collections.sort(messages, new GRTRSortTupleComparator());
 				break;
 			case GRTRMax:
+				// Sort by P(B,D) probability (descending)
 				Collections.sort(messages, new GRTRMaxTupleComparator());
 				break;
 		}
@@ -412,15 +390,27 @@ public class ProphetRouterForwarding extends ActiveRouter {
 			ri.addMoreInfo(new RoutingInfo(String.format("%s : %.6f",
 					host, value)));
 		}
-		// Tambahkan info MOFO/MOPR jika aktif - DITAMBAHKAN
+		// Tambahkan info MOFO/MOPR jika aktif
 		if (queueingPolicyEnum == QueueingPolicyEnum.MOFO) {
 			RoutingInfo mofoInfo = new RoutingInfo(forwardedCounts.size() + " msgs with forward counts");
 			// Detail pesan/hitungan bisa ditambahkan di sini jika verbose mode
+			// if (get){ // Check if detailed info is requested, e.g., via a setting
+			// for(Map.Entry<String, Integer> entry : forwardedCounts.entrySet()) {
+			// mofoInfo.addMoreInfo(new RoutingInfo(entry.getKey() + ": " +
+			// entry.getValue()));
+			// }
+			// }
 			ri.addMoreInfo(mofoInfo);
 		}
 		if (queueingPolicyEnum == QueueingPolicyEnum.MOPR) {
 			RoutingInfo moprInfo = new RoutingInfo(forwardProgresses.size() + " msgs with forward progress");
 			// Detail pesan/FP bisa ditambahkan
+			// if (get){ // Check if detailed info is requested
+			// for(Map.Entry<String, Double> entry : forwardProgresses.entrySet()) {
+			// moprInfo.addMoreInfo(new RoutingInfo(String.format("%s: %.6f",
+			// entry.getKey(), entry.getValue())));
+			// }
+			// }
 			ri.addMoreInfo(moprInfo);
 		}
 
@@ -448,7 +438,7 @@ public class ProphetRouterForwarding extends ActiveRouter {
 
 		/**
 		 * Returns the enum constant for the given strategy name string.
-		 * 
+		 *
 		 * @param name The name of the strategy (case-insensitive)
 		 * @return The corresponding enum constant
 		 * @throws IllegalArgumentException if the name is unknown
@@ -466,28 +456,26 @@ public class ProphetRouterForwarding extends ActiveRouter {
 		public String toString() {
 			return name;
 		}
-
-	}
-
-	private interface ForwardingStrategyComparator extends Comparator<Tuple<Message, Connection>> {
-		// empty interface, just for clarity
 	}
 
 	/**
 	 * (GRTRMax) Comparator for Message-Connection-Tuples that orders the tuples
 	 * by their delivery probability by the host on the other side of the
-	 * connection (descending).
+	 * connection (descending). Uses queue mode as tie-breaker.
 	 */
-	private class GRTRMaxTupleComparator implements ForwardingStrategyComparator {
+	private class GRTRMaxTupleComparator implements Comparator<Tuple<Message, Connection>> {
 		@Override
 		public int compare(Tuple<Message, Connection> tuple1,
 				Tuple<Message, Connection> tuple2) {
+
 			// delivery probability of tuple1's message with tuple1's connection
-			double p1 = ((ProphetRouterForwarding) tuple1.getValue().getOtherNode(getHost()).getRouter()).getPredFor(
-					tuple1.getKey().getTo());
+			double p1 = ((ProphetRouterForwarding) tuple1.getValue().getOtherNode(getHost()).getRouter())
+					.getPredFor(
+							tuple1.getKey().getTo());
 			// -"- tuple2...
-			double p2 = ((ProphetRouterForwarding) tuple2.getValue().getOtherNode(getHost()).getRouter()).getPredFor(
-					tuple2.getKey().getTo());
+			double p2 = ((ProphetRouterForwarding) tuple2.getValue().getOtherNode(getHost()).getRouter())
+					.getPredFor(
+							tuple2.getKey().getTo());
 
 			// Sort descending by probability (p2 - p1)
 			if (p2 - p1 == 0) {
@@ -504,17 +492,21 @@ public class ProphetRouterForwarding extends ActiveRouter {
 
 	/**
 	 * (GRTRSort) Comparator for Message-Connection-Tuples that orders the tuples
-	 * by the difference P(B,D) - P(A,D) (descending).
+	 * by the difference P(B,D) - P(A,D) (descending). Uses queue mode as
+	 * tie-breaker.
 	 */
-	private class GRTRSortTupleComparator implements ForwardingStrategyComparator {
+	private class GRTRSortTupleComparator implements Comparator<Tuple<Message, Connection>> {
 		@Override
 		public int compare(Tuple<Message, Connection> tuple1,
 				Tuple<Message, Connection> tuple2) {
+			// Note: othProphetRouterForwarding is guaranteed non-null when this comparator
+			// is used (GRTRMax/GRTRSort)
+
 			// Mendapatkan router peer untuk kedua tuple
 			ProphetRouterForwarding otherRouter1 = (ProphetRouterForwarding) tuple1.getValue()
-					.getOtherNode(getHost()).getRouter();
+					.getOtherNode(getHost()).getRouter(); // --- MODIFIED (Cast here) ---
 			ProphetRouterForwarding otherRouter2 = (ProphetRouterForwarding) tuple2.getValue()
-					.getOtherNode(getHost()).getRouter();
+					.getOtherNode(getHost()).getRouter(); // --- MODIFIED (Cast here) ---
 
 			// Menghitung P(B,D) dan P(A,D) untuk pesan pertama (tuple1)
 			double pBD1 = otherRouter1.getPredFor(tuple1.getKey().getTo()); // P(B1, D1)
@@ -542,19 +534,6 @@ public class ProphetRouterForwarding extends ActiveRouter {
 		}
 	}
 
-	/**
-	 * (GRTR) Comparator that orders tuples based on the router's configured
-	 * queueing policy.
-	 */
-	private class GRTRTupleComparator implements ForwardingStrategyComparator {
-		@Override
-		public int compare(Tuple<Message, Connection> tuple1,
-				Tuple<Message, Connection> tuple2) {
-			// Order based on the router's queue mode setting
-			return compareByQueueMode(tuple1.getKey(), tuple2.getKey());
-		}
-	}
-
 	public enum QueueingPolicyEnum {
 		FIFO_DROP("FIFO_DROP"), // Drop terlama (standard di ActiveRouter saat ini)
 		MOFO("MOFO"), // Drop paling sering diforward
@@ -570,7 +549,7 @@ public class ProphetRouterForwarding extends ActiveRouter {
 
 		/**
 		 * Returns the enum constant for the given policy name string.
-		 * 
+		 *
 		 * @param name The name of the policy (case-insensitive)
 		 * @return The corresponding enum constant
 		 * @throws IllegalArgumentException if the name is unknown
@@ -598,90 +577,97 @@ public class ProphetRouterForwarding extends ActiveRouter {
 		super.deleteMessage(id, drop);
 	}
 
-	@Override // Meng-override transferDone dari ActiveRouter - LOGIKA BARU
-	protected void transferDone(Connection con) {
-		super.transferDone(con); // Panggil superclass method
-
-		// Logika pembaruan state MOFO/MOPR hanya berjalan di sisi pengirim -
-		// DITAMBAHKAN
-		if (con.getSender() == getHost()) {
-			Message transferredMsg = con.getMessage();
-			String msgId = transferredMsg.getId();
-			DTNHost receiver = con.getReceiver();
-
-			// --- Update MOFO (Forward Count) ---
-			// Ambil hitungan saat ini, jika tidak ada default 0, tambahkan 1 - DITAMBAHKAN
-			int currentCount = forwardedCounts.getOrDefault(msgId, 0);
-			forwardedCounts.put(msgId, currentCount + 1);
-
-			// --- Update MOPR (Forwarding Progress) ---
-			// FP = FPold + P(B,D) - DITAMBAHKAN
-			// B adalah receiver, D adalah tujuan pesan transferredMsg.getTo()
-			// Kita perlu nilai P(B,D), yaitu prediktabilitas receiver (B) ke tujuan pesan
-			// (D).
-			// Ini membutuhkan router 'receiver' untuk menjadi ProphetRouterForwarding.
-			if (receiver.getRouter() instanceof ProphetRouterForwarding) {
-				ProphetRouterForwarding receiverRouter = (ProphetRouterForwarding) receiver.getRouter();
-				double pBD = receiverRouter.getPredFor(transferredMsg.getTo()); // Dapatkan P(B,D)
-
-				// Ambil FP saat ini, jika tidak ada default 0.0, tambahkan P(B,D) - DITAMBAHKAN
-				double currentFP = forwardProgresses.getOrDefault(msgId, 0.0);
-				forwardProgresses.put(msgId, currentFP + pBD);
-			}
-		}
-	}
-
 	@Override
-	public Message messageTransferred(String id, DTNHost from) {
-		// Ini adalah metode dari MessageRouter, dipanggil di penerima setelah transfer.
-		// Logika pembaruan state MOFO/MOPR seharusnya ada di sisi pengirim.
-		// Jadi, kita hanya panggil superclass method di sini.
-		Message m = super.messageTransferred(id, from);
+	protected void transferDone(Connection con) {
+		super.transferDone(con);
 
-		return m;
+		// Logika pembaruan state MOFO/MOPR hanya berjalan di sisi pengirim
+		// Menggunakan getHost() dan getOtherNode() karena Connection tidak punya method
+		// getSender/Receiver
+		// Asumsikan router ini adalah pengirim karena transferDone dipanggil untuk
+		// koneksi di sendingConnections
+		DTNHost sender = getHost();
+		// Penerima adalah node lain di koneksi ini
+		DTNHost receiver = con.getOtherNode(sender);
+
+		Message transferredMsg = con.getMessage();
+		if (transferredMsg == null) {
+			return;
+		}
+		String msgId = transferredMsg.getId();
+
+		// --- Update MOFO (Forward Count) ---
+		// Ambil hitungan saat ini, jika tidak ada default 0, tambahkan 1
+		int currentCount = forwardedCounts.getOrDefault(msgId, 0);
+		forwardedCounts.put(msgId, currentCount + 1);
+
+		// --- Update MOPR (Forwarding Progress) ---
+		// FP = FPold + P(B,D)
+		// B adalah receiver, D adalah tujuan pesan transferredMsg.getTo()
+		// Kita perlu nilai P(B,D), yaitu prediktabilitas receiver (B) ke tujuan pesan
+		// (D).
+		// Ini membutuhkan router 'receiver' untuk menjadi ProphetRouterForwarding.
+		// Jika bukan, P(B,D) dianggap 0 karena tidak ada prediktabilitas Prophet.
+		double pBD = 0.0; // Default P(B,D) = 0 jika peer bukan Prophet
+		if (receiver.getRouter() instanceof ProphetRouterForwarding) {
+			ProphetRouterForwarding receiverRouter = (ProphetRouterForwarding) receiver.getRouter();
+			pBD = receiverRouter.getPredFor(transferredMsg.getTo()); // getPredFor() dari ProphetRouterForwarding
+		}
+
+		// Ambil FP saat ini, jika tidak ada default 0.0, tambahkan P(B,D)
+		double currentFP = forwardProgresses.getOrDefault(msgId, 0.0);
+		forwardProgresses.put(msgId, currentFP + pBD);
 	}
+
+	// @Override
+	// public Message messageTransferred(String id, DTNHost from) {
+	// // Ini adalah metode dari MessageRouter, dipanggil di penerima setelah
+	// transfer.
+	// // Logika pembaruan state MOFO/MOPR seharusnya ada di sisi pengirim.
+	// // Jadi, kita hanya panggil superclass method di sini.
+	// Message m = super.messageTransferred(id, from);
+
+	// return m;
+	// }
 
 	// --- START: Implementasi Queueing Policy (Drop Logic) --- //
 
-	@Override // Override makeRoomForMessage dari ActiveRouter
-	protected boolean makeRoomForMessage(int size) {
-		if (size > this.getBufferSize()) {
-			return false; // message too big for the buffer
-		}
+	// @Override // Override makeRoomForMessage dari ActiveRouter
+	// protected boolean makeRoomForMessage(int size) {
+	// if (size > this.getBufferSize()) {
+	// return false; // message too big for the buffer
+	// }
 
-		int freeBuffer = this.getFreeBufferSize();
-		/* delete messages from the buffer until there's enough space */
-		while (freeBuffer < size) {
-			// Panggil metode untuk memilih pesan yang akan di-drop berdasarkan kebijakan
-			Message m = selectMessageToDrop(true); // true: jangan drop pesan yang sedang dikirim
+	// int freeBuffer = this.getFreeBufferSize();
+	// /* delete messages from the buffer until there's enough space */
+	// while (freeBuffer < size) {
+	// // Panggil metode untuk memilih pesan yang akan di-drop berdasarkan kebijakan
+	// Message m = selectMessageToDrop(true); // true: jangan drop pesan yang sedang
+	// dikirim
 
-			if (m == null) {
-				// Tidak ada pesan yang bisa di-drop sama sekali dan buffer masih penuh.
-				// Ini bisa terjadi jika semua pesan sedang dikirim dan buffer penuh.
-				// Dalam kasus ini, tidak ada ruang yang bisa dibuat saat ini.
-				return false;
-			}
+	// if (m == null) {
+	// // Tidak ada pesan yang bisa di-drop sama sekali dan buffer masih penuh.
+	// // Ini bisa terjadi jika semua pesan sedang dikirim dan buffer penuh.
+	// // Dalam kasus ini, tidak ada ruang yang bisa dibuat saat ini.
+	// return false;
+	// }
 
-			/* delete message from the buffer as "drop" */
-			deleteMessage(m.getId(), true); // Memanggil deleteMessage yang sudah di-override untuk clean up map
-			freeBuffer += m.getSize();
-		}
-		return true;
-	}
+	// /* delete message from the buffer as "drop" */
+	// deleteMessage(m.getId(), true); // Memanggil deleteMessage yang sudah
+	// di-override untuk clean up map
+	// freeBuffer += m.getSize();
+	// }
+	// return true;
+	// }
 
 	/**
-	 * Memilih pesan dari buffer untuk di-drop berdasarkan kebijakan antrian. -
-	 * METODE BARU - DITAMBAHKAN
-	 * 
+	 * Memilih pesan dari buffer untuk di-drop berdasarkan kebijakan antrian.
+	 *
 	 * @param excludeMsgBeingSent Jangan pilih pesan yang sedang dikirim jika true.
 	 * @return Pesan yang dipilih untuk di-drop atau null jika tidak ada.
 	 */
 	protected Message selectMessageToDrop(boolean excludeMsgBeingSent) {
 		Collection<Message> messages = this.getMessageCollection();
-		Message messageToDrop = null;
-
-		// Buat daftar pesan yang bisa di-drop (tidak sedang dikirim jika
-		// excludeMsgBeingSent true)
 		List<Message> droppableMessages = new ArrayList<>();
 		for (Message m : messages) {
 			if (!(excludeMsgBeingSent && isSending(m.getId()))) {
@@ -693,103 +679,74 @@ public class ProphetRouterForwarding extends ActiveRouter {
 			return null; // Tidak ada pesan yang bisa di-drop
 		}
 
+		Comparator<Message> droppingComparator = null;
+
 		switch (queueingPolicyEnum) {
 			case FIFO_DROP:
-				// FIFO: Drop yang paling tua (waktu terima paling kecil)
-				messageToDrop = Collections.min(droppableMessages,
-						Comparator.comparingDouble(Message::getReceiveTime));
+				// Drop paling tua (receive time terkecil) = TERTINGGI prioritas drop
+				droppingComparator = Comparator.comparingDouble(Message::getReceiveTime);
+				// Tie-breaker: gunakan compareByQueueMode dari superclass
+				droppingComparator = droppingComparator.thenComparing(super::compareByQueueMode); // <-- PANGGIL
+																					// super.compareByQueueMode
 				break;
+
 			case MOFO:
-				// MOFO: Drop yang paling sering diforward - LOGIKA MOFO - DITAMBAHKAN
-				// Menggunakan map forwardedCounts
-				int maxForwardCount = -1; // Cari nilai maksimum
-				for (Message m : droppableMessages) {
-					int count = forwardedCounts.getOrDefault(m.getId(), 0);
-					if (count > maxForwardCount) {
-						maxForwardCount = count;
-					}
-				}
-				List<Message> mofoCandidates = new ArrayList<>(); // Kumpulkan kandidat dengan nilai maksimum
-				for (Message m : droppableMessages) {
-					if (forwardedCounts.getOrDefault(m.getId(), 0) == maxForwardCount) {
-						mofoCandidates.add(m);
-					}
-				}
-				// Tie-breaker (menggunakan FIFO)
-				if (!mofoCandidates.isEmpty()) { // Check if not empty
-					messageToDrop = Collections.min(mofoCandidates,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				} else { // Fallback if somehow list is empty
-					messageToDrop = Collections.min(droppableMessages,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				}
+				// MOFO: Drop paling sering diforward (count tertinggi) = TERTINGGI prioritas
+				// drop
+				droppingComparator = Comparator
+						.comparingInt((Message m) -> forwardedCounts.getOrDefault(m.getId(), 0)).reversed();
+				// Tie-breaker: gunakan compareByQueueMode dari superclass
+				droppingComparator = droppingComparator.thenComparing(super::compareByQueueMode); // <-- PANGGIL
+																					// super.compareByQueueMode
 				break;
+
 			case SHLI:
-				// SHLI: Drop yang sisa TTL-nya paling sedikit - LOGIKA SHLI - DITAMBAHKAN
-				messageToDrop = Collections.min(droppableMessages, Comparator.comparingInt(Message::getTtl));
+				// SHLI: Drop TTL tersingkat (TTL terkecil) = TERTINGGI prioritas drop
+				droppingComparator = Comparator.comparingInt(Message::getTtl);
+				// Tie-breaker: gunakan compareByQueueMode dari superclass
+				droppingComparator = droppingComparator.thenComparing(super::compareByQueueMode); // <-- PANGGIL
+																					// super.compareByQueueMode
 				break;
+
 			case LEPR:
-				// LEPR: Drop P terendah (dari node saat ini ke tujuan) - LOGIKA LEPR -
-				// DITAMBAHKAN
-				// Menggunakan getPredFor
-				double minPred = Double.MAX_VALUE; // Cari nilai minimum
-				for (Message m : droppableMessages) {
-					double pred = getPredFor(m.getTo());
-					if (pred < minPred) {
-						minPred = pred;
-					}
-				}
-				List<Message> leprCandidates = new ArrayList<>(); // Kumpulkan kandidat
-				for (Message m : droppableMessages) {
-					// HATI-HATI perbandingan double == minPred, mungkin perlu toleransi epsilon
-					// jika tidak ingin tie-breaker sering dipanggil
-					if (getPredFor(m.getTo()) == minPred) {
-						leprCandidates.add(m);
-					}
-				}
-				// Tie-breaker (menggunakan FIFO)
-				if (!leprCandidates.isEmpty()) {
-					messageToDrop = Collections.min(leprCandidates,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				} else {
-					messageToDrop = Collections.min(droppableMessages,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				}
+				// LEPR: Drop P(A,D) terendah (prediksi node saat ini ke tujuan terendah) =
+				// TERTINGGI prioritas drop
+				droppingComparator = Comparator.comparingDouble((Message m) -> getPredFor(m.getTo())); // getPredFor()
+																						// dari
+																						// ProphetRouterForwarding
+				// Tie-breaker: gunakan compareByQueueMode dari superclass
+				droppingComparator = droppingComparator.thenComparing(super::compareByQueueMode); // <-- PANGGIL
+																					// super.compareByQueueMode
 				break;
+
 			case MOPR:
-				// MOPR: Drop FP tertinggi - LOGIKA MOPR - DITAMBAHKAN
-				// Menggunakan map forwardProgresses
-				double maxFP = Double.MIN_VALUE; // Cari nilai maksimum
-				for (Message m : droppableMessages) {
-					double fp = forwardProgresses.getOrDefault(m.getId(), 0.0);
-					if (fp > maxFP) {
-						maxFP = fp;
-					}
-				}
-				List<Message> moprCandidates = new ArrayList<>(); // Kumpulkan kandidat
-				for (Message m : droppableMessages) {
-					// HATI-HATI perbandingan double == maxFP
-					if (forwardProgresses.getOrDefault(m.getId(), 0.0) == maxFP) {
-						moprCandidates.add(m);
-					}
-				}
-				// Tie-breaker (menggunakan FIFO)
-				if (!moprCandidates.isEmpty()) {
-					messageToDrop = Collections.min(moprCandidates,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				} else {
-					messageToDrop = Collections.min(droppableMessages,
-							Comparator.comparingDouble(Message::getReceiveTime));
-				}
+				// MOPR: Drop FP tertinggi (FP tertinggi) = TERTINGGI prioritas drop
+				droppingComparator = Comparator
+						.comparingDouble((Message m) -> forwardProgresses.getOrDefault(m.getId(), 0.0))
+						.reversed(); // forwardedProgresses dari ProphetRouterForwarding
+				// Tie-breaker: gunakan compareByQueueMode dari superclass
+				droppingComparator = droppingComparator.thenComparing(super::compareByQueueMode); // <-- PANGGIL
+																					// super.compareByQueueMode
 				break;
+
 			default:
-				throw new SimError("Unknown queueing policy " + queueingPolicyEnum);
+				throw new SimError("Unknown queueing policy " + queueingPolicyEnum + " in selectMessageToDrop");
 		}
 
-		// Pengecekan keamanan (seharusnya tidak null)
-		if (messageToDrop == null) {
-			throw new SimError("Queueing policy " + queueingPolicyEnum
-					+ " failed to select a message to drop from a non-empty droppable list.");
+		if (droppingComparator == null) {
+			throw new SimError("Dropping comparator is null for policy " + queueingPolicyEnum);
+		}
+
+		// Cari pesan dengan prioritas dropping tertinggi menggunakan comparator yang
+		// sudah didefinisikan
+		Message messageToDrop = Collections.max(droppableMessages, droppingComparator);
+
+		// Collections.max akan mengembalikan null jika list kosong, tapi kita sudah cek
+		// isEmpty().
+		// Jadi, messageToDrop seharusnya tidak null di sini.
+		// Final null check untuk keamanan.
+		if (messageToDrop == null && !droppableMessages.isEmpty()) {
+			throw new SimError("selectMessageToDrop logic failed to select a message from a non-empty list.");
 		}
 
 		return messageToDrop;
