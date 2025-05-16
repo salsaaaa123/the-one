@@ -29,10 +29,6 @@ replay_pid*
 .gradle/**/taskHistory/
 .gradle/**/gradleApp/
 
-# Gradle wrapper files
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
-
 # ========== IDE / EDITOR ==========
 # IntelliJ IDEA
 .idea/
