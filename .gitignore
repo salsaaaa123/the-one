@@ -12,7 +12,6 @@ desktop.ini
 # ========== JAVA / GRADLE ==========
 # Compiled Java files
 *.class
-*.jar
 *.war
 *.ear
 
