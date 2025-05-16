@@ -47,8 +47,10 @@ tasks.named<JavaExec>("run") {
     // args = listOf("1", "default_settings.txt")
     // args = listOf("1", "config/Prophet/prophet_Movenment.txt")
     // args = listOf("-b","200", "config/Prophet/prophet_Movenment_perStrategyForwarding.txt")
-    args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyForwardingMod.txt")
+//    args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyForwardingMod.txt")
     // args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyForwarding.txt")
+    args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyEpidemicForwardingMod.txt")
+
 
 
     

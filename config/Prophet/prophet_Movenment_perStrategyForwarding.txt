@@ -1,0 +1,92 @@
+### SCENARIO SETTINGS
+Scenario.name = ProphetEval_FS_%%ProphetRouterForwarding.forwardingStrategy%%_QP%%ProphetRouterForwarding.queueingPolicy%%_Buf_%%Group1.bufferSize%%
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 11000 
+Scenario.nrofHostGroups = 1 
+
+### INTERFACE SETTINGS
+# Interface standar untuk semua node
+defaultInterface.type = SimpleBroadcastInterface
+defaultInterface.transmitSpeed = 1M  
+defaultInterface.transmitRange = 100 
+
+### GROUP SETTINGS
+
+# Grup 1: Semua Node Menggunakan ProphetCommunityMovement
+# Node indices: 0 - 119 (Total 120 node)
+Group1.router = ProphetRouterForwarding 
+Group1.sendQueue = 2 
+Group1.groupID = Nodes 
+Group1.nrofHosts = 120 
+Group1.movementModel = ProphetCommunityMovement
+Group1.speed = 10, 30 
+# VARIASIKAN UKURAN BUFFER - SUMBU X - TANDAI DENGAN [run=0]
+# Group1.bufferSize = [0M; 20M; 40M; 60M; 80M; 100M; 120M; 140M; 160M; 180M; 200M][run=0]
+Group1.bufferSize = [0M; 20M; 40M; 60M; 80M; 100M; 120M; 140M; 160M; 180M; 200M]
+
+Group1.waitTime = 0, 0 
+Group1.nrofInterfaces = 1
+Group1.interface1 = defaultInterface
+Group1.msgTtl = 12000 
+
+### MESSAGE CREATION PARAMETERS
+# Paper: Total 1200 pesan dibuat hingga 3000 detik
+# Event1: setiap 10 detik, 2 gateway (dari 11 comm) -> gateway lain (12 gateway total)
+# Event2: 5 detik setelahnya (pada 5, 15, ...), 2 mobile -> random semua node
+# Di uji coba awal ini, SEMUA NODE menggunakan ProphetCommunityMovement, dan SEMUA NODE bisa jadi sumber/tujuan.
+# Mari kita buat pola pesan yang sederhana yang menghasilkan total 1200 pesan dalam 3000 detik.
+# Total event interval hingga 3000s adalah 3000 / interval.
+# Jika interval 5s, ada 600 interval. Jika setiap interval buat 2 pesan, total 1200 pesan.
+# Jika interval 10s, ada 300 interval. Jika setiap interval buat 4 pesan, total 1200 pesan.
+# Menggunakan 1 Event Generator dengan interval 5s, membuat 2 pesan setiap kali:
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 5 
+Events1.size = 500k, 1M 
+Events1.hosts = 0, 119 
+Events1.nrofHosts = 2 
+Events1.nrofMessages = 1200 
+Events1.endTime = 3000 
+Events1.prefix = M 
+Events1.tohosts = 0, 119 
+Events1.nrofToHosts = 1 
+
+### MOVEMENT MODEL SETTINGS
+MovementModel.rngSeed = 1 
+MovementModel.worldSize = 3000, 1500 
+MovementModel.warmup = 500 
+
+
+### ROUTER SETTINGS
+ProphetRouterForwarding.secondsInTimeUnit = 30 
+ProphetRouterForwarding.Pinit = 0.75 
+ProphetRouterForwarding.gamma = 0.98 
+ProphetRouterForwarding.beta = 0.25 
+
+# FORWARDING STRATEGY - VARIASIKAN - TANDAI DENGAN [run=1]
+# ProphetRouterForwarding.forwardingStrategy = [GRTRMax; GRTRSort; GRTR; COIN][run=1]
+ProphetRouterForwarding.forwardingStrategy = GRTRMax 
+
+# KEBIJAKAN ANTRIAN PAPER - VARIASIKAN - TANDAI DENGAN [run=2]
+# ProphetRouterForwarding.queueingPolicy = [FIFO_DROP; MOFO; SHLI; LEPR; MOPR][run=1]
+ProphetRouterForwarding.queueingPolicy = FIFO_DROP 
+
+
+### REPORT SETTINGS
+Report.nrofReports = 1 
+Report.warmup = 500 
+Report.reportDir = reports/ProphetEval/FS_%%ProphetRouterForwarding.forwardingStrategy%%/QP_%%ProphetRouterForwarding.queueingPolicy%%/Buf_%%Group1.bufferSize%%/
+Report.report1 = MessageStatsReport 
+
+### OPTIMIZATION SETTINGS
+Optimization.cellSizeMult = 5 
+Optimization.randomizeUpdateOrder = true 
+
+### GUI SETTINGS
+GUI.enabled = false 
+GUI.UnderlayImage.fileName = 
+GUI.UnderlayImage.offset = 0, 0
+GUI.UnderlayImage.scale = 1
+GUI.UnderlayImage.rotate = 0
+GUI.EventLogPanel.nrofEvents = 100

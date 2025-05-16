@@ -1,0 +1,79 @@
+### SCENARIO SETTINGS
+# Nama scenario mencerminkan semua parameter yang divariasikan
+ Scenario.name = ProphetEvalModTest_FS_%%ProphetRouterForwardingMod.forwardingStrategy%%_QP%%ProphetRouterForwardingMod.queueingPolicy%%_Buf_%%Group1.bufferSize%%
+
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 11000
+Scenario.nrofHostGroups = 1
+
+### INTERFACE SETTINGS
+defaultInterface.type = SimpleBroadcastInterface
+defaultInterface.transmitSpeed = 1M
+defaultInterface.transmitRange = 100
+
+### GROUP SETTINGS
+Group1.router = ProphetRouterForwardingMod
+Group1.sendQueue = 2
+Group1.groupID = prophet_nodes
+Group1.nrofHosts = 120
+Group1.movementModel = ProphetCommunityMovement
+Group1.speed = 10, 30
+# VARIASIKAN UKURAN BUFFER - SUMBU X - TANDAI DENGAN [run=0]
+Group1.bufferSize = [0M; 20M; 40M; 60M; 80M; 100M; 120M; 140M; 160M; 180M; 200M]
+Group1.waitTime = 0, 0
+Group1.nrofInterfaces = 1
+Group1.interface1 = defaultInterface
+# TTL TETAP DAN LAMA (sesuai paper)
+Group1.msgTtl = 12000 
+
+# (Bagian Group2 dikomentari)
+
+### MESSAGE CREATION PARAMETERS
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 5
+Events1.size = 500k, 1M
+Events1.hosts = 0, 119
+Events1.prefix = M
+Events1.nrofMessages = 1200
+
+### MOVEMENT MODEL SETTINGS
+MovementModel.rngSeed = 1
+MovementModel.worldSize = 3000, 1500 
+MovementModel.warmup = 500
+
+### ROUTER SETTINGS
+ProphetRouterForwardingMod.secondsInTimeUnit = 30
+ProphetRouterForwardingMod.Pinit = 0.75
+ProphetRouterForwardingMod.gamma = 0.98
+ProphetRouterForwardingMod.beta = 0.25
+# FORWARDING STRATEGY - VARIASIKAN - TANDAI DENGAN [run=1]
+#ProphetRouterForwardingMod.forwardingStrategy = [GRTRMax; GRTRSort; GRTR; COIN][run=1] 
+ProphetRouterForwardingMod.forwardingStrategy = GRTRMax
+
+# KEBIJAKAN ANTRIAN PAPER - VARIASIKAN - TANDAI DENGAN [run=2]
+# ProphetRouterForwardingMod.queueingPolicy = [FIFO_DROP; MOFO; SHLI; LEPR; MOPR]
+ ProphetRouterForwardingMod.queueingPolicy = MOPR
+
+
+
+
+### REPORT SETTINGS
+Report.nrofReports = 1
+Report.warmup = 500
+# FOLDER LAPORAN YANG DIUBAH - KELUARKAN BUF_%%Size%% DARI PATH
+Report.reportDir = reports/ProphetEvalModTest/FS_%%ProphetRouterForwardingMod.forwardingStrategy%%/QP_%%ProphetRouterForwardingMod.queueingPolicy%%/Buf_%%Group1.bufferSize%%/
+Report.report1 = MessageStatsReport
+
+### OPTIMIZATION SETTINGS
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
+
+### GUI SETTINGS
+GUI.enabled = false 
+GUI.UnderlayImage.fileName =
+GUI.UnderlayImage.offset = 0, 0
+GUI.UnderlayImage.scale = 1
+GUI.UnderlayImage.rotate = 0
+GUI.EventLogPanel.nrofEvents = 100
