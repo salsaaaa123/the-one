@@ -52,7 +52,7 @@ nbproject/private/
 
 # ========== SIMULATION / REPORT FILES ==========
 # Simulation report files
-.reports/
+reports/
 
 # Javadoc
 *.html
