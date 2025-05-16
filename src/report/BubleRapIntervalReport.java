@@ -1,7 +1,6 @@
 package report;
 
 import core.DTNHost;
-import core.Settings;
 import core.SimScenario;
 import routing.DecisionEngineRouter;
 import routing.MessageRouter;
@@ -27,10 +26,12 @@ public class BubleRapIntervalReport extends Report {
 
         for (DTNHost host : hosts) {
             MessageRouter router = host.getRouter();
-            if (!(router instanceof DecisionEngineRouter)) continue;
+            if (!(router instanceof DecisionEngineRouter))
+                continue;
 
             RoutingDecisionEngine de = ((DecisionEngineRouter) router).getDecisionEngine();
-            if (!(de instanceof DistributedBubbleRapUTS)) continue;
+            if (!(de instanceof DistributedBubbleRapUTS))
+                continue;
 
             DistributedBubbleRapUTS dbr = (DistributedBubbleRapUTS) de;
 

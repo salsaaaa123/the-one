@@ -1,0 +1,79 @@
+### SCENARIO SETTINGS
+Scenario.name = Haggle3_Prophet_TTL%%Group.msgTtl%%_Beta%%ProphetRouter.beta%%
+
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 274883 
+
+Scenario.nrofHostGroups = 1
+
+### INTERFACE SETTINGS
+defaultInterface.type = SimpleBroadcastInterface
+defaultInterface.transmitSpeed = 1M
+defaultInterface.transmitRange = 50
+
+### GROUP SETTINGS
+Group1.router = ProphetRouter 
+Group1.sendQueue = 2 
+Group1.groupID = H
+Group1.nrofHosts = 50
+
+# --- Pengaturan Movement Model ---
+# Model Pergerakan yang AKAN DIGUNAKAN oleh Group1
+Group1.movementModel = ProphetCommunityMovement 
+
+# Speed (Relevan untuk ProphetCommunityMovement)
+Group1.speed = 10, 30 
+
+Group1.bufferSize = 50M 
+Group1.waitTime = 0, 0 
+
+Group1.nrofInterfaces = 1
+Group1.interface1 = defaultInterface
+
+# Variasi TTL Pesan (Parameter Router/Pesan, bukan Movement)
+Group.msgTtl = [100; 300; 500; 600; 1800; 3600; 7200]
+
+# nodeLocation (akan menimpa getInitialLocation di MovementModel Anda jika diaktifkan)
+# Komen ini berarti getInitialLocation di ProphetCommunityMovement yang dipakai
+# # Group1.nodeLocation = 1500, 750
+
+### MESSAGE CREATION PARAMETERS
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 5
+Events1.size = 500k, 1M
+Events1.hosts = 0, 49
+Events1.prefix = M
+# Events1.endTime tidak disetel, jadi generator berjalan sampai Scenario.endTime
+
+### MOVEMENT MODEL SETTINGS
+MovementModel.rngSeed = 1
+MovementModel.worldSize = 3000, 1500 
+MovementModel.warmup = 500
+
+# --- Pengaturan spesifik MovementFromFile ---
+MovementFromFile.filePath = /home/endos/Documents/DTN/the-one-pitt/discussion/Haggle3-Infocom5.txt 
+
+### ROUTER SETTINGS
+ProphetRouter.secondsInTimeUnit = 30
+ProphetRouter.Pinit = 0.75
+ProphetRouter.gamma = 0.98
+ProphetRouter.beta = 0.25
+
+### REPORT SETTINGS
+Report.nrofReports = 1
+Report.warmup = 500
+Report.reportDir = reports/Haggle3_Prophet_TTL_FIFO/ 
+Report.report1 = MessageStatsReport
+
+### OPTIMIZATION SETTINGS
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
+
+### GUI SETTINGS (Opsional, tambahkan Scenario.gui = false jika ingin mode batch)
+GUI.UnderlayImage.fileName =
+GUI.UnderlayImage.offset = 0, 0
+GUI.UnderlayImage.scale = 1
+GUI.UnderlayImage.rotate = 0
+GUI.EventLogPanel.nrofEvents = 100

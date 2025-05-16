@@ -3,7 +3,7 @@
 #
 
 ## Scenario settings
-Scenario.name = default_scenario
+Scenario.name = default_scenario_prophet
 Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
 # 43k ~= 12h
@@ -18,7 +18,7 @@ firstinterface.transmitRange = 10
 Scenario.nrofHostGroups = 4
 
 # common settings for all groups
-Group.movementModel = ClusterMovement
+Group.movementModel = CrowdMovenment
 Group.router = EpidemicRouter
 Group.bufferSize = 5M
 Group.waitTime = 0, 120

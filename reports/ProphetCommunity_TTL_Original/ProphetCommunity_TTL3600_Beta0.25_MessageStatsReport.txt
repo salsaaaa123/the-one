@@ -1,0 +1,20 @@
+Message stats for scenario ProphetCommunity_TTL3600_Beta0.25
+sim_time: 216000.0000
+created: 43101
+started: 1644819
+relayed: 1359591
+aborted: 285220
+dropped: 1365763
+removed: 0
+delivered: 33507
+delivery_prob: 0.7774
+response_prob: 0.0000
+overhead_ratio: 39.5763
+latency_avg: 366.2287
+latency_med: 296.1000
+hopcount_avg: 1.5408
+hopcount_med: 1
+buffertime_avg: 532.7925
+buffertime_med: 492.2000
+rtt_avg: NaN
+rtt_med: NaN

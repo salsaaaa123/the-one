@@ -35,7 +35,6 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
      */
     protected Map<DTNHost, Double> startTimestamps;
 
-
     public SnFDecisionEngineDuration(Settings s) {
         initialNrofCopies = s.getInt(NROF_COPIES_S);
         if (s.contains(TIMER_THRESHOLD_S))
@@ -57,8 +56,8 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
     @Override
     public void connectionUp(DTNHost thisHost, DTNHost peer) {
         // Catat waktu mulai koneksi
-//        double currentTime = SimClock.getTime();
-//        startTimestamps.put(peer, currentTime);
+        // double currentTime = SimClock.getTime();
+        // startTimestamps.put(peer, currentTime);
     }
 
     @Override
@@ -115,7 +114,7 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
                 break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
             }
         }
-        if(destination == null){
+        if (destination == null) {
             return;
         }
         Double connectionStartTime = startTimestamps.get(peer);
@@ -127,7 +126,7 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         Double connectionEndTime = currentTime;
         Duration connectionDuration = new Duration(connectionStartTime, connectionEndTime);
 
-        if(connHistory.get(destination) == null){
+        if (connHistory.get(destination) == null) {
             connHistory.put(destination, new ArrayList<Duration>());
         }
 
@@ -147,7 +146,7 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
                 break; // Asumsikan hanya satu pesan yang relevan untuk contoh ini
             }
         }
-        if(destinationPeer == null){
+        if (destinationPeer == null) {
             return;
         }
         Double connectionStartTimePeer = de.startTimestamps.get(myHost);
@@ -158,45 +157,10 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         }
 
         Duration connectionDurationPeer = new Duration(connectionStartTimePeer, connectionEndTime);
-        if(de.connHistory.get(destinationPeer) == null){
+        if (de.connHistory.get(destinationPeer) == null) {
             de.connHistory.put(destinationPeer, new ArrayList<Duration>());
         }
         de.connHistory.get(destinationPeer).add(connectionDurationPeer);
-    }
-
-    private void updateEncounter(DTNHost myHost, DTNHost peer, Connection con) {
-        DTNHost destination = null;
-
-        if (destination == null) {
-            // Jika tidak ada pesan yang terkait, jangan lakukan apa-apa
-            return;
-        }
-
-        double currentTime = SimClock.getTime();
-
-        // Buat objek Duration baru
-        Double connectionStartTime = startTimestamps.get(peer);
-        if (connectionStartTime == null) {
-            // Jika tidak ada waktu mulai, mungkin ada kesalahan
-            System.err.println("Error: No start time found for peer " + peer);
-            return;
-        }
-        double connectionEndTime = currentTime;
-        Duration connectionDuration = new Duration(connectionStartTime, connectionEndTime);
-
-        // Ambil daftar durasi kontak untuk tujuan ini
-        List<Duration> durations = connHistory.get(destination);
-        if (durations == null) {
-            // Jika belum ada daftar, buat baru
-            durations = new ArrayList<>();
-            connHistory.put(destination, durations);
-        }
-
-        // Tambahkan durasi kontak baru ke daftar
-        durations.add(connectionDuration);
-
-        //Update StartTimestamps dengan current Time
-        startTimestamps.replace(peer, currentTime);
     }
 
     private SnFDecisionEngineDuration getOtherSnFDecisionEngine(DTNHost h) {
@@ -221,7 +185,6 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         return totalDuration / durations.size(); // Rata-rata durasi per kontak
     }
 
-
     @Override
     public boolean newMessage(Message m) {
         m.addProperty(MSG_COUNT_PROP, initialNrofCopies);
@@ -242,16 +205,18 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         return m.getTo() != thisHost;
     }
 
-//    @Override
+    // @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
         // 1. Cek apakah otherHost adalah tujuan akhir
-        if (m.getTo() == otherHost) return true;
+        if (m.getTo() == otherHost)
+            return true;
 
         // 2. Ambil jumlah salinan yang tersisa
         int nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
 
         // 3. Kalau masih ada salinan, forward (Spray Phase)
-        if (nrofCopies > 1) return true;
+        if (nrofCopies > 1)
+            return true;
 
         // 4. Ambil tujuan dari pesan
         DTNHost destination = m.getTo();
@@ -262,7 +227,8 @@ public class SnFDecisionEngineDuration implements RoutingDecisionEngine {
         // 6. Hitung Average Intercontact Time antara otherHost dan tujuan
         double otherAvgIntercontactTime = getAverageIntercontactTime(otherHost, destination);
 
-        // 7. Forward jika otherHost memiliki Average Intercontact Time yang lebih kecil (Focus Phase)
+        // 7. Forward jika otherHost memiliki Average Intercontact Time yang lebih kecil
+        // (Focus Phase)
         return otherAvgIntercontactTime < myAvgIntercontactTime;
     }
 

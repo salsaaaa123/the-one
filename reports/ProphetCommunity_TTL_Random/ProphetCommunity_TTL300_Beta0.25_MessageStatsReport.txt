@@ -1,0 +1,20 @@
+Message stats for scenario ProphetCommunity_TTL300_Beta0.25
+sim_time: 216000.0000
+created: 43101
+started: 1671860
+relayed: 1384699
+aborted: 287153
+dropped: 1391892
+removed: 0
+delivered: 32510
+delivery_prob: 0.7543
+response_prob: 0.0000
+overhead_ratio: 41.5930
+latency_avg: 350.0497
+latency_med: 287.7000
+hopcount_avg: 1.5607
+hopcount_med: 1
+buffertime_avg: 528.3389
+buffertime_med: 508.4000
+rtt_avg: NaN
+rtt_med: NaN

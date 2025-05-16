@@ -1,6 +1,6 @@
 plugins {
-    java
     application
+    java
 }
 
 java {
@@ -44,7 +44,22 @@ tasks.named<JavaExec>("run") {
 * Jangan anda ganti ini
 * args = listOf("1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
 */
-//    args = listOf("1", "default_settings.txt")  
+    // args = listOf("1", "default_settings.txt")
+    // args = listOf("1", "config/Prophet/prophet_Movenment.txt")
+    // args = listOf("-b","200", "config/Prophet/prophet_Movenment_perStrategyForwarding.txt")
+    args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyForwardingMod.txt")
+    // args = listOf("-b","11", "config/Prophet/prophet_Movenment_perStrategyForwarding.txt")
+
+
+    
+
+    // args = listOf("-b","20", "config/Prophet/prophet_Movenment_Forwarding.txt")
+    // args = listOf("-b","7", "config/Prophet/prophet_Movenment_Haggle.txt")
+    // args = listOf("-b","7", "config/Prophet/prophet_Movenment_HaggleMod.txt")
+
+    // args = listOf("-b","4", "config/Prophet/prophetPaper_Movenment.txt")
+
+
 
 //    args = listOf("-b","1", "default_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","1", "config/Epidemic/EpidemicDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
@@ -65,10 +80,12 @@ tasks.named<JavaExec>("run") {
 //    args = listOf("-b","1", "config/Prophet/eunhaklee-prophetplus.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
+//    args = listOf("1", "config/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //   args = listOf("-b","6", "config/Prophet/prophetOriginal_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("-b","6", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 //    args = listOf("1", "config/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 }
+
 
 
 

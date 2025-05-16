@@ -1,6 +1,6 @@
-/*
+/* 
  * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details.
+ * Released under GPLv3. See LICENSE.txt for details. 
  */
 package routing;
 
@@ -162,6 +162,10 @@ public abstract class ActiveRouter extends MessageRouter {
      * return getHost().getConnections();
      * }
      */
+
+    protected List<Connection> getConnections() {
+        return getHost().getConnections();
+    }
 
     /**
      * Tries to start a transfer of message using a connection. Is starting
@@ -436,7 +440,7 @@ public abstract class ActiveRouter extends MessageRouter {
             return null;
         }
 
-        this.sortByQueueMode((List<Object>) (List<?>) messages);
+        this.sortByQueueMode(messages);
 
         for (Connection con : getHost()) {
             Message started = tryAllMessages(con, messages);
@@ -466,7 +470,7 @@ public abstract class ActiveRouter extends MessageRouter {
         // List<Connection> connections = getConnections();
 
         List<Message> messages = new ArrayList<Message>(this.getMessageCollection());
-        this.sortByQueueMode((List<Object>) (List<?>) messages);
+        this.sortByQueueMode(messages);
 
         return tryMessagesToAllConnections(messages);
     }
@@ -486,9 +490,7 @@ public abstract class ActiveRouter extends MessageRouter {
         }
 
         @SuppressWarnings(value = "unchecked")
-        List<Tuple<Message, Connection>> sortedTuples = (List<Tuple<Message, Connection>>) (List<?>) sortByQueueMode(
-                (List<Object>) (List<?>) getMessagesForConnected());
-        Tuple<Message, Connection> t = tryMessagesForConnected(sortedTuples);
+        Tuple<Message, Connection> t = tryMessagesForConnected(sortByQueueMode(getMessagesForConnected()));
 
         if (t != null) {
             return t.getValue(); // started transfer

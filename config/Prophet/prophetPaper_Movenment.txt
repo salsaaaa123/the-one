@@ -1,0 +1,84 @@
+### SCENARIO SETTINGS
+Scenario.name = ProphetCommunity_TTL%%Group.msgTtl%%_Beta%%ProphetRouter.beta%%
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 4000
+Scenario.nrofHostGroups = 2
+
+### INTERFACE SETTINGS
+gatewayInterface.type = SimpleBroadcastInterface
+gatewayInterface.transmitSpeed = 1M
+gatewayInterface.transmitRange = 50
+
+mobileInterface.type = SimpleBroadcastInterface
+mobileInterface.transmitSpeed = 1M
+mobileInterface.transmitRange = 50
+
+### GROUP SETTINGS
+Group.router = ProphetRouter 
+#Group.sendQueue = 2
+Group1.nodeLocation = 1500, 750
+
+# --- Pengaturan Umum Grup ---
+# Mengvariasikan TTL Pesan menggunakan fitur multi-run [run=0]
+# Ini BERBEDA dari paper yang menggunakan Hop Count
+Group.msgTtl = [600; 1800; 3600; 7200]
+
+# --- Grup 1: Gateway Fixed (12 node) ---
+Group1.groupID = gateway
+Group1.nrofHosts = 12
+Group1.movementModel = StationaryMovement 
+Group1.speed = 0, 0
+Group1.waitTime = 0, 0
+Group1.bufferSize = 100M
+Group1.nrofInterfaces = 1
+Group1.interface1 = gatewayInterface
+
+# --- Grup 2: Node Mobile (38 node) ---
+Group2.groupID = mobile
+Group2.nrofHosts = 38
+Group2.movementModel = ProphetCommunityMovement 
+Group2.speed = 10, 30
+Group2.waitTime = 0, 0
+Group2.bufferSize = 50M 
+Group2.nrofInterfaces = 1
+Group2.interface1 = mobileInterface
+
+### MESSAGE CREATION PARAMETERS
+Events.nrof = 1
+Events1.class = MessageEventGenerator 
+Events1.interval = 5
+Events1.size = 500k, 1M
+Events1.hosts = 0, 49
+Events1.prefix = M
+Events1.endTime = 1980 
+
+### MOVEMENT MODEL SETTINGS
+MovementModel.rngSeed = 1
+MovementModel.worldSize = 3000, 1500
+MovementModel.warmup = 500
+
+### ROUTER SETTINGS
+ProphetRouter.secondsInTimeUnit = 30
+ProphetRouter.Pinit = 0.75
+ProphetRouter.gamma = 0.98
+ProphetRouter.beta = 0.25 
+# Variasikan ini untuk menguji Hop Count 3 atau 11
+ProphetRouter.maxHopCount = 3 
+
+### REPORT SETTINGS
+Report.nrofReports = 1
+Report.warmup = 500
+Report.reportDir = reports/ProphetCommunity_Hop_TTL_Paper/ 
+Report.report1 = MessageStatsReport
+
+### OPTIMIZATION SETTINGS
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
+
+### GUI SETTINGS (Opsional, tambahkan Scenario.gui = false jika ingin mode batch)
+GUI.UnderlayImage.fileName =
+GUI.UnderlayImage.offset = 0, 0
+GUI.UnderlayImage.scale = 1
+GUI.UnderlayImage.rotate = 0
+GUI.EventLogPanel.nrofEvents = 100

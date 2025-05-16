@@ -1,0 +1,20 @@
+Message stats for scenario ProphetEval_FS_COIN_QPMOFO_Buf_160M
+sim_time: 11000.0000
+created: 2101
+started: 472547
+relayed: 434975
+aborted: 37536
+dropped: 416963
+removed: 0
+delivered: 1447
+delivery_prob: 0.6887
+response_prob: 0.0000
+overhead_ratio: 299.6047
+latency_avg: 511.8600
+latency_med: 309.4000
+hopcount_avg: 1.9820
+hopcount_med: 1
+buffertime_avg: 226.1372
+buffertime_med: 36.0000
+rtt_avg: NaN
+rtt_med: NaN

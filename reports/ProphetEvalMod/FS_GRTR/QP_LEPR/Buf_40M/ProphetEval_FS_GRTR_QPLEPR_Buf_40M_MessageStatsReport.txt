@@ -1,0 +1,20 @@
+Message stats for scenario ProphetEval_FS_GRTR_QPLEPR_Buf_40M
+sim_time: 11000.0000
+created: 2101
+started: 541653
+relayed: 493739
+aborted: 47869
+dropped: 488638
+removed: 0
+delivered: 781
+delivery_prob: 0.3717
+response_prob: 0.0000
+overhead_ratio: 631.1882
+latency_avg: 156.2434
+latency_med: 110.4000
+hopcount_avg: 1.5416
+hopcount_med: 1
+buffertime_avg: 115.3561
+buffertime_med: 16.7000
+rtt_avg: NaN
+rtt_med: NaN
