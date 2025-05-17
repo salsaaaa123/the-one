@@ -8,7 +8,7 @@ Scenario.endTime = 11000
 # Scenario.nrofHostGroups = 1
 Scenario.nrofHostGroups = 2
 
-Scenario.rngSeed = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10][run=3]
+Scenario.rngSeed = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 
 ### INTERFACE SETTINGS
 defaultInterface.type = SimpleBroadcastInterface
@@ -25,8 +25,9 @@ Group1.movementModel = ProphetCommunityMovement
 Group1.speed = 10, 30
 
 # VARIASIKAN UKURAN BUFFER - SUMBU X - TANDAI DENGAN [run=0]
-Group1.bufferSize = [0; 20000; 40000; 60000; 80000; 100000; 120000; 140000; 160000; 180000; 200000][run=0]
-Group1.waitTime = 0, 0
+Group1.bufferSize = [0; 20000; 40000; 60000; 80000; 100000; 120000; 140000; 160000; 180000; 200000]
+# Group1.bufferSize = [0M; 20M; 40M; 60M; 80M; 100M; 120M; 140M; 160M; 180M; 200M][0]
+Group1.waitTime = 0, 10
 Group1.nrofInterfaces = 1
 Group1.interface1 = defaultInterface
 # TTL TETAP DAN LAMA (sesuai paper)
@@ -36,6 +37,7 @@ Group1.msgTtl = 12000
 Group2.router = ProphetRouterForwardingMod
 Group2.sendQueue = 2
 Group2.groupID = gateway_nodes
+# Group2.interface2 = defaultInterface
 Group2.nrofHosts = 12
 Group2.movementModel = StationaryMovement
 Group2.speed = 0, 0
@@ -44,17 +46,17 @@ Group2.speed = 0, 0
 Group2.bufferSize = 500000
 Group2.waitTime = 0, 0
 Group2.nrofInterfaces = 1
-Group2.interface1 = defaultInterface
 # TTL TETAP DAN LAMA (sesuai paper)
 Group2.msgTtl = 12000 
 Group2.nodeLocation = 0, 0
 # Catatan: Penempatan node Stationary mungkin perlu setup tambahan (misalnya, InitialLocation) jika tidak ditempatkan secara acak. ( Gunakan Haggle)
 
+ 
 
 Events.nrof = 2
 # Event 1: Gateway to Gateway messages
 Events1.class = MessageEventGenerator
-Events1.interval = 25,35 
+Events1.interval = 2
 Events1.size = 1000 
 Events1.prefix = GG
 Events1.nrofMessages = 250 
@@ -66,15 +68,15 @@ Events1.endTime = 3000
 # Event 2: Mobile to Mobile messages
 Events2.class = MessageEventGenerator
 # Sekitar 2 pesan setiap 5 detik (1 msg/2.5s)
-Events2.interval = 25,35
+Events2.interval = 5
 # Ukuran pesan diasumsikan 1000 byte
 Events2.size = 1000 
 Events2.prefix = MM
-Events2.nrofMessages = 1000 
+Events2.nrofMessages = 950 
 # Gunakan semua host di source/destination group
 Events2.hosts = 0, 109
 Events2.warmup = 500
-Events2.endTime = 3000
+# Events2.endTime = 3000
 
 ### MOVEMENT MODEL SETTINGS
 MovementModel.rngSeed = 1
@@ -87,12 +89,12 @@ ProphetRouterForwardingMod.Pinit = 0.75
 ProphetRouterForwardingMod.gamma = 0.98
 ProphetRouterForwardingMod.beta = 0.25
 # FORWARDING STRATEGY - VARIASIKAN - TANDAI DENGAN [run=1]
-ProphetRouterForwardingMod.forwardingStrategy = [GRTRMax; GRTRSort; GRTR; COIN; EPIDEMIC][run=1] 
-# ProphetRouterForwardingMod.forwardingStrategy = COIN
+# ProphetRouterForwardingMod.forwardingStrategy = [GRTRMax; GRTRSort; GRTR; COIN; EPIDEMIC][run=1] 
+ ProphetRouterForwardingMod.forwardingStrategy = COIN
 
 # KEBIJAKAN ANTRIAN PAPER - VARIASIKAN - TANDAI DENGAN [run=2]
-ProphetRouterForwardingMod.queueingPolicy = [FIFO_DROP; MOFO; SHLI; LEPR; MOPR][run=2]
- # ProphetRouterForwardingMod.queueingPolicy = MOFO
+# ProphetRouterForwardingMod.queueingPolicy = [FIFO_DROP; MOFO; SHLI; LEPR; MOPR][run=2]
+ProphetRouterForwardingMod.queueingPolicy = MOFO
 
 
 
