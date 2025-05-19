@@ -15,20 +15,22 @@ public class EpidemicRouter extends ActiveRouter {
 	/**
 	 * Constructor. Creates a new message router based on the settings in
 	 * the given Settings object.
+	 * 
 	 * @param s The settings object
 	 */
 	public EpidemicRouter(Settings s) {
 		super(s);
-		//TODO: read&use epidemic router specific settings (if any)
+		// TODO: read&use epidemic router specific settings (if any)
 	}
 
 	/**
 	 * Copy constructor.
+	 * 
 	 * @param r The router prototype where setting values are copied from
 	 */
 	protected EpidemicRouter(EpidemicRouter r) {
 		super(r);
-		//TODO: copy epidemic settings here (if any)
+		// TODO: copy epidemic settings here (if any)
 	}
 
 	@Override
@@ -46,7 +48,6 @@ public class EpidemicRouter extends ActiveRouter {
 		// then try any/all message to any/all connection
 		this.tryAllMessagesToAllConnections();
 	}
-
 
 	@Override
 	public EpidemicRouter replicate() {

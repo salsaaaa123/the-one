@@ -50,11 +50,11 @@ ProphetRouterForwardingMod.gamma = 0.98
 ProphetRouterForwardingMod.beta = 0.25
 # FORWARDING STRATEGY - VARIASIKAN - TANDAI DENGAN [run=1]
 #ProphetRouterForwardingMod.forwardingStrategy = [GRTRMax; GRTRSort; GRTR; COIN; EPIDEMIC][run=1] 
-ProphetRouterForwardingMod.forwardingStrategy = COIN
+ProphetRouterForwardingMod.forwardingStrategy = GRTRMax
 
 # KEBIJAKAN ANTRIAN PAPER - VARIASIKAN - TANDAI DENGAN [run=2]
 # ProphetRouterForwardingMod.queueingPolicy = [FIFO_DROP; MOFO; SHLI; LEPR; MOPR]
- ProphetRouterForwardingMod.queueingPolicy = SHLI
+ ProphetRouterForwardingMod.queueingPolicy = FIFO_DROP
 
 
 
@@ -64,6 +64,7 @@ Report.nrofReports = 1
 Report.warmup = 500
 # FOLDER LAPORAN YANG DIUBAH - KELUARKAN BUF_%%Size%% DARI PATH
 Report.reportDir = reports/ProphetEvalMod/FS_%%ProphetRouterForwardingMod.forwardingStrategy%%/QP_%%ProphetRouterForwardingMod.queueingPolicy%%/Buf_%%Group1.bufferSize%%/
+#Report.reportDir = reports/FS_%%ProphetRouterForwardingMod.forwardingStrategy%%/QP_%%ProphetRouterForwardingMod.queueingPolicy%%/Buf_%%Group1.bufferSize%%/
 Report.report1 = MessageStatsReport
 
 ### OPTIMIZATION SETTINGS
