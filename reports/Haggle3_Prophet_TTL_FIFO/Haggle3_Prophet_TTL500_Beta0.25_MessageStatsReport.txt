@@ -1,0 +1,20 @@
+Message stats for scenario Haggle3_Prophet_TTL500_Beta0.25
+sim_time: 274883.0000
+created: 54877
+started: 2094137
+relayed: 1730036
+aborted: 364095
+dropped: 1738950
+removed: 0
+delivered: 42509
+delivery_prob: 0.7746
+response_prob: 0.0000
+overhead_ratio: 39.6981
+latency_avg: 367.0394
+latency_med: 294.9000
+hopcount_avg: 1.5462
+hopcount_med: 1
+buffertime_avg: 533.8868
+buffertime_med: 492.8000
+rtt_avg: NaN
+rtt_med: NaN

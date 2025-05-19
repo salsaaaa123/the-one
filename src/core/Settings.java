@@ -14,26 +14,27 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
- * Interface for simulation settings stored in setting file(s). Settings 
+ * Interface for simulation settings stored in setting file(s). Settings
  * class should be initialized before using (with {@link #init(String)}). If
  * Settings isn't initialized, only settings in {@link #DEF_SETTINGS_FILE}
  * are read. Normally, after initialization, settings in the given file can
- * override any settings defined in the default settings file and/or define 
+ * override any settings defined in the default settings file and/or define
  * new settings.
- * <P> All settings are key-value pairs. For parsing details see 
- * {@link java.util.Properties#getProperty(String)}. Value can be a single 
+ * <P>
+ * All settings are key-value pairs. For parsing details see
+ * {@link java.util.Properties#getProperty(String)}. Value can be a single
  * value or comma separated list of values. With CSV values, CSV methods
  * must be used (e.g. {@link #getCsvInts(String, int)}). Setting value should
  * not start and end with a bracket since those are reserved for run-specific
  * values (see {@link #setRunIndex(int)}). In file paths directory separator
  * should always be forward slash ("/").
- * </P> 
+ * </P>
  */
 public class Settings {
 	/** properties object where the setting files are read into */
 	protected static Properties props;
 	/** file name of the default settings file ({@value}) */
-	public static final String DEF_SETTINGS_FILE ="default_settings.txt";
+	public static final String DEF_SETTINGS_FILE = "settings/default_settings.txt";
 
 	/**
 	 * Setting to define the file name where all read settings are written
@@ -42,8 +43,11 @@ public class Settings {
 	 */
 	public static final String SETTING_OUTPUT_S = "Settings.output";
 
-	/** delimiter for requested values in strings ({@value})
-	 * @see #valueFillString(String) */
+	/**
+	 * delimiter for requested values in strings ({@value})
+	 * 
+	 * @see #valueFillString(String)
+	 */
 	public static final String FILL_DELIMITER = "%%";
 
 	/** Stream where all read settings are written to */
@@ -60,6 +64,7 @@ public class Settings {
 	/**
 	 * Creates a setting object with a namespace. Namespace is the prefix
 	 * of the all subsequent setting requests.
+	 * 
 	 * @param namespace Namespace to use
 	 */
 	public Settings(String namespace) {
@@ -80,7 +85,8 @@ public class Settings {
 	 * Sets the run index for the settings (only has effect on settings with
 	 * run array). A run array can be defined with syntax<BR>
 	 * <CODE>[settingFor1stRun ; settingFor2ndRun ; SettingFor3rdRun]</CODE>
-	 * <BR>I.e. settings are put in brackets and delimited with semicolon.
+	 * <BR>
+	 * I.e. settings are put in brackets and delimited with semicolon.
 	 * First run's setting is returned when index is 0, second when index is
 	 * 1 etc. If run index is bigger than run array's length, indexing wraps
 	 * around in run array (i.e. return value is the value at index
@@ -88,8 +94,9 @@ public class Settings {
 	 * To disable whole run-index-thing, set index to value smaller than
 	 * zero (e.g. -1). When disabled, run-arrays are returned as normal values,
 	 * including the brackets.
+	 * 
 	 * @param index The run index to use for subsequent settings calls, or
-	 * -1 to disable run indexing
+	 *              -1 to disable run indexing
 	 */
 	public static void setRunIndex(int index) {
 		runIndex = index;
@@ -100,6 +107,7 @@ public class Settings {
 	 * Checks that the given integer array contains a valid range. I.e.,
 	 * the length of the array must be two and
 	 * <code>first_value <= second_value</code>.
+	 * 
 	 * @param range The range array
 	 * @param sname Name of the setting (for error messages)
 	 * @throws SettingsError If the given array didn't qualify as a range
@@ -121,6 +129,7 @@ public class Settings {
 	/**
 	 * Sets the namespace to something else than the current namespace.
 	 * This change can be reverted using {@link #restoreNameSpace()}
+	 * 
 	 * @param namespace The new namespace
 	 */
 	public void setNameSpace(String namespace) {
@@ -130,10 +139,11 @@ public class Settings {
 
 	/**
 	 * Returns full (namespace prefixed) property name for a setting.
+	 * 
 	 * @param setting The name of the setting
 	 * @return The setting name prefixed with fully qualified name of the
-	 * namespace where the requested setting would be retrieved from or null
-	 * if that setting is not found from any of the current namespace(s)
+	 *         namespace where the requested setting would be retrieved from or null
+	 *         if that setting is not found from any of the current namespace(s)
 	 */
 	public String getFullPropertyName(String setting) {
 		if (!contains(setting)) {
@@ -145,11 +155,13 @@ public class Settings {
 		}
 
 		// not found from primary, but Settings contains -> must be from 2ndary
-		else return getFullPropertyName(setting, true);
+		else
+			return getFullPropertyName(setting, true);
 	}
 
 	/**
 	 * Returns the namespace of the settings object
+	 * 
 	 * @return the namespace of the settings object
 	 */
 	public String getNameSpace() {
@@ -162,8 +174,9 @@ public class Settings {
 	 * be used e.g. as a "default" space where the settings are looked from
 	 * if no specific setting is set.
 	 * This change can be reverted using {@link #restoreSecondaryNamespace()}
+	 * 
 	 * @param namespace The new secondary namespace or null if secondary
-	 * namespace is not used (default behavior)
+	 *                  namespace is not used (default behavior)
 	 */
 	public void setSecondaryNamespace(String namespace) {
 		this.secondaryNamespaces.push(this.secondaryNamespace);
@@ -172,6 +185,7 @@ public class Settings {
 
 	/**
 	 * Restores the namespace that was in use before a call to setNameSpace
+	 * 
 	 * @see #setNameSpace(String)
 	 */
 	public void restoreNameSpace() {
@@ -181,6 +195,7 @@ public class Settings {
 	/**
 	 * Restores the secondary namespace that was in use before a call to
 	 * setSecondaryNameSpace
+	 * 
 	 * @see #setSecondaryNamespace(String)
 	 */
 	public void restoreSecondaryNamespace() {
@@ -192,8 +207,10 @@ public class Settings {
 	 * called before any setting requests. Subsequent calls replace all
 	 * old settings and then Settings contains only the new settings.
 	 * The file {@link #DEF_SETTINGS_FILE}, if exists, is always read.
+	 * 
 	 * @param propFile Path to the property file where additional settings
-	 * are read from or null if no additional settings files are needed.
+	 *                 are read from or null if no additional settings files are
+	 *                 needed.
 	 * @throws SettingsError If loading the settings file(s) didn't succeed
 	 */
 	public static void init(String propFile) throws SettingsError {
@@ -203,8 +220,7 @@ public class Settings {
 				Properties defProperties = new Properties();
 				defProperties.load(new FileInputStream(DEF_SETTINGS_FILE));
 				props = new Properties(defProperties);
-			}
-			else {
+			} else {
 				props = new Properties();
 			}
 			if (propFile != null) {
@@ -229,14 +245,14 @@ public class Settings {
 		}
 	}
 
-	public static void addSetting(String name, String value)
-	{
+	public static void addSetting(String name, String value) {
 		props.put(name, value);
 	}
 
 	/**
 	 * Reads another settings file and adds the key-value pairs to the current
 	 * settings overriding any values that already existed with the same keys.
+	 * 
 	 * @param propFile Path to the property file
 	 * @throws SettingsError If loading the settings file didn't succeed
 	 * @see #init(String)
@@ -251,6 +267,7 @@ public class Settings {
 
 	/**
 	 * Writes the given setting string to the settings output (if any)
+	 * 
 	 * @param setting The string to write
 	 */
 	private static void outputSetting(String setting) {
@@ -267,6 +284,7 @@ public class Settings {
 	 * Returns true if a setting with defined name (in the current namespace
 	 * or secondary namespace if such is set) exists and has some value
 	 * (not just white space)
+	 * 
 	 * @param name Name of the setting to check
 	 * @return True if the setting exists, false if not
 	 */
@@ -277,16 +295,17 @@ public class Settings {
 				return false;
 			}
 
-			else return value.trim().length() > 0;
-		}
-		catch (SettingsError e) {
+			else
+				return value.trim().length() > 0;
+		} catch (SettingsError e) {
 			return false; // didn't find the setting
 		}
 	}
 
 	/**
 	 * Returns full (namespace prefixed) property name for setting.
-	 * @param name Name of the settings
+	 * 
+	 * @param name      Name of the settings
 	 * @param secondary If true, the secondary namespace is used.
 	 * @return full (prefixed with current namespace) property name for setting
 	 */
@@ -295,8 +314,7 @@ public class Settings {
 
 		if (usedNamespace != null) {
 			return usedNamespace + "." + name;
-		}
-		else {
+		} else {
 			return name;
 		}
 	}
@@ -306,10 +324,11 @@ public class Settings {
 	 * namespace that is set (if any) and then from the secondary namespace
 	 * (if any). All other getters use this method as their first step too
 	 * (so all getters may throw SettingsError and look from both namespaces).
+	 * 
 	 * @param name Name of the setting to get
 	 * @return The contents of the setting in a String
 	 * @throws SettingsError if the setting is not found from either one of
-	 * the namespaces
+	 *                       the namespaces
 	 */
 	public String getSetting(String name) {
 		String fullPropName;
@@ -319,26 +338,25 @@ public class Settings {
 		fullPropName = getFullPropertyName(name, false);
 		String value = props.getProperty(fullPropName);
 
-		/*if ((value == null || value.length() == 0) &&
-				this.secondaryNamespace != null) {
-			// try secondary namespace if the value wasn't found from primary
-			fullPropName = getFullPropertyName(name, true);
-			value = props.getProperty(fullPropName);
-
-			if (value != null) {
-				value = parseRunSetting(valueFillString(value.trim()));
-			}
-		}*/
-		if((value == null || value.length() == 0) && this.secondaryNamespace != null)
-		{
+		/*
+		 * if ((value == null || value.length() == 0) &&
+		 * this.secondaryNamespace != null) {
+		 * // try secondary namespace if the value wasn't found from primary
+		 * fullPropName = getFullPropertyName(name, true);
+		 * value = props.getProperty(fullPropName);
+		 * 
+		 * if (value != null) {
+		 * value = parseRunSetting(valueFillString(value.trim()));
+		 * }
+		 * }
+		 */
+		if ((value == null || value.length() == 0) && this.secondaryNamespace != null) {
 			value = props.getProperty(this.secondaryNamespace + '.' + name);
 		}
 
-		if(value == null || value.length() == 0)
-		{
+		if (value == null || value.length() == 0) {
 			Iterator<String> i = this.secondaryNamespaces.iterator();
-			while(value == null && i.hasNext())
-			{
+			while (value == null && i.hasNext()) {
 				value = props.getProperty(i.next() + '.' + name);
 			}
 
@@ -349,9 +367,9 @@ public class Settings {
 					getPropertyNamesString(name));
 		}
 
-		//if (value != null) { // found value, check if run setting can be parsed
+		// if (value != null) { // found value, check if run setting can be parsed
 		value = parseRunSetting(valueFillString(value.trim()));
-		//}
+		// }
 
 		outputSetting(fullPropName + " = " + value);
 		return value;
@@ -359,6 +377,7 @@ public class Settings {
 
 	/**
 	 * Parses run-specific settings from a String value
+	 * 
 	 * @param value The String to parse
 	 * @return The runIndex % arrayLength'th value of the run array
 	 */
@@ -375,7 +394,7 @@ public class Settings {
 			return value; // standard format setting -> return
 		}
 
-		value = value.substring(1,value.length()-1); // remove brackets
+		value = value.substring(1, value.length() - 1); // remove brackets
 		String[] valueArr = value.split(RUN_ARRAY_DELIM);
 		int arrIndex = runIndex % valueArr.length;
 		value = valueArr[arrIndex].trim();
@@ -386,24 +405,24 @@ public class Settings {
 	/**
 	 * Returns the setting name appended to namespace name(s) on a String
 	 * (for error messages)
+	 * 
 	 * @param name Name of the setting
 	 * @return the setting name appended to namespace name(s) on a String
 	 */
 	private String getPropertyNamesString(String name) {
 		if (this.secondaryNamespace != null) {
-			return "'"+ this.secondaryNamespace + "." + name + "' nor '" +
+			return "'" + this.secondaryNamespace + "." + name + "' nor '" +
 					this.namespace + "." + name + "'";
-		}
-		else if (this.namespace != null){
+		} else if (this.namespace != null) {
 			return "'" + this.namespace + "." + name + "'";
-		}
-		else {
+		} else {
 			return "'" + name + "'";
 		}
 	}
 
 	/**
 	 * Returns a double-valued setting
+	 * 
 	 * @param name Name of the setting to get
 	 * @return Value of the setting as a double
 	 */
@@ -414,11 +433,12 @@ public class Settings {
 	/**
 	 * Parses a double value from a String valued setting. Supports
 	 * kilo (k), mega (M) and giga (G) suffixes.
-	 * @param value String value to parse
+	 * 
+	 * @param value   String value to parse
 	 * @param setting The setting where this value was from (for error msgs)
 	 * @return The value as a double
 	 * @throws SettingsError if the value wasn't a numeric value
-	 * (or the suffix wasn't recognized)
+	 *                       (or the suffix wasn't recognized)
 	 */
 	private double parseDouble(String value, String setting) {
 		double number;
@@ -426,23 +446,21 @@ public class Settings {
 
 		if (value.endsWith("k")) {
 			multiplier = 1000;
-		}
-		else if (value.endsWith("M")) {
+		} else if (value.endsWith("M")) {
 			multiplier = 1000000;
-		}
-		else if (value.endsWith("G")) {
+		} else if (value.endsWith("G")) {
 			multiplier = 1000000000;
 		}
 
 		if (multiplier > 1) { // take the suffix away before parsing
-			value = value.substring(0,value.length()-1);
+			value = value.substring(0, value.length() - 1);
 		}
 
 		try {
 			number = Double.parseDouble(value) * multiplier;
 		} catch (NumberFormatException e) {
 			throw new SettingsError("Invalid numeric setting '" + value +
-					"' for '" + setting +"'\n" + e.getMessage());
+					"' for '" + setting + "'\n" + e.getMessage());
 		}
 		return number;
 	}
@@ -450,6 +468,7 @@ public class Settings {
 	/**
 	 * Returns a CSV setting. Value part of the setting must be a list of
 	 * comma separated values. Whitespace between values is trimmed away.
+	 * 
 	 * @param name Name of the setting
 	 * @return Array of values that were comma-separated
 	 * @throws SettingsError if something went wrong with reading
@@ -457,11 +476,12 @@ public class Settings {
 	public String[] getCsvSetting(String name) {
 		ArrayList<String> values = new ArrayList<String>();
 		String csv = getSetting(name);
-		Scanner s = new Scanner(csv);
-		s.useDelimiter(",");
+		try (Scanner s = new Scanner(csv)) {
+			s.useDelimiter(",");
 
-		while (s.hasNext()) {
-			values.add(s.next().trim());
+			while (s.hasNext()) {
+				values.add(s.next().trim());
+			}
 		}
 
 		return values.toArray(new String[0]);
@@ -471,11 +491,12 @@ public class Settings {
 	 * Returns a CSV setting containing expected amount of values.
 	 * Value part of the setting must be a list of
 	 * comma separated values. Whitespace between values is trimmed away.
-	 * @param name Name of the setting
+	 * 
+	 * @param name          Name of the setting
 	 * @param expectedCount how many values are expected
 	 * @return Array of values that were comma-separated
 	 * @throws SettingsError if something went wrong with reading or didn't
-	 * read the expected amount of values.
+	 *                       read the expected amount of values.
 	 */
 	public String[] getCsvSetting(String name, int expectedCount) {
 		String[] values = getCsvSetting(name);
@@ -492,17 +513,19 @@ public class Settings {
 	/**
 	 * Returns an array of CSV setting double values containing expected
 	 * amount of values.
-	 * @param name Name of the setting
+	 * 
+	 * @param name          Name of the setting
 	 * @param expectedCount how many values are expected
 	 * @return Array of values that were comma-separated
 	 * @see #getCsvSetting(String, int)
 	 */
 	public double[] getCsvDoubles(String name, int expectedCount) {
-		return parseDoubles(getCsvSetting(name, expectedCount),name);
+		return parseDoubles(getCsvSetting(name, expectedCount), name);
 	}
 
 	/**
 	 * Returns an array of CSV setting double values.
+	 * 
 	 * @param name Name of the setting
 	 * @return Array of values that were comma-separated
 	 * @see #getCsvSetting(String)
@@ -513,13 +536,14 @@ public class Settings {
 
 	/**
 	 * Parses a double array out of a String array
+	 * 
 	 * @param strings The array of strings containin double values
-	 * @param name Name of the setting
+	 * @param name    Name of the setting
 	 * @return Array of double values parsed from the string values
 	 */
 	private double[] parseDoubles(String[] strings, String name) {
 		double[] values = new double[strings.length];
-		for (int i=0; i<values.length; i++) {
+		for (int i = 0; i < values.length; i++) {
 			values[i] = parseDouble(strings[i], name);
 		}
 		return values;
@@ -527,7 +551,8 @@ public class Settings {
 
 	/**
 	 * Returns an array of CSV setting integer values
-	 * @param name Name of the setting
+	 * 
+	 * @param name          Name of the setting
 	 * @param expectedCount how many values are expected
 	 * @return Array of values that were comma-separated
 	 * @see #getCsvSetting(String, int)
@@ -538,6 +563,7 @@ public class Settings {
 
 	/**
 	 * Returns an array of CSV setting integer values
+	 * 
 	 * @param name Name of the setting
 	 * @return Array of values that were comma-separated
 	 * @see #getCsvSetting(String, int)
@@ -546,9 +572,9 @@ public class Settings {
 		return convertToInts(getCsvDoubles(name), name);
 	}
 
-
 	/**
 	 * Returns an integer-valued setting
+	 * 
 	 * @param name Name of the setting to get
 	 * @return Value of the setting as an integer
 	 */
@@ -559,15 +585,16 @@ public class Settings {
 	/**
 	 * Converts a double value that is supposedly equal to an integer value
 	 * to an integer value.
+	 * 
 	 * @param doubleValue The double value to convert
-	 * @param name Name of the setting where this value is from (for
-	 * SettingsError)
+	 * @param name        Name of the setting where this value is from (for
+	 *                    SettingsError)
 	 * @return The integer value
 	 * @throws SettingsError if the double value was not equal to any integer
-	 * value
+	 *                       value
 	 */
 	private int convertToInt(double doubleValue, String name) {
-		int number = (int)doubleValue;
+		int number = (int) doubleValue;
 
 		if (number != doubleValue) {
 			throw new SettingsError("Expected integer value for setting '" +
@@ -579,15 +606,16 @@ public class Settings {
 	/**
 	 * Converts an array of double values to int values using
 	 * {@link #convertToInt(double, String)}.
+	 * 
 	 * @param doubleValues The double valued array
-	 * @param name Name of the setting where this value is from (for
-	 * SettingsError)
+	 * @param name         Name of the setting where this value is from (for
+	 *                     SettingsError)
 	 * @return Array of integer values
 	 * @see #convertToInt(double, String)
 	 */
-	private int[] convertToInts(double [] doubleValues, String name) {
+	private int[] convertToInts(double[] doubleValues, String name) {
 		int[] values = new int[doubleValues.length];
-		for (int i=0; i<values.length; i++) {
+		for (int i = 0; i < values.length; i++) {
 			values[i] = convertToInt(doubleValues[i], name);
 		}
 		return values;
@@ -595,12 +623,13 @@ public class Settings {
 
 	/**
 	 * Returns a boolean-valued setting
+	 * 
 	 * @param name Name of the setting to get
 	 * @return True if the settings value was either "true" (case ignored)
-	 *  or "1", false is the settings value was either "false" (case ignored)
-	 *  or "0".
-	 *  @throws SettingsError if the value wasn't any recognized value
-	 *  @see #getSetting(String)
+	 *         or "1", false is the settings value was either "false" (case ignored)
+	 *         or "0".
+	 * @throws SettingsError if the value wasn't any recognized value
+	 * @see #getSetting(String)
 	 */
 	public boolean getBoolean(String name) {
 		String stringValue = getSetting(name);
@@ -609,31 +638,29 @@ public class Settings {
 		if (stringValue.equalsIgnoreCase("true") ||
 				stringValue.equals("1")) {
 			value = true;
-		}
-		else if (stringValue.equalsIgnoreCase("false") ||
+		} else if (stringValue.equalsIgnoreCase("false") ||
 				stringValue.equals("0")) {
 			value = false;
-		}
-		else {
-			throw new SettingsError("Not a boolean value: '"+stringValue+
+		} else {
+			throw new SettingsError("Not a boolean value: '" + stringValue +
 					"' for setting " + name);
 		}
 
 		return value;
 	}
 
-
 	/**
 	 * Creates (and dynamically loads the class of) an object that
 	 * intializes itself using the settings in this Settings object
 	 * (given as the only parameter to the constructor).
+	 * 
 	 * @param className Name of the class of the object
 	 * @return Initialized object
 	 * @throws SettingsError if object couldn't be created
 	 */
 	public Object createIntializedObject(String className) {
-		Class<?>[] argsClass = {Settings.class};
-		Object[] args = {this};
+		Class<?>[] argsClass = { Settings.class };
+		Object[] args = { this };
 
 		return loadObject(className, argsClass, args);
 	}
@@ -641,6 +668,7 @@ public class Settings {
 	/**
 	 * Creates (and dynamically loads the class of) an object using the
 	 * constructor without any parameters.
+	 * 
 	 * @param className Name of the class of the object
 	 * @return Initialized object
 	 * @throws SettingsError if object couldn't be created
@@ -651,25 +679,25 @@ public class Settings {
 
 	/**
 	 * Dynamically loads and creates an object.
+	 * 
 	 * @param className Name of the class of the object
 	 * @param argsClass Class(es) of the argument(s) or null if no-argument
-	 * constructor should be called
-	 * @param args Argument(s)
+	 *                  constructor should be called
+	 * @param args      Argument(s)
 	 * @return The new object
 	 * @throws SettingsError if object couldn't be created
 	 */
 	private Object loadObject(String className, Class<?>[] argsClass,
-							  Object[] args) {
+			Object[] args) {
 		Object o = null;
 		Class<?> objClass = getClass(className);
 		Constructor<?> constructor;
 
 		try {
 			if (argsClass != null) { // use a specific constructor
-				constructor = objClass.getConstructor((Class[])argsClass);
+				constructor = objClass.getConstructor((Class[]) argsClass);
 				o = constructor.newInstance(args);
-			}
-			else { // call empty constructor
+			} else { // call empty constructor
 				o = objClass.getDeclaredConstructor().newInstance();
 			}
 		} catch (SecurityException e) {
@@ -690,11 +718,10 @@ public class Settings {
 		} catch (InvocationTargetException e) {
 			// this exception occurs if initialization of the object fails
 			if (e.getCause() instanceof SettingsError) {
-				throw (SettingsError)e.getCause();
-			}
-			else {
+				throw (SettingsError) e.getCause();
+			} else {
 				e.printStackTrace();
-				throw new SimError("Couldn't create settings-accepting object"+
+				throw new SimError("Couldn't create settings-accepting object" +
 						" for '" + className + "'\n" + "cause: " + e.getCause(), e);
 			}
 		}
@@ -704,10 +731,11 @@ public class Settings {
 
 	/**
 	 * Returns a Class object for the name of class of throws SettingsError
-	 * if such class wasn't found. 
-	 * @param name Full name of the class (including package name) 
+	 * if such class wasn't found.
+	 * 
+	 * @param name Full name of the class (including package name)
 	 * @return A Class object of that class
-	 * @throws SettingsError if such class wasn't found or couldn't be loaded 
+	 * @throws SettingsError if such class wasn't found or couldn't be loaded
 	 */
 	private Class<?> getClass(String name) {
 		String className = name;
@@ -716,8 +744,8 @@ public class Settings {
 		try {
 			c = Class.forName(className);
 		} catch (ClassNotFoundException e) {
-			throw new SettingsError("Couldn't find class '" + className + "'"+
-					"\n" + e.getMessage(),e);
+			throw new SettingsError("Couldn't find class '" + className + "'" +
+					"\n" + e.getMessage(), e);
 		}
 
 		return c;
@@ -725,17 +753,18 @@ public class Settings {
 
 	/**
 	 * Fills a String formatted in a special way with values from Settings.
-	 * String can contain (fully qualified) setting names surrounded by 
+	 * String can contain (fully qualified) setting names surrounded by
 	 * delimiters (see {@link #FILL_DELIMITER}). Values for those settings
 	 * are retrieved and filled in the place of place holders.
+	 * 
 	 * @param input The input string that may contain value requests
 	 * @return A string filled with requested values (or the original string
-	 * if no requests were found)
+	 *         if no requests were found)
 	 * @throws SettingsError if such settings were not found
 	 */
 	public String valueFillString(String input) {
 		if (!input.contains(FILL_DELIMITER)) {
-			return input;	// nothing to fill
+			return input; // nothing to fill
 		}
 
 		Settings s = new Settings(); // don't use any namespace
@@ -747,7 +776,7 @@ public class Settings {
 			result += s.getSetting(scan.next());
 		}
 
-		while(scan.hasNext()) {
+		while (scan.hasNext()) {
 			result += scan.next();
 			if (!scan.hasNext()) {
 				break;
@@ -760,7 +789,8 @@ public class Settings {
 
 	/**
 	 * Returns a String representation of the stored settings
-	 * @return a String representation of the stored settings 
+	 * 
+	 * @return a String representation of the stored settings
 	 */
 	public String toString() {
 		return props.toString();

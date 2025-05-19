@@ -8,7 +8,6 @@
 
 package routing.peoplerank;
 
-
 import core.*;
 import routing.DecisionEngineRouter;
 import routing.MessageRouter;
@@ -33,7 +32,7 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
     private Map<DTNHost, Double> startTime;
     private Map<DTNHost, SocialInteraction> socialInteractions;
     private Map<DTNHost, PeopleRankInfo> peerInfo;
-    //private List<Message> messageBuffer; // Hapus message buffer
+    // private List<Message> messageBuffer; // Hapus message buffer
 
     private Map<DTNHost, Set<DTNHost>> socialGraph = new HashMap<>();
     private boolean isSocialGraphShared = true;
@@ -62,7 +61,7 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         startTime = new HashMap<>();
         socialInteractions = new HashMap<>();
         peerInfo = new HashMap<>();
-        //messageBuffer = new ArrayList<>(); // Hapus inisialisasi message buffer
+        // messageBuffer = new ArrayList<>(); // Hapus inisialisasi message buffer
 
         peopleRank = DEFAULT_PEOPLE_RANK;
 
@@ -79,7 +78,7 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         startTime = new HashMap<>();
         socialInteractions = new HashMap<>(proto.socialInteractions);
         peerInfo = new HashMap<>(proto.peerInfo);
-        //messageBuffer = new ArrayList<>(); // Hapus inisialisasi message buffer
+        // messageBuffer = new ArrayList<>(); // Hapus inisialisasi message buffer
 
         this.socialGraph = proto.socialGraph;
         this.isSocialGraphShared = false;
@@ -108,7 +107,8 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
 
         startTime.remove(peer);
         updateSocialGraph(thisHost, peer);
-        // processMessageBuffer(thisHost, peer); // Hapus pemanggilan processMessageBuffer
+        // processMessageBuffer(thisHost, peer); // Hapus pemanggilan
+        // processMessageBuffer
     }
 
     @Override
@@ -178,18 +178,17 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         DTNHost myHost = con.getOtherNode(peer);
         double currentPeopleRank = getPeopleRank();
 
-        //Kirimkan data peerrank
+        // Kirimkan data peerrank
         PeopleRankInfo data = new PeopleRankInfo(currentPeopleRank, getNeighborCount(myHost));
         send(myHost, peer, data);
 
-        //Menerima data peer
+        // Menerima data peer
         PeopleRankInfo peerData = receive(peer);
         peerInfo.put(peer, peerData);
 
         updateSocialGraph(myHost, peer);
         // processMessageBuffer(myHost, peer); // Hapus pemanggilan processMessageBuffer
     }
-
 
     private void send(DTNHost myHost, DTNHost peer, PeopleRankInfo info) {
         PeopleRankDurationEngine prde = getDecisionRouterFrom(peer);
@@ -204,11 +203,11 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
     public void updatePeopleRank(DTNHost myHost) {
         double sigma = 0.0;
         Set<DTNHost> neighbors = socialGraph.get(myHost);
-        //Pastikan node memiliki tetangga
-        if(neighbors != null){
+        // Pastikan node memiliki tetangga
+        if (neighbors != null) {
             int neighborCount = neighbors.size();
-            //Pastikan bahwa terdapat tetangga
-            if(neighborCount >0){
+            // Pastikan bahwa terdapat tetangga
+            if (neighborCount > 0) {
                 Iterator<DTNHost> it = neighbors.iterator();
                 while (it.hasNext()) {
                     DTNHost neighbor = it.next();
@@ -236,8 +235,10 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
             DTNHost node = it.next();
             PeopleRankDurationEngine prde = getDecisionRouterFrom(node);
             double rank = prde.getPeopleRank();
-            if (rank < minRank) minRank = rank;
-            if (rank > maxRank) maxRank = rank;
+            if (rank < minRank)
+                minRank = rank;
+            if (rank > maxRank)
+                maxRank = rank;
         }
 
         if (maxRank - minRank > 0) {
@@ -292,10 +293,12 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         return this.peopleRank;
     }
 
-    @Override
+    // @Override
     public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost) {
-        if (!getNeighbors(thisHost).contains(otherHost)) return false;
-        if (m.getTo().equals(otherHost)) return true;
+        if (!getNeighbors(thisHost).contains(otherHost))
+            return false;
+        if (m.getTo().equals(otherHost))
+            return true;
 
         PeopleRankDurationEngine prde = getDecisionRouterFrom(otherHost);
         return prde.getPeopleRank() >= peopleRank;
@@ -322,7 +325,7 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
 
     @Override
     public boolean newMessage(Message m) {
-        //messageBuffer.add(m); // Hapus penambahan pesan ke buffer
+        // messageBuffer.add(m); // Hapus penambahan pesan ke buffer
         return true;
     }
 
@@ -346,27 +349,19 @@ public class PeopleRankDurationEngine implements RoutingDecisionEngine, NodeRank
         return true;
     }
 
-    //private void processMessageBuffer(DTNHost thisHost, DTNHost peer) { // Hapus method processMessageBuffer
-    //List<Message> toRemove = new ArrayList<>();
-    //Iterator<Message> it = messageBuffer.iterator();
-    //while (it.hasNext()) {
+    // private void processMessageBuffer(DTNHost thisHost, DTNHost peer) { // Hapus
+    // method processMessageBuffer
+    // List<Message> toRemove = new ArrayList<>();
+    // Iterator<Message> it = messageBuffer.iterator();
+    // while (it.hasNext()) {
     // Message m = it.next();
     // if (shouldSendMessageToHost(m, peer, thisHost)) {
-    //     forwardMessage(m, peer, thisHost);
-    //     toRemove.add(m);
+    // forwardMessage(m, peer, thisHost);
+    // toRemove.add(m);
     // }
     // }
     // messageBuffer.removeAll(toRemove);
-    //}
-
-    private void forwardMessage(Message m, DTNHost peer, DTNHost thisHost) {
-        MessageRouter peerRouter = peer.getRouter();
-        if (peerRouter instanceof DecisionEngineRouter) {
-            ((DecisionEngineRouter) peerRouter).receiveMessage(m, thisHost);
-        } else {
-            System.err.println("Peer router is not DecisionEngineRouter");
-        }
-    }
+    // }
 
     @Override
     public RoutingDecisionEngine replicate() {

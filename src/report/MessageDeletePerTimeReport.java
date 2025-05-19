@@ -11,15 +11,16 @@ public class MessageDeletePerTimeReport extends Report implements MessageListene
 
     private Map<Integer, Map<DTNHost, Integer>> deleteMessagePerTime; // Data penghapusan per waktu
     private int interval; // Interval pencatatan dalam detik
-    private double lastRecord; // Waktu terakhir pencatatan
     private Map<Integer, Integer> droppedMessagesPerTime;
+    // private double lastRecord; // Field to store the last record time
 
     public static final String DELETE_REPORT_INTERVAL = "deleteInterval";
     public static final int DEFAULT_DELETE_REPORT_INTERVAL = 3600;
 
     public MessageDeletePerTimeReport() {
         init();
-        // Mengambil nilai interval dari pengaturan jika ada, jika tidak, gunakan default
+        // Mengambil nilai interval dari pengaturan jika ada, jika tidak, gunakan
+        // default
         Settings settings = getSettings();
         if (settings.contains(DELETE_REPORT_INTERVAL)) {
             this.interval = settings.getInt(DELETE_REPORT_INTERVAL);
@@ -31,8 +32,7 @@ public class MessageDeletePerTimeReport extends Report implements MessageListene
     public void init() {
         super.init();
         this.deleteMessagePerTime = new HashMap<>();
-        this.lastRecord = Double.MIN_VALUE;
-        this.droppedMessagesPerTime = new HashMap<>();
+        // this.lastRecord = Double.MIN_VALUE;
     }
 
     @Override

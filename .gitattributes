@@ -1,30 +1,12 @@
-# Keep EOLs consistent
-* text=auto
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Linux start script should use lf
+/gradlew        text eol=lf
 
-# Gradle wrapper scripts
-gradlew        text eol=lf
-gradlew.bat    text eol=crlf
+# These are Windows script files and should use crlf
+*.bat           text eol=crlf
 
-# Java source code
-*.java         text
-*.md           text
-*.txt          text
-*.sh           text eol=lf
-*.bat          text eol=crlf
-*.xml          text
-*.yml          text
-*.yaml         text
-*.properties   text
+# Binary files should be left untouched
+*.jar           binary
 
-# Binary files
-*.class        binary
-*.jar          binary
-*.war          binary
-*.ear          binary
-*.zip          binary
-*.tar          binary
-*.gz           binary
-*.png          binary
-*.jpg          binary
-*.gif          binary
-*.ico          binary

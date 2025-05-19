@@ -1,0 +1,120 @@
+### Test scenario using Prophet router and Points of Interest (POIs)
+#
+#Scenario.name = PRoPHET-%%ProphetRouter.secondsInTimeUnit%%siu
+#Group.router = ProphetRouter
+#
+#ProphetRouter.secondsInTimeUnit = 30
+#
+## Define POI data files
+#PointsOfInterest.poiFile1 = data/ParkPOIs.wkt
+#PointsOfInterest.poiFile2 = data/CentralPOIs.wkt
+#PointsOfInterest.poiFile3 = data/WestPOIs.wkt
+#PointsOfInterest.poiFile4 = data/shops.wkt
+#
+## Define probabilities for different groups selecting POIs from different POI files
+#Group1.pois = 1,0.3, 2,0.1, 3,0.1, 4, 0.1
+#Group2.pois = 2,0.3, 3,0.1
+#Group3.pois = 3,0.3, 2,0.1, 1,0.1, 4, 0.1
+#Group4.pois = 4,0.3, 2,0.1, 3,0.1, 1, 0.1
+
+##########################################################################################
+### SCENARIO SETTINGS
+##########################################################################################
+
+# Nama scenario akan dinamis berdasarkan nilai TTL dan Beta yang sedang berjalan
+Scenario.name = ProphetOriginal_TTL%%Group.msgTtl%%_Beta%%ProphetRouter.beta%%
+Scenario.simulateConnections = true
+Scenario.updateInterval = 1
+Scenario.endTime = 216000
+# Kita gunakan 1 grup untuk fokus pada parameter router
+Scenario.nrofHostGroups = 1
+
+##########################################################################################
+### INTERFACE SETTINGS
+##########################################################################################
+
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
+
+##########################################################################################
+### GROUP SETTINGS
+##########################################################################################
+
+# Menggunakan ProphetRouter ASLI
+Group.router = ProphetRouter
+# FIFO untuk stabilitas (mengurangi potensi error Comparator)
+Group.sendQueue = 2
+
+# Group1 (satu-satunya grup aktif)
+Group1.groupID = p
+Group1.nrofHosts = 100
+Group1.movementModel = ShortestPathMapBasedMovement
+Group1.speed = 0.5, 1.5
+Group1.bufferSize = 50M
+Group1.nrofInterfaces = 1
+Group1.interface1 = btInterface
+
+# *** VARIABEL TTL ***
+# Daftar nilai TTL yang akan dicoba, dipisahkan oleh titik koma (;)
+# [run=0] berarti nilai ini akan diambil berdasarkan run index dimensi 0
+Group.msgTtl = [100; 300; 500]
+
+##########################################################################################
+### MESSAGE CREATION PARAMETERS
+##########################################################################################
+
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 25, 35
+Events1.size = 500k, 1M
+Events1.hosts = 0, 99
+Events1.prefix = M
+
+##########################################################################################
+### MOVEMENT MODEL SETTINGS
+##########################################################################################
+
+# Jika ingin seed berbeda untuk setiap kombinasi parameter, gunakan sintaks [run=...]
+# Misalnya, jika ada 3 TTL dan 2 Beta (total 6 run), Anda bisa menggunakan:
+# MovementModel.rngSeed = {1; 2; 3; 4; 5; 6}[run=0] # dan hapus [run=..] dari TTL/Beta
+# atau biarkan seed tetap untuk melihat efek murni parameter.
+MovementModel.rngSeed = 5
+MovementModel.worldSize = 4500, 3400
+MovementModel.warmup = 1000
+
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+
+##########################################################################################
+### ROUTER SETTINGS
+##########################################################################################
+
+# Parameter PROPHET
+ProphetRouter.secondsInTimeUnit = 30
+# *** VARIABEL BETA ***
+# Daftar nilai beta yang akan dicoba
+# [run=1] berarti nilai ini akan diambil berdasarkan run index dimensi 1
+#ProphetRouter.beta = {0.25; 0.50}[run=1]
+ProphetRouter.beta = 0.25
+
+##########################################################################################
+### REPORT SETTINGS
+##########################################################################################
+
+Report.nrofReports = 1
+Report.warmup = 1000
+Report.reportDir = reports/ProphetOriginal_Comparison
+Report.report1 = MessageStatsReport
+#Report.report2 = AlgorithmicComparisonReport
+
+
+##########################################################################################
+### OPTIMIZATION SETTINGS
+##########################################################################################
+
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true

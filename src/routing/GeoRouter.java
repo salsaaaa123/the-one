@@ -16,7 +16,7 @@ import core.*;
  * hash functions that determine x and y coordinates for the node, which we call
  * the virtual repository for the node. Thus, in all cases, the router has a set
  * of coordinates to which to send the given message. 
- * 
+ *
  * @author PJ Dillon
  *
  */
@@ -28,25 +28,25 @@ public class GeoRouter extends ActiveRouter
 	public static final String NEIGHBOREXP_NAME = "neighborExpireInterval";
 	public static final String MAX_VR_AREA_S = "maxVRArea";
 	public static final String VR_ORIGIN_S = "vrOrigin";
-	
+
 	public static final String MESSAGE_CHECKIN_SEQNUM_P = "GeoRouter.checkInID";
 	public static final String MESSAGE_FOCUS_P = "GeoRouter.focus";
 	public static final String MESSAGE_IS_CHECKIN_P = "GeoRouter.isCheckIn";
 	public static final String MESSAGE_HOME_LOC_P = "GeoRouter.homeLocation";
 	public static final String MESSAGE_LOOK_P = "GeoRouter.look";
 	public static final String MESSAGE_LOOK_TIMEOUT_P = "GeoRouter.lookTimeout";
-	
+
 	public static final int DENIED_ALREADY_IN_VR = -6;
 	public static final int DENIED_CHECKIN = -7;
-	
+
 	public static final int defaultCheckInInterval = 300;  //seconds
 	public static final double defaultVrRadius = 50.0; //meters
 	public static final int defaultExpirationInterval = 300; //seconds
-	
+
 	private static final double A = (Math.sqrt(5.0) - 1)/2;
 	private static final String CHECKIN_ID_PREFIX = "checkIN";
 	private static int checkInID = 0;
-	
+
 	protected static int maxVrX;
 	protected static int maxVrY;
 	protected static int vrOriginX;
@@ -55,37 +55,37 @@ public class GeoRouter extends ActiveRouter
 	protected static int checkInTTL;
 	protected static double vrRadius;
 	protected static int neighborExpirationInterval;
-	
+
 	/*
 	 * For now, the hashing scheme assumes we're using a rectangular movement
 	 * area.
 	 */
 	static
-	{	
+	{
 		Settings s = new Settings(GEOROUTER_NS);
-		
+
 		int[] vrAreaSize = s.getCsvInts(MAX_VR_AREA_S);
 		maxVrX = vrAreaSize[0];
 		maxVrY = vrAreaSize[1];
-		
+
 		int[] vrAreaOrigin = s.getCsvInts(VR_ORIGIN_S);
 		vrOriginX = vrAreaOrigin[0];
 		vrOriginY = vrAreaOrigin[1];
-		
+
 		if(s.contains(CHECKIN_NAME)) {
 			checkInInterval = s.getInt(CHECKIN_NAME);
 		}
 		else {
 			checkInInterval = defaultCheckInInterval;
 		}
-		
+
 		if(s.contains(RADIUS_NAME)) {
 			vrRadius = s.getDouble(RADIUS_NAME);
 		}
 		else {
 			vrRadius = defaultVrRadius;
 		}
-		
+
 		if(s.contains(NEIGHBOREXP_NAME)) {
 			neighborExpirationInterval = s.getInt(NEIGHBOREXP_NAME);
 		}
@@ -93,32 +93,32 @@ public class GeoRouter extends ActiveRouter
 			neighborExpirationInterval = defaultExpirationInterval;
 		}
 	}
-	
+
 	/*
 	 * hash functions for the router; takes a node's address and returns a Coord
 	 * object indicating the focus of the node's VR.
 	 */
 	public static Coord hash(DTNHost node)
 	{
-		double x = hashX(node), 
-		 	y = hashY(node, x);
+		double x = hashX(node),
+				y = hashY(node, x);
 		return new Coord(x, y);
 	}
-	
+
 	private static double hashX(DTNHost node)
 	{
 		int addr = node.getAddress();
 //		return node.hashCode() / ((double)Integer.MAX_VALUE) * worldSizeX;
 		return maxVrX * (A* addr - Math.floor(A * addr)) + vrOriginX;
 	}
-	
+
 	private static double hashY(DTNHost node, double x)
 	{
 		int addr = node.getAddress();
 //		return node.hashCode() / ((double)Integer.MAX_VALUE) * worldSizeY;
 		return maxVrY * (A*(x+1)*addr - Math.floor(A *(x+1)* addr)) + vrOriginY;
 	}
-	
+
 	/**
 	 * Helper to drawn the VRs in the GUI.
 	 * @return
@@ -127,12 +127,12 @@ public class GeoRouter extends ActiveRouter
 	{
 		return vrRadius;
 	}
-	
+
 	/**
 	 * Returns true if the given host is inside the Virtual Repository area of the
 	 * node who is the destination of the given message. This generally means that
 	 * the host is responsible for holding on to the message.
-	 * 
+	 *
 	 * @param host
 	 * @param m
 	 * @return
@@ -141,15 +141,15 @@ public class GeoRouter extends ActiveRouter
 	{
 		Coord hostLoc = host.getLocation();
 		Coord vrHome = hash(m.getTo());
-		
-		double hx = hostLoc.getX(), hy = hostLoc.getY(), 
-		 //vector lengths for 'here' to 'dest' vector
-		 vx = vrHome.getX() - hx, vy = vrHome.getY() - hy, 
-		 vmag = Math.hypot(vx, vy); //distance bwt here and dest
-		
+
+		double hx = hostLoc.getX(), hy = hostLoc.getY(),
+				//vector lengths for 'here' to 'dest' vector
+				vx = vrHome.getX() - hx, vy = vrHome.getY() - hy,
+				vmag = Math.hypot(vx, vy); //distance bwt here and dest
+
 		return vmag < vrRadius;
 	}
-	
+
 	/**
 	 * Stores the location of all currently connected neighbors. If any entry 
 	 * exists here, then the actual location of a destination is known and any
@@ -157,7 +157,7 @@ public class GeoRouter extends ActiveRouter
 	 * should, however, always be directed towards the destination's VR.
 	 */
 	protected Map<DTNHost, NeighborEntry> neighborhood;
-	
+
 	/**
 	 * Stores the IDs of messages that have been delivered to their final 
 	 * destination, which is not necessarily this host. This info is used to
@@ -167,14 +167,14 @@ public class GeoRouter extends ActiveRouter
 	 * buffer.
 	 */
 	protected Set<String> finishedMessages;
-	
+
 	/**
 	 * The time at which another check-in message should be generated. 
 	 */
 	protected double nextCheckInTime;
-	
+
 	protected long checkInSeqNum;
-	
+
 	/**
 	 * Creates an instance of the Virtual Repository Router
 	 * @param s Settings for the router
@@ -184,7 +184,7 @@ public class GeoRouter extends ActiveRouter
 		super(s);
 		init();
 	}
-	
+
 	/**
 	 * Copy Constructor
 	 * @param vr the prototype from where the Settings are copied
@@ -194,7 +194,7 @@ public class GeoRouter extends ActiveRouter
 		super(vr);
 		init();
 	}
-	
+
 	protected void init()
 	{
 		neighborhood = new HashMap<DTNHost, NeighborEntry>();
@@ -220,14 +220,14 @@ public class GeoRouter extends ActiveRouter
 		g2.drawString("h"+getHost().toString(), PlayFieldGraphic.scale(home.getX()), 
 				PlayFieldGraphic.scale(home.getY()));
 	}*/
-	
+
 	@Override
 	public boolean createNewMessage(Message m)
 	{
 		DTNHost to = m.getTo();
-		
+
 		makeRoomForNewMessage(m.getSize());
-		
+
 		if(neighborhood.containsKey(to)) {
 			NeighborEntry entry = neighborhood.get(to);
 			doLook(m, entry.getLocation(), entry.getLocationTimestamp());
@@ -237,12 +237,12 @@ public class GeoRouter extends ActiveRouter
 			m.addProperty(MESSAGE_FOCUS_P, hash(to));
 			m.addProperty(MESSAGE_LOOK_TIMEOUT_P, null);
 		}
-				
+
 		addToMessages(m, true);
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Adds a new check-in message to this host's buffer. The message is directed
 	 * towards the VR for this host. The destination for this message is also set
@@ -256,14 +256,14 @@ public class GeoRouter extends ActiveRouter
 
 		m.setResponseSize(0);
 //		m.setTtl(checkInTTL);
-		
+
 		m.addProperty(MESSAGE_CHECKIN_SEQNUM_P, checkInSeqNum++);
 		m.addProperty(MESSAGE_LOOK_P, false);
 		m.addProperty(MESSAGE_FOCUS_P, hash(thisHost));
 		m.addProperty(MESSAGE_IS_CHECKIN_P, m);
 		m.addProperty(MESSAGE_HOME_LOC_P, thisHost.getLocation());
 		m.updateProperty(MESSAGE_LOOK_TIMEOUT_P, null);
-		
+
 		removeOldCheckInMsgs(m);
 		addToMessages(m, true);
 	}
@@ -297,7 +297,7 @@ public class GeoRouter extends ActiveRouter
 			return DENIED_CHECKIN;
 		if(finishedMessages.contains(m.getId()))
 			return DENIED_DELIVERED;
-		
+
 		return super.receiveMessage(m, from);
 	}
 
@@ -310,10 +310,10 @@ public class GeoRouter extends ActiveRouter
 	{
 		/*
 		 * We need to know if the peer to which we're trying to send knows that the
-		 * message is already 
+		 * message is already
 		 */
 		int retVal = super.startTransfer(m, con);
-		
+
 		if(retVal == DENIED_DELIVERED)
 		{
 //			System.out.println("Peer says msg " + m.getId() + " is finished");
@@ -342,27 +342,27 @@ public class GeoRouter extends ActiveRouter
 	{
 		Message vrm = super.messageTransferred(id, from);
 //		System.out.println(vrm.toString() + " transfered to host: " + getHost().getAddress());
-		
+
 		/*
 		 * This is a hack. messagedTransferred is called at the receiving end of
 		 * a connection over which the message was just transferred. To simulate an
 		 * ACK, which is trivial in this scenario, we're reaching into the sending
 		 * node and deleted the message.
-		 * 
+		 *
 		 * This is a custody transfer.
 		 */
 		((ActiveRouter)from.getRouter()).ackMessage(vrm, getHost());
-		
+
 		/*
 		 * If this is a check-in message, then we need to add the location contained
 		 * within it along with the source host of the message to our neighborhood.
 		 */
 		if(isCheckInMessage(vrm) && removeOldCheckInMsgs(vrm))
-		{	
+		{
 			Coord homeloc = getCheckInLocation(vrm);
-			neighborhood.put(vrm.getFrom(), 
+			neighborhood.put(vrm.getFrom(),
 					new NeighborEntry(homeloc, vrm.getCreationTime()));
-			
+
 			if(isHostInMsgVR(getHost(), vrm))
 			{
 				for(Message m : this.getMessageCollection())
@@ -381,7 +381,7 @@ public class GeoRouter extends ActiveRouter
 			NeighborEntry entry = neighborhood.get(vrm.getTo());
 			doLook(vrm, entry.getLocation(), entry.getLocationTimestamp());
 		}
-		
+
 		return vrm;
 	}
 
@@ -391,7 +391,7 @@ public class GeoRouter extends ActiveRouter
 	 * as the 'from' argument. If the peer is the final destination of the message,
 	 * we can add the message to our list of finished messages. In all cases, when 
 	 * the peer has received the message, we can delete it from our buffer.
-	 * 
+	 *
 	 * @param vrm Message being acknowledged
 	 * @param from Peer acknowledging the message
 	 */
@@ -404,7 +404,7 @@ public class GeoRouter extends ActiveRouter
 				deleteMessage(vrm.getId(), false);
 			return;
 		}
-		
+
 		if((!isHostInMsgVR(getHost(), vrm) || isLooking(vrm)) && hasMessage(vrm.getId()))
 		{
 //			System.out.println("Host " + getHost().getAddress() + " deleting " + 
@@ -412,15 +412,15 @@ public class GeoRouter extends ActiveRouter
 			deleteMessage(vrm.getId(), false);
 		}
 	}
-	
+
 	protected boolean removeOldCheckInMsgs(Message newCheckin)
 	{
 		for(Message m : getMessageCollection())
 		{
 			// delete any older checkIn messages (or this message if it's older)
-			if(m != newCheckin && 
-				isCheckInMessage(m) && 
-				m.getTo() == newCheckin.getTo())
+			if(m != newCheckin &&
+					isCheckInMessage(m) &&
+					m.getTo() == newCheckin.getTo())
 			{
 				if(getCheckInSequenceNumber(newCheckin) > getCheckInSequenceNumber(m))
 				{
@@ -436,32 +436,32 @@ public class GeoRouter extends ActiveRouter
 		}
 		return true;
 	}
-	
+
 	protected Coord getFocus(Message m)
 	{
 		return (Coord) m.getProperty(MESSAGE_FOCUS_P);
 	}
-	
+
 	protected boolean isCheckInMessage(Message m)
 	{
 		return m.getProperty(MESSAGE_IS_CHECKIN_P) != null;
 	}
-	
+
 	protected Coord getCheckInLocation(Message m)
 	{
 		return (Coord) m.getProperty(MESSAGE_HOME_LOC_P);
 	}
-	
+
 	protected boolean isLooking(Message m)
 	{
 		return ((Boolean)m.getProperty(MESSAGE_LOOK_P)).booleanValue();
 	}
-	
+
 	protected long getCheckInSequenceNumber(Message m)
 	{
 		return ((Long) m.getProperty(MESSAGE_CHECKIN_SEQNUM_P)).longValue();
 	}
-	
+
 	protected void doLook(Message m, Coord toLoc, double locationTime)
 	{
 		m.updateProperty(MESSAGE_LOOK_P, true);
@@ -469,11 +469,11 @@ public class GeoRouter extends ActiveRouter
 		m.updateProperty(MESSAGE_LOOK_TIMEOUT_P, 2*SimClock.getTime()-locationTime+600);
 //		System.out.println("Starting look: " + m.getId() + ' '+toLoc);
 	}
-	
+
 	protected void expireLook(Message m, double timeNow)
 	{
 		if(!isLooking(m))return;
-		
+
 		double timeout = ((Double)m.getProperty(GeoRouter.MESSAGE_LOOK_TIMEOUT_P)).doubleValue();
 		if(timeout < timeNow)
 		{
@@ -481,12 +481,12 @@ public class GeoRouter extends ActiveRouter
 			m.updateProperty(MESSAGE_FOCUS_P, hash(m.getTo()));
 		}
 	}
-	
+
 	@Override
 	public void update()
 	{
 		super.update();
-		
+
 		/*
 		 * At regular intervals, each node needs to generate a message to its
 		 * Virtual Repository to get messages.
@@ -498,19 +498,19 @@ public class GeoRouter extends ActiveRouter
 				//nextCheckInTime = Integer.MAX_VALUE;
 				nextCheckInTime = time + GeoRouter.checkInInterval;
 			}
-			
+
 			updateNeighborhood(time);
 			updateMessageCollection(time);
 		}
-		
+
 		if(!this.canStartTransfer() || this.isTransferring())
 			return; // nothing to transfer or is currently transferring 
-		
+
 		/*
-		 * try messages that could be delivered to final recipient, i.e. all 
-		 * messages whose final destination is a peer to which we're a currently 
+		 * try messages that could be delivered to final recipient, i.e. all
+		 * messages whose final destination is a peer to which we're a currently
 		 * connected.
-		 */ 
+		 */
 		{
 			if (exchangeDeliverableMessages() != null)
 			{
@@ -518,31 +518,31 @@ public class GeoRouter extends ActiveRouter
 			}
 		}
 		Collection<Message> msgCollection = getMessageCollection();
-		java.util.List<Tuple<Message, Connection>> messages = 
-							new LinkedList<Tuple<Message, Connection>>();
+		java.util.List<Tuple<Message, Connection>> messages =
+				new LinkedList<Tuple<Message, Connection>>();
 		Coord here = this.getHost().getLocation(); //host knows its own location
-		
+
 		/*
-		 * For each message, we need to determine several things: 
+		 * For each message, we need to determine several things:
 		 *   1. Do we know the actual location of the destination or do we have to
 		 *      use its hashed VR location contained in the message.
 		 *   2. Are we inside the VR for this message or not.
-		 *   
+		 *
 		 */
 		for(Message m : msgCollection)
 		{
 			DTNHost to = m.getTo(); //Note: the (peer) DTNHost knows its coordinate
-									//location in the simulation, but an actual
-									//implementation may not have this info for its
-									//peer, so we don't use it here.
-								
+			//location in the simulation, but an actual
+			//implementation may not have this info for its
+			//peer, so we don't use it here.
+
 			Coord msgDest;
 			boolean isDestOutsideNeighborhood =
-				!neighborhood.containsKey(to) || isCheckInMessage(m);
+					!neighborhood.containsKey(to) || isCheckInMessage(m);
 			if(isDestOutsideNeighborhood)
 			{
 				/*
-				 * this host doesn't know the actual location or this is a check-in msg 
+				 * this host doesn't know the actual location or this is a check-in msg
 				 * and the actual location should be ignored, use hashed location stored
 				 * in message.
 				 */
@@ -551,40 +551,40 @@ public class GeoRouter extends ActiveRouter
 			else {
 				msgDest = neighborhood.get(to).getLocation();
 			}
-			
+
 			/*
-			 * Compute information for this host. 
+			 * Compute information for this host.
 			 */
-			double distToMsgDest = Math.hypot(msgDest.getX() - here.getX(), 
-											msgDest.getY() - here.getY());
+			double distToMsgDest = Math.hypot(msgDest.getX() - here.getX(),
+					msgDest.getY() - here.getY());
 			boolean isThisHostInVR = distToMsgDest < vrRadius;
-			
+
 //			double myDirectionAngle = myDest.equals(here) ? Double.NaN : 
 //				Math.atan2(myDest.getY() - here.getY(), myDest.getX() - here.getX());
-			
+
 //			double msgDirectionFromHere = Math.atan2(msgDest.getY() - here.getY(), 
 //					msgDest.getX() - here.getX());
-			
+
 //			boolean myMovingTowards = myDirectionAngle != Double.NaN &&
 //				Math.abs(myDirectionAngle - msgDirectionFromHere) < Math.PI / 4;
-			
+
 //			double mySpeed = getHost().getSpeed(),
 //						 mySpeedX = mySpeed * Math.cos(myDirectionAngle),
 //						 mySpeedY = mySpeed * Math.sin(myDirectionAngle);
-		
+
 			for(Connection c : getHost())
 			//for(Connection c : getConnections())
 			{
 				DTNHost peer = c.getOtherNode(getHost());
 				if(((ActiveRouter)peer.getRouter()).isTransferring())
 					continue;
-				
+
 				Coord peerLoc = peer.getLocation();
-				
+
 				/*
 				 * If both this host and the peer are in the VR for the msg and we don't
 				 * have the actual location of the destination node, then we need to
-				 * transfer the msg to the peer. This essentially broadcasts the message 
+				 * transfer the msg to the peer. This essentially broadcasts the message
 				 * to all peers inside the VR.
 				 */
 				if(isDestOutsideNeighborhood && isHostInMsgVR(peer, m))
@@ -594,29 +594,29 @@ public class GeoRouter extends ActiveRouter
 				}
 				else if(isThisHostInVR && isDestOutsideNeighborhood)
 					continue;
-				
-				double peerDistToMsgDest = Math.hypot(msgDest.getX() - peerLoc.getX(), 
+
+				double peerDistToMsgDest = Math.hypot(msgDest.getX() - peerLoc.getX(),
 						msgDest.getY() - peerLoc.getY());
-				
+
 //				double peerDirectionAngle = peerLoc.equals(peerDest) ? Double.NaN :
 //					Math.atan2(peerDest.getY() - peerLoc.getY(), peerDest.getX() - 
 //							peerLoc.getX());
-				
+
 //				double msgDirFromPeer =	Math.atan2(msgDest.getY() - peerLoc.getY(), 
 //						msgDest.getX() - peerLoc.getX());
-				
+
 //				boolean peerMovingTowards = peerDirectionAngle != Double.NaN &&
 //					Math.abs(peerDirectionAngle - msgDirFromPeer) < Math.PI / 4;
-				
+
 //				double peerSpeed = peer.getSpeed(),
 //							 peerRelSpeedX = peerSpeed * Math.cos(peerDirectionAngle) - mySpeedX,
 //							 peerRelSpeedY = peerSpeed * Math.sin(peerDirectionAngle) - mySpeedY,
 //							 peerRelDirAngle = peerSpeed == 0.0 && mySpeed == 0.0 ? Double.NaN :
 //								 Math.atan2(peerRelSpeedY, peerRelSpeedX);
-				
+
 //				boolean peerRelMovingTowards = peerRelDirAngle != Double.NaN &&
 //					Math.abs(peerRelDirAngle - msgDirFromPeer) < Math.PI / 4;
-				
+
 				if(distToMsgDest > peerDistToMsgDest)
 				{
 					/*if(myMovingTowards && peerMovingTowards && peerDistToMsgDest < 
@@ -659,7 +659,7 @@ public class GeoRouter extends ActiveRouter
 				}
 			}
 		}
-		
+
 		{
 			Collections.shuffle(messages);
 //			Tuple<Message, Connection> t;
@@ -667,11 +667,11 @@ public class GeoRouter extends ActiveRouter
 			{
 //				System.out.println("Sending " +t.getKey().toString() + " from " + 
 //					getHost().getAddress() + " to " + t.getValue().getOtherNode(getHost()).getAddress());
-			
+
 			}
 		}
 	}
-	
+
 	private void updateNeighborhood(double time)
 	{
 		for(Connection conn : getHost())
@@ -680,9 +680,9 @@ public class GeoRouter extends ActiveRouter
 			DTNHost otherHost = conn.getOtherNode(getHost());
 			neighborhood.put(otherHost, new NeighborEntry(otherHost.getLocation(), time));
 		}
-		
+
 		for(Iterator<Map.Entry<DTNHost, NeighborEntry>> i =
-						neighborhood.entrySet().iterator(); i.hasNext();)
+			neighborhood.entrySet().iterator(); i.hasNext();)
 		{
 			Map.Entry<DTNHost, NeighborEntry> e = i.next();
 			if(e.getValue().isExpired(time)) {
@@ -690,7 +690,7 @@ public class GeoRouter extends ActiveRouter
 			}
 		}
 	}
-	
+
 	private void updateMessageCollection(double time)
 	{
 		for(Message m : this.getMessageCollection())
@@ -704,12 +704,12 @@ public class GeoRouter extends ActiveRouter
 	{
 		return new GeoRouter(this);
 	}
-	
+
 	/**
 	 * Entry for the neighborhood map. Each entry contains a stored location for
 	 * an associated DTNHost (the key of the map) and a time when this entry 
 	 * should expire and be removed from the map. 
-	 * 
+	 *
 	 * @author PJ Dillon
 	 */
 	protected class NeighborEntry
@@ -717,38 +717,38 @@ public class GeoRouter extends ActiveRouter
 		private Coord knownLocation;
 		private double locationTimestamp; //time at which the neighbor was at knownlocation
 		private int expirationTime;
-		
+
 		NeighborEntry(Coord location, double timestampOfLocation)
 		{
 			knownLocation = location;
 			locationTimestamp = timestampOfLocation;
 			setExpiration();
 		}
-		
+
 		public Coord getLocation()
 		{
 			return knownLocation;
 		}
-		
+
 		public double getLocationTimestamp()
 		{
 			return locationTimestamp;
 		}
-		
+
 		public boolean isExpired(double timeNow)
 		{
 			return expirationTime < timeNow;
 		}
-		
+
 		public void refresh()
 		{
 			setExpiration();
 		}
-		
+
 		private void setExpiration()
 		{
-			expirationTime = SimClock.getIntTime() + 
-			GeoRouter.neighborExpirationInterval;
+			expirationTime = SimClock.getIntTime() +
+					GeoRouter.neighborExpirationInterval;
 		}
 	}
 }

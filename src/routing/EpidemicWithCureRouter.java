@@ -15,7 +15,7 @@ public class EpidemicWithCureRouter extends ActiveRouter
 	 * buffer.
 	 */
 	protected Set<String> finishedMessages;
-	
+
 	public EpidemicWithCureRouter(Settings s)
 	{
 		super(s);
@@ -66,18 +66,18 @@ public class EpidemicWithCureRouter extends ActiveRouter
 	}
 
 	@Override
-	public void update() 
+	public void update()
 	{
 		super.update();
 		if (isTransferring() || !canStartTransfer()) {
 			return; // transferring, don't try other connections yet
 		}
-		
+
 		// Try first the messages that can be delivered to final recipient
 		if (exchangeDeliverableMessages() != null) {
 			return; // started a transfer, don't try others (yet)
 		}
-		
+
 		// then try any/all message to any/all connection
 		this.tryAllMessagesToAllConnections();
 	}

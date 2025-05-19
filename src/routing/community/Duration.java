@@ -9,10 +9,10 @@ package routing.community;
  */
 public class Duration {
 	/** The start value */
-	double start;
+	public double start;
 
 	/** The end value */
-	double end;
+	public double end;
 
 	/**
 	 * Standard constructor that assigns s to start and e to end.
@@ -25,11 +25,4 @@ public class Duration {
 		end = e;
 	}
 
-	public double getStart() {
-		return start;
-	}
-
-	public double getEnd() {
-		return end;
-	}
 }

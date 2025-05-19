@@ -3,127 +3,79 @@ package routing;
 import core.*;
 
 /**
- * Antarmuka yang mendefinisikan bagaimana sebuah router membuat keputusan tentang
- * bagaimana pesan harus dikirimkan dalam jaringan.
- * <p>
- * Class yang mengimplementasikan antarmuka ini (disebut "Decision Engine") berisi
- * logika routing spesifik untuk algoritma routing tertentu (misalnya, Epidemic,
- * Spray and Wait). Decision EngineRouter menggunakan interface ini untuk
- * memisahkan logika routing dari mekanisme pengiriman pesan dasar.
- * </p>
+ * Defines the interface between DecisionEngineRouter and its decision making
+ * object.
  *
- * © 2025 Hendro Wunga, Sanata Dharma University, Network Laboratory
+ * @author PJ Dillon, University of Pittsburgh
  */
-public interface RoutingDecisionEngine {
-
+public interface RoutingDecisionEngine
+{
 	/**
-	 * Dipanggil ketika sebuah koneksi (hubungan langsung) terbentuk antara host ini
-	 * dan host lain (peer).
-	 * <p>
-	 * Memberi tahu Decision Engine bahwa koneksi baru telah terbentuk. Decision
-	 * Engine dapat menggunakan informasi ini untuk memperbarui informasi routing,
-	 * memulai pertukaran informasi dengan peer, atau melakukan tindakan lain
-	 * yang relevan.
-	 * </p>
-	 * <p>
-	 * Penting: Method `doExchangeForNewConnection()` mungkin dipanggil
-	 * *sebelum* method ini dipanggil, untuk memungkinkan pertukaran informasi
-	 * awal sebelum koneksi sepenuhnya siap.
-	 * </p>
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @param peer     Host peer (host lain) yang terhubung.
+	 * Called when a connection goes up between this host and a peer. Note that,
+	 * doExchangeForNewConnection() may be called first.
+	 *
+	 * @param thisHost
+	 * @param peer
 	 */
 	public void connectionUp(DTNHost thisHost, DTNHost peer);
 
 	/**
-	 * Dipanggil ketika sebuah koneksi (hubungan langsung) terputus antara host ini
-	 * dan host lain (peer).
-	 * <p>
-	 * Memberi tahu Decision Engine bahwa koneksi telah hilang. Decision Engine
-	 * dapat menggunakan informasi ini untuk menghapus rute yang tidak valid,
-	 * memperbarui informasi routing, atau melakukan tindakan lain yang relevan.
-	 * </p>
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @param peer     Host peer (host lain) yang koneksinya terputus.
+	 * Called when a connection goes down between this host and a peer.
+	 *
+	 * @param thisHost
+	 * @param peer
 	 */
 	public void connectionDown(DTNHost thisHost, DTNHost peer);
 
 	/**
-	 * Dipanggil sekali untuk setiap koneksi baru yang terbentuk, untuk memungkinkan
-	 * dua Decision Engine di kedua ujung koneksi bertukar informasi routing
-	 * secara simultan.
-	 * <p>
-	 * Pertukaran informasi ini penting untuk menghindari masalah di mana satu host
-	 * memperbarui informasinya berdasarkan informasi yang *baru* dari host lain,
-	 * sementara host lain menggunakan informasi yang *lama*. Dengan pertukaran
-	 * yang simultan, kedua host menggunakan informasi yang konsisten.
-	 * </p>
-	 * @param con  Objek {@link Connection} yang merepresentasikan koneksi baru.
-	 * @param peer Host peer (host lain) yang terhubung melalui koneksi ini.
+	 * Called once for each connection that comes up to give two decision engine
+	 * objects on either end of the connection to exchange and update information
+	 * in a simultaneous fashion. This call is provided so that one end of the
+	 * connection does not perform an update based on newly updated information
+	 * from the opposite end of the connection (real life would reflect an update
+	 * based on the old peer information).
+	 *
+	 * @param con
+	 * @param peer
 	 */
 	public void doExchangeForNewConnection(Connection con, DTNHost peer);
 
 	/**
-	 * Dipanggil ketika sebuah pesan baru dibuat di host ini.
-	 * <p>
-	 * Memberi kesempatan kepada Decision Engine untuk memeriksa pesan dan memutuskan
-	 * apakah pesan tersebut harus diterima dan diproses lebih lanjut, atau ditolak.
-	 * </p>
-	 * <p>
-	 * Penting: Method ini hanya dipanggil untuk pesan yang *dibuat* oleh host ini,
-	 * bukan pesan yang diterima dari peer.
-	 * </p>
-	 * @param m Pesan baru yang akan dievaluasi.
-	 * @return `true` jika pesan harus diterima dan diproses lebih lanjut,
-	 *         `false` jika pesan harus ditolak.
+	 * Allows the decision engine to gather information from the given message and
+	 * determine if it should be forwarded on or discarded. This method is only
+	 * called when a message originates at the current host (not when received
+	 * from a peer). In this way, applications can use a Message to communicate
+	 * information to this routing layer.
+	 *
+	 * @param m the new Message to consider routing
+	 * @return True if the message should be forwarded on. False if the message
+	 * should be discarded.
 	 */
 	public boolean newMessage(Message m);
 
 	/**
-	 * Menentukan apakah host tertentu (targetHost) adalah tujuan akhir dari pesan
-	 * tertentu (m).
-	 * <p>
-	 * Dipanggil ketika sebuah pesan diterima, untuk menentukan apakah pesan telah
-	 * mencapai tujuannya.
-	 * </p>
-	 * @param m          Pesan yang diterima.
-	 * @param targetHost Host yang akan diperiksa apakah merupakan tujuan akhir.
-	 * @return `true` jika host yang diberikan adalah tujuan akhir dari pesan,
-	 *         `false` jika bukan.
+	 * Determines if the given host is an intended recipient of the given Message.
+	 * This method is expected to be called when a new Message is received at a
+	 * given router.
+	 *
+	 * @param m Message just received
+	 * @param aHost Host to check
+	 * @return true if the given host is a recipient of this given message. False
+	 * otherwise.
 	 */
-	public boolean isFinalDest(Message m, DTNHost targetHost);
+	public boolean isFinalDest(Message m, DTNHost aHost);
 
 	/**
-	 * Menentukan apakah pesan yang diterima dari peer harus disimpan dalam penyimpanan
-	 * pesan host ini dan diproses lebih lanjut.
-	 * <p>
-	 * Memungkinkan Decision Engine untuk menerapkan kebijakan penyimpanan pesan,
-	 * seperti membatasi penyimpanan pesan yang duplikat, pesan yang sudah kadaluarsa,
-	 * atau pesan dari sumber yang tidak dipercaya.
-	 * </p>
-	 * @param m        Pesan yang diterima.
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 * @return `true` jika pesan harus disimpan dan diproses lebih lanjut,
-	 *         `false` jika tidak.
+	 * Called to determine if a new message received from a peer should be saved
+	 * to the host's message store and further forwarded on.
+	 *
+	 * @param m Message just received
+	 * @param thisHost The requesting host
+	 * @return true if the message should be saved and further routed.
+	 * False otherwise.
 	 */
 	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost);
 
-	/**
-	 * Menentukan apakah pesan tertentu (m) harus dikirim ke host tertentu (otherHost).
-	 * <p>
-	 * Method ini merupakan inti dari logika routing. Decision Engine harus
-	 * mempertimbangkan berbagai faktor, seperti konektivitas jaringan,
-	 * kedekatan ke tujuan, jumlah salinan pesan yang sudah ada, dan kebijakan
-	 * routing lainnya, untuk menentukan apakah pengiriman pesan ke host yang
-	 * diberikan akan meningkatkan kemungkinan pengiriman atau mengurangi overhead.
-	 * </p>
-	 * @param m         Pesan yang akan dievaluasi untuk pengiriman.
-	 * @param otherHost Host peer yang berpotensi menjadi tujuan pengiriman.
-	 * @param thisHost  Host lokal (yang menjalankan router ini).
-	 * @return `true` jika pesan harus dikirim ke host yang diberikan,
-	 *         `false` jika tidak.
-	 */
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost);
 	/**
 	 * Called to determine if the given Message should be sent to the given host.
 	 * This method will often be called multiple times in succession as the
@@ -137,50 +89,32 @@ public interface RoutingDecisionEngine {
 	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost);
 
 	/**
-	 * Dipanggil setelah pesan berhasil dikirim ke peer, untuk menentukan apakah pesan
-	 * tersebut sekarang harus dihapus dari penyimpanan pesan host ini.
-	 * <p>
-	 * Memungkinkan Decision Engine untuk menerapkan kebijakan penyimpanan pesan,
-	 * seperti menghapus pesan setelah berhasil dikirim ke tujuan akhir, atau setelah
-	 * sejumlah salinan pesan telah tersebar.
-	 * </p>
-	 * @param m         Pesan yang telah berhasil dikirim.
-	 * @param otherHost Host peer yang menerima pesan.
-	 * @return `true` jika pesan harus dihapus dari penyimpanan pesan host ini,
-	 *         `false` jika tidak.
+	 * Called after a message is sent to some other peer to ask if it should now
+	 * be deleted from the message store.
+	 *
+	 * @param m Sent message
+	 * @param otherHost Host who received the message
+	 * @return true if the message should be deleted. False otherwise.
 	 */
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost);
 
 	/**
-	 * Dipanggil jika upaya pengiriman pesan ke peer gagal dan kode pengembalian
-	 * menunjukkan bahwa pesan tersebut sudah lama atau sudah dikirim sebelumnya.
-	 * Dalam kasus ini, pesan mungkin perlu dihapus.
-	 * <p>
-	 * Memberi kesempatan kepada Decision Engine untuk membersihkan pesan-pesan
-	 * yang tidak lagi berguna, berdasarkan laporan dari peer lain.
-	 * </p>
-	 * @param m              Pesan yang dianggap sudah lama.
-	 * @param hostReportingOld Host peer yang melaporkan bahwa pesan tersebut sudah lama.
-	 * @return `true` jika pesan harus dihapus dari penyimpanan pesan host ini,
-	 *         `false` jika tidak.
+	 * Called if an attempt was unsuccessfully made to transfer a message to a
+	 * peer and the return code indicates the message is old or already delivered,
+	 * in which case it might be appropriate to delete the message.
+	 *
+	 * @param m Old Message
+	 * @param hostReportingOld Peer claiming the message is old
+	 * @return true if the message should be deleted. False otherwise.
 	 */
 	public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld);
 
-	/**
-	 * Dipanggil secara berkala untuk memberi kesempatan kepada Decision Engine untuk
-	 * memperbarui state internalnya, melakukan pembersihan berkala, atau melakukan
-	 * tindakan pemeliharaan lainnya.
-	 * @param thisHost Host lokal (yang menjalankan router ini).
-	 */
 	public void update(DTNHost thisHost);
 
 	/**
-	 * Membuat duplikat (replika) dari Decision Engine ini.
-	 * <p>
-	 * Penting karena setiap host dalam simulasi akan memiliki instance Decision
-	 * Engine sendiri.
-	 * </p>
-	 * @return Salinan baru dari Decision Engine ini.
+	 * Duplicates this decision engine.
+	 *
+	 * @return
 	 */
 	public RoutingDecisionEngine replicate();
 }

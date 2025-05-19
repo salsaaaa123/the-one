@@ -15,7 +15,7 @@ import core.SimError;
 
 /**
  * <P>
- * External events reader for standard-format events 
+ * External events reader for standard-format events
  * (created e.g by the dtnsim2parser).
  * </P>
  * <P>
@@ -24,18 +24,22 @@ import core.SimError;
  * &lt;time&gt; &lt;actionId&gt; &lt;msgId&gt; &lt;hostId&gt; 
  * [&lt;host2Id&gt; [&lt;size&gt;] [&lt;respSize&gt;]]
  * </TT>
- * </P><P>
- * All actions (except CONNECTION) must have first four fields. SEND, DELIVERED 
- * and ABORT actions need host2Id field too (the host who the message is/was 
- * being transferred to). CREATE action needs the additional size 
+ * </P>
+ * <P>
+ * All actions (except CONNECTION) must have first four fields. SEND, DELIVERED
+ * and ABORT actions need host2Id field too (the host who the message is/was
+ * being transferred to). CREATE action needs the additional size
  * (of the message) field and can have also size-of-the-response field if
- * a response to this message is requested.</P>
- * <P> CONNNECTION action is followed by the two hosts which connect (or 
+ * a response to this message is requested.
+ * </P>
+ * <P>
+ * CONNNECTION action is followed by the two hosts which connect (or
  * disconnect) to each other and then either "up" or "down" depending on whether
  * the connection was created or destroyed.
  * </P>
- * <P> Message DROP and REMOVE events can use {@value #ALL_MESSAGES_ID} as the
- * message ID for referring to all messages the node has in message buffer 
+ * <P>
+ * Message DROP and REMOVE events can use {@value #ALL_MESSAGES_ID} as the
+ * message ID for referring to all messages the node has in message buffer
  * (i.e., to delete all messages).
  * </P>
  */
@@ -58,20 +62,19 @@ public class StandardEventsReader implements ExternalEventsReader {
 	public static final String CONNECTION_DOWN = "down";
 	/** Value identifier of connection up event ({@value}) */
 	public static final String CONNECTION_UP = "up";
-	/** Message identifier to use to refer to all messages ({@value}) */ 
+	/** Message identifier to use to refer to all messages ({@value}) */
 	public static final String ALL_MESSAGES_ID = "*";
-	
+
 	private Scanner scanner;
-	
-	public StandardEventsReader(File eventsFile){
+
+	public StandardEventsReader(File eventsFile) {
 		try {
 			this.scanner = new Scanner(eventsFile);
 		} catch (FileNotFoundException e) {
-			throw new SimError(e.getMessage(),e);
+			throw new SimError(e.getMessage(), e);
 		}
 	}
-	
-	
+
 	public List<ExternalEvent> readEvents(int nrof) {
 		ArrayList<ExternalEvent> events = new ArrayList<ExternalEvent>(nrof);
 		int eventsRead = 0;
@@ -80,69 +83,63 @@ public class StandardEventsReader implements ExternalEventsReader {
 
 		while (eventsRead < nrof && scanner.hasNextLine()) {
 			String line = scanner.nextLine();
-			Scanner lineScan = new Scanner(line);
 			if (skipPattern.matcher(line).matches()) {
 				// skip empty and comment lines
 				continue;
 			}
-			
+
 			double time;
 			String action;
 			String msgId;
 			int hostAddr;
 			int host2Addr;
-					
-			try {
+
+			try (Scanner lineScan = new Scanner(line)) {
 				time = lineScan.nextDouble();
-				action = lineScan.next();		
-			
+				action = lineScan.next();
+
 				if (action.equals(DROP)) {
 					msgId = lineScan.next();
 					hostAddr = getHostAddress(lineScan.next());
 					events.add(new MessageDeleteEvent(hostAddr, msgId,
 							time, true));
-				}
-				else if (action.equals(REMOVE)) {
+				} else if (action.equals(REMOVE)) {
 					msgId = lineScan.next();
 					hostAddr = getHostAddress(lineScan.next());
 					events.add(new MessageDeleteEvent(hostAddr, msgId,
 							time, false));
-				}
-				else if (action.equals(CONNECTION)) {
+				} else if (action.equals(CONNECTION)) {
 					String connEventType;
 					boolean isUp;
 					hostAddr = getHostAddress(lineScan.next());
 					host2Addr = getHostAddress(lineScan.next());
 					connEventType = lineScan.next();
-					
+
 					String interfaceId = null;
 					if (lineScan.hasNext()) {
 						interfaceId = lineScan.next();
-					}	
-					
+					}
+
 					if (connEventType.equalsIgnoreCase(CONNECTION_UP)) {
 						isUp = true;
-					}
-					else if (connEventType.equalsIgnoreCase(CONNECTION_DOWN)) {
+					} else if (connEventType.equalsIgnoreCase(CONNECTION_DOWN)) {
 						isUp = false;
-					}
-					else {
-						throw new SimError("Unknown up/down value '" + 
+					} else {
+						throw new SimError("Unknown up/down value '" +
 								connEventType + "'");
 					}
-					
-					ConnectionEvent ce = new ConnectionEvent(hostAddr, 
+
+					ConnectionEvent ce = new ConnectionEvent(hostAddr,
 							host2Addr, interfaceId, isUp, time);
-					
+
 					events.add(ce);
-				}
-				else {
+				} else {
 					msgId = lineScan.next();
 					hostAddr = getHostAddress(lineScan.next());
-				
+
 					host2Addr = getHostAddress(lineScan.next());
-				
-					if (action.equals(CREATE)){
+
+					if (action.equals(CREATE)) {
 						int size = lineScan.nextInt();
 						int respSize = 0;
 						if (lineScan.hasNextInt()) {
@@ -150,25 +147,21 @@ public class StandardEventsReader implements ExternalEventsReader {
 						}
 						events.add(new MessageCreateEvent(hostAddr, host2Addr,
 								msgId, size, respSize, time));
-					}
-					else {
+					} else {
 						int stage = -1;
 						if (action.equals(SEND)) {
 							stage = MessageRelayEvent.SENDING;
-						}
-						else if (action.equals(DELIVERED)) {
+						} else if (action.equals(DELIVERED)) {
 							stage = MessageRelayEvent.TRANSFERRED;
-						}
-						else if (action.equals(ABORT)) {
+						} else if (action.equals(ABORT)) {
 							stage = MessageRelayEvent.ABORTED;
-						}
-						else {
-							throw new SimError("Unknown action '" + action + 
-								"' in external events");
+						} else {
+							throw new SimError("Unknown action '" + action +
+									"' in external events");
 						}
 						events.add(new MessageRelayEvent(hostAddr, host2Addr,
 								msgId, time, stage));
-					}						
+					}
 				}
 				// discard the newline in the end
 				if (lineScan.hasNextLine()) {
@@ -176,17 +169,18 @@ public class StandardEventsReader implements ExternalEventsReader {
 				}
 				eventsRead++;
 			} catch (Exception e) {
-				throw new SimError("Can't parse external event " + 
-						(eventsRead+1) + " from '" + line + "'", e);
+				throw new SimError("Can't parse external event " +
+						(eventsRead + 1) + " from '" + line + "'", e);
 			}
 		}
-		
+
 		return events;
 	}
 
 	/**
 	 * Parses a host address from a hostId string (the numeric part after
 	 * optional non-numeric part).
+	 * 
 	 * @param hostId The id to parse the address from
 	 * @return The address
 	 * @throws SimError if no address could be parsed from the id
@@ -195,18 +189,16 @@ public class StandardEventsReader implements ExternalEventsReader {
 		String addressPart = "";
 		if (hostId.matches("^\\d+$")) {
 			addressPart = hostId; // host id is only the address
-		}
-		else if (hostId.matches("^\\D+\\d+$")) {
-			String [] parts = hostId.split("\\D");
-			addressPart = parts[parts.length-1]; // last occurence is the addr
-		}
-		else {
+		} else if (hostId.matches("^\\D+\\d+$")) {
+			String[] parts = hostId.split("\\D");
+			addressPart = parts[parts.length - 1]; // last occurence is the addr
+		} else {
 			throw new SimError("Invalid host ID '" + hostId + "'");
 		}
-		
+
 		return Integer.parseInt(addressPart);
 	}
-	
+
 	public void close() {
 		this.scanner.close();
 	}

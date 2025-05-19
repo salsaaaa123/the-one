@@ -12,7 +12,6 @@ desktop.ini
 # ========== JAVA / GRADLE ==========
 # Compiled Java files
 *.class
-*.jar
 *.war
 *.ear
 
@@ -28,10 +27,6 @@ replay_pid*
 .gradle/**/daemon/
 .gradle/**/taskHistory/
 .gradle/**/gradleApp/
-
-# Gradle wrapper files
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
 
 # ========== IDE / EDITOR ==========
 # IntelliJ IDEA
@@ -65,3 +60,9 @@ doc/package-list
 !the-one/config/**
 
 
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build

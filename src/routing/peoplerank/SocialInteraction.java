@@ -31,7 +31,7 @@ public class SocialInteraction {
         double total = 0.0;
         for (int i = 0; i < durations.size(); i++) {
             Duration d = durations.get(i);
-            total += d.getEnd() - d.getStart();
+            total += d.end - d.start;
         }
         return total;
     }

@@ -21,20 +21,20 @@ import core.Message;
 /**
  * Information panel that shows data of selected messages and nodes.
  */
-public class InfoPanel extends JPanel implements ActionListener{
-	private JComboBox msgChooser;
+public class InfoPanel extends JPanel implements ActionListener {
+	private JComboBox<Message> msgChooser;
 	private JLabel info;
 	private JButton infoButton;
 	private JButton routingInfoButton;
 	private Message selectedMessage;
 	private DTNHost selectedHost;
 	private DTNSimGUI gui;
-	
+
 	public InfoPanel(DTNSimGUI gui) {
 		this.gui = gui;
 		reset();
 	}
-	
+
 	private void reset() {
 		this.removeAll();
 		this.repaint();
@@ -42,36 +42,37 @@ public class InfoPanel extends JPanel implements ActionListener{
 		this.infoButton = null;
 		this.selectedMessage = null;
 	}
-	
+
 	/**
 	 * Show information about a host
+	 * 
 	 * @param host Host to show the information of
 	 */
-	@SuppressWarnings("unchecked")
 	public void showInfo(DTNHost host) {
-		Vector messages = new Vector<Message>(host.getMessageCollection());
+		Vector<Message> messages = new Vector<Message>(host.getMessageCollection());
 		Collections.sort(messages);
 		reset();
 		this.selectedHost = host;
 		String text = (host.isActive() ? "" : "INACTIVE ") + host + " at " +
-			host.getLocation();
-		
-		msgChooser = new JComboBox(messages);
-		msgChooser.insertItemAt(messages.size() + " messages", 0);
-		msgChooser.setSelectedIndex(0);
+				host.getLocation();
+
+		msgChooser = new JComboBox<Message>(messages);
+		msgChooser.setSelectedIndex(-1); // No selection by default
 		msgChooser.addActionListener(this);
-		
+
 		routingInfoButton = new JButton("routing info");
 		routingInfoButton.addActionListener(this);
-		
+
 		this.add(new JLabel(text));
+		this.add(new JLabel(messages.size() + " messages"));
 		this.add(msgChooser);
 		this.add(routingInfoButton);
 		this.revalidate();
 	}
-	
+
 	/**
 	 * Show information about a message
+	 * 
 	 * @param message Message to show the information of
 	 */
 	public void showInfo(Message message) {
@@ -83,52 +84,49 @@ public class InfoPanel extends JPanel implements ActionListener{
 
 	private void setMessageInfo(Message m) {
 		int ttl = m.getTtl();
-		String txt = " [" + m.getFrom() + "->" + m.getTo() + "] " +   
-				"size:" + m.getSize() + ", UI:" + m.getUniqueId() +  
+		String txt = " [" + m.getFrom() + "->" + m.getTo() + "] " +
+				"size:" + m.getSize() + ", UI:" + m.getUniqueId() +
 				", received @ " + String.format("%.2f", m.getReceiveTime());
 		if (ttl != Integer.MAX_VALUE) {
 			txt += " TTL: " + ttl;
 		}
-		
-		String butTxt = "path: " + (m.getHops().size()-1) + " hops";
-		
+
+		String butTxt = "path: " + (m.getHops().size() - 1) + " hops";
+
 		if (this.info == null) {
 			this.info = new JLabel(txt);
 			this.infoButton = new JButton(butTxt);
 			this.add(info);
 			this.add(infoButton);
 			infoButton.addActionListener(this);
-		}
-		else {
+		} else {
 			this.info.setText(txt);
 			this.infoButton.setText(butTxt);
 		}
-		
+
 		this.selectedMessage = m;
 		infoButton.setToolTipText("path:" + m.getHops());
-		
+
 		this.revalidate();
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == msgChooser) {
 			if (msgChooser.getSelectedIndex() == 0) { // title text selected
-				return; 
+				return;
 			}
-			Message m = (Message)msgChooser.getSelectedItem();
+			Message m = (Message) msgChooser.getSelectedItem();
 			setMessageInfo(m);
-		}
-		else if (e.getSource() == this.infoButton) {
+		} else if (e.getSource() == this.infoButton) {
 			Path p = new Path();
 			for (DTNHost h : this.selectedMessage.getHops()) {
 				p.addWaypoint(h.getLocation());
 			}
-				
+
 			this.gui.showPath(p);
-		}
-		else if (e.getSource() ==  this.routingInfoButton) {
+		} else if (e.getSource() == this.routingInfoButton) {
 			new RoutingInfoWindow(this.selectedHost);
 		}
 	}
-	
+
 }

@@ -2,6 +2,7 @@
  * @(#)SprayAndFocusRouter.java
  *
  * Copyright 2010 by University of Pittsburgh, released under GPLv3.
+ *
  */
 package routing;
 
@@ -17,24 +18,20 @@ import core.*;
  * @author PJ Dillon, University of Pittsburgh
  */
 public class SprayAndFocusRouter extends ActiveRouter {
-	/**
-	 * SprayAndFocus router's settings name space ({@value})
-	 */
+	/** SprayAndFocus router's settings name space ({@value}) */
 	public static final String SPRAYANDFOCUS_NS = "SprayAndFocusRouter";
-	/**
-	 * identifier for the initial number of copies setting ({@value})
-	 */
+	/** identifier for the initial number of copies setting ({@value}) */
 	public static final String NROF_COPIES_S = "nrofCopies";
 	/**
-	 * identifier for the difference in timer values needed to forward on a message copy
+	 * identifier for the difference in timer values needed to forward on a message
+	 * copy
 	 */
 	public static final String TIMER_THRESHOLD_S = "transitivityTimerThreshold";
-	/**
-	 * Message property key for the remaining available copies of a message
-	 */
+	/** Message property key for the remaining available copies of a message */
 	public static final String MSG_COUNT_PROP = "SprayAndFocus.copies";
 	/**
-	 * Message property key for summary vector messages exchanged between direct peers
+	 * Message property key for summary vector messages exchanged between direct
+	 * peers
 	 */
 	public static final String SUMMARY_XCHG_PROP = "SprayAndFocus.protoXchg";
 
@@ -45,9 +42,7 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	protected int initialNrofCopies;
 	protected double transitivityTimerThreshold;
 
-	/**
-	 * Stores information about nodes with which this host has come in contact
-	 */
+	/** Stores information about nodes with which this host has come in contact */
 	protected Map<DTNHost, EncounterInfo> recentEncounters;
 	protected Map<DTNHost, Map<DTNHost, EncounterInfo>> neighborEncounters;
 
@@ -102,7 +97,7 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		DTNHost thisHost = getHost();
 		DTNHost peer = con.getOtherNode(thisHost);
 
-		//do this when con is up and goes down (might have been up for awhile)
+		// do this when con is up and goes down (might have been up for awhile)
 		if (recentEncounters.containsKey(peer)) {
 			EncounterInfo info = recentEncounters.get(peer);
 			info.updateEncounterTime(SimClock.getTime());
@@ -116,13 +111,15 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		}
 
 		/*
-		 * For this simulator, we just need a way to give the other node in this connection
-		 * access to the peers we recently encountered; so we duplicate the recentEncounters
+		 * For this simulator, we just need a way to give the other node in this
+		 * connection
+		 * access to the peers we recently encountered; so we duplicate the
+		 * recentEncounters
 		 * Map and attach it to a message.
 		 */
 		int msgSize = recentEncounters.size() * 64 + getMessageCollection().size() * 8;
 		Message newMsg = new Message(thisHost, peer, SUMMARY_XCHG_IDPREFIX + protocolMsgIdx++, msgSize);
-		newMsg.addProperty(SUMMARY_XCHG_PROP, /*new HashMap<DTNHost, EncounterInfo>(*/recentEncounters);
+		newMsg.addProperty(SUMMARY_XCHG_PROP, /* new HashMap<DTNHost, EncounterInfo>( */recentEncounters);
 
 		createNewMessage(newMsg);
 	}
@@ -131,7 +128,7 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	public boolean createNewMessage(Message m) {
 		makeRoomForNewMessage(m.getSize());
 
-		m.addProperty(MSG_COUNT_PROP, Integer.valueOf(initialNrofCopies));
+		m.addProperty(MSG_COUNT_PROP, Double.valueOf(initialNrofCopies));
 		addToMessages(m, true);
 		return true;
 	}
@@ -144,12 +141,14 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		 * Here we update our last encounter times based on the information sent
 		 * from our peer.
 		 */
+		@SuppressWarnings("unchecked")
 		Map<DTNHost, EncounterInfo> peerEncounters = (Map<DTNHost, EncounterInfo>) m.getProperty(SUMMARY_XCHG_PROP);
 		if (isDeliveredMessage(m) && peerEncounters != null) {
 			double distTo = getHost().getLocation().distance(from.getLocation());
 			double speed = from.getPath() == null ? 0 : from.getPath().getSpeed();
 
-			if (speed == 0.0) return m;
+			if (speed == 0.0)
+				return m;
 
 			double timediff = distTo / speed;
 
@@ -161,7 +160,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 
 			for (Map.Entry<DTNHost, EncounterInfo> entry : peerEncounters.entrySet()) {
 				DTNHost h = entry.getKey();
-				if (h == getHost()) continue;
+				if (h == getHost())
+					continue;
 
 				EncounterInfo peerEncounter = entry.getValue();
 				EncounterInfo info = recentEncounters.get(h);
@@ -180,7 +180,6 @@ public class SprayAndFocusRouter extends ActiveRouter {
 					continue;
 				}
 
-
 				if (info.getLastSeenTime() + timediff < peerEncounter.getLastSeenTime()) {
 					recentEncounters.get(h).updateEncounterTime(peerEncounter.getLastSeenTime() -
 							timediff);
@@ -189,7 +188,7 @@ public class SprayAndFocusRouter extends ActiveRouter {
 			return m;
 		}
 
-		//Normal message beyond here
+		// Normal message beyond here
 
 		Integer nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
 
@@ -230,7 +229,6 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		msg.updateProperty(MSG_COUNT_PROP, nrofCopies);
 	}
 
-
 	@Override
 	public void update() {
 		super.update();
@@ -247,7 +245,8 @@ public class SprayAndFocusRouter extends ActiveRouter {
 		List<Tuple<Message, Connection>> focuslist = new LinkedList<Tuple<Message, Connection>>();
 
 		for (Message m : getMessageCollection()) {
-			if (m.getProperty(SUMMARY_XCHG_PROP) != null) continue;
+			if (m.getProperty(SUMMARY_XCHG_PROP) != null)
+				continue;
 
 			Integer nrofCopies = (Integer) m.getProperty(MSG_COUNT_PROP);
 			assert nrofCopies != null : "SnF message " + m + " didn't have " +
@@ -263,13 +262,13 @@ public class SprayAndFocusRouter extends ActiveRouter {
 				 */
 				DTNHost dest = m.getTo();
 				Connection toSend = null;
-				double maxPeerLastSeen = 0.0; //beginning of time (simulation time)
+				double maxPeerLastSeen = 0.0; // beginning of time (simulation time)
 
-				//Get the timestamp of the last time this Host saw the destination
+				// Get the timestamp of the last time this Host saw the destination
 				double thisLastSeen = getLastEncounterTimeForHost(dest);
 
 				for (Connection c : getHost())
-				//for(Connection c : getConnections())
+				// for(Connection c : getConnections())
 				{
 					DTNHost peer = c.getOtherNode(getHost());
 					Map<DTNHost, EncounterInfo> peerEncounters = neighborEncounters.get(peer);
@@ -295,26 +294,12 @@ public class SprayAndFocusRouter extends ActiveRouter {
 			}
 		}
 
-		//arbitrarily favor spraying
-		if (tryMessagesToAllConnections(spraylist) == null) {  // Change here: Fix the method name
+		// arbitrarily favor spraying
+		if (tryMessagesToAllConnections(spraylist) == null) {
 			if (tryMessagesForConnected(focuslist) != null) {
 
 			}
 		}
-	}
-
-	/**
-	 * Method to try to send messages for all connections
-	 * @param messages list of message to send
-	 * @return connections that started a transfer or null if no connection accepted a message.
-	 */
-	protected Connection tryMessagesToAllConnections(List<Message> messages){
-		List<Connection> connections = getConnections();
-		if (connections.size() == 0 || this.getNrofMessages() == 0) {
-			return null;
-		}
-
-		return tryMessagesToConnections(messages, connections);
 	}
 
 	protected double getLastEncounterTimeForHost(DTNHost host) {
@@ -325,8 +310,10 @@ public class SprayAndFocusRouter extends ActiveRouter {
 	}
 
 	/**
-	 * Stores all necessary info about encounters made by this host to some other host.
-	 * At the moment, all that's needed is the timestamp of the last time these two hosts
+	 * Stores all necessary info about encounters made by this host to some other
+	 * host.
+	 * At the moment, all that's needed is the timestamp of the last time these two
+	 * hosts
 	 * met.
 	 *
 	 * @author PJ Dillon, University of Pittsburgh
