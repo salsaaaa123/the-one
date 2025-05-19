@@ -1,6 +1,6 @@
-/*
+/* 
  * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details.
+ * Released under GPLv3. See LICENSE.txt for details. 
  */
 package routing;
 
@@ -500,14 +500,14 @@ public abstract class MessageRouter {
      * @return The sorted/shuffled list
      */
     @SuppressWarnings(value = "unchecked") /* ugly way to make this generic */
-    protected List<Object> sortByQueueMode(List<Object> list) {
+    protected List sortByQueueMode(List list) {
         switch (sendQueueMode) {
             case Q_MODE_RANDOM:
                 Collections.shuffle(list, new Random(SimClock.getIntTime()));
                 break;
             case Q_MODE_FIFO:
                 Collections.sort(list,
-                        new Comparator<Object>() {
+                        new Comparator() {
                             /** Compares two tuples by their messages' receiving time */
                             public int compare(Object o1, Object o2) {
                                 double diff;
@@ -549,11 +549,33 @@ public abstract class MessageRouter {
      * @return -1 if the first message should come first, 1 if the second
      *         message should come first, or 0 if the ordering isn't defined
      */
+    // protected int compareByQueueMode(Message m1, Message m2) {
+    // switch (sendQueueMode) {
+    // case Q_MODE_RANDOM:
+    // /* return randomly (enough) but consistently -1, 0 or 1 */
+    // return (m1.hashCode() / 2 + m2.hashCode() / 2) % 3 - 1;
+
+    // case Q_MODE_FIFO:
+    // double diff = m1.getReceiveTime() - m2.getReceiveTime();
+    // if (diff == 0) {
+    // return 0;
+    // }
+    // return (diff < 0 ? -1 : 1);
+    // /* add more queue modes here */
+    // default:
+    // throw new SimError("Unknown queue mode " + sendQueueMode);
+    // }
+    // }
+
     protected int compareByQueueMode(Message m1, Message m2) {
         switch (sendQueueMode) {
             case Q_MODE_RANDOM:
                 /* return randomly (enough) but consistently -1, 0 or 1 */
-                return (m1.hashCode() / 2 + m2.hashCode() / 2) % 3 - 1;
+                int hash_diff = m1.hashCode() - m2.hashCode();
+                if (hash_diff == 0) {
+                    return 0;
+                }
+                return (hash_diff < 0 ? -1 : 1);
             case Q_MODE_FIFO:
                 double diff = m1.getReceiveTime() - m2.getReceiveTime();
                 if (diff == 0) {
@@ -604,7 +626,7 @@ public abstract class MessageRouter {
 
     /**
      * Adds an application to the attached applications list.
-     *
+     * 
      * @param app The application to attach to this router.
      */
     public void addApplication(Application app) {
@@ -618,7 +640,7 @@ public abstract class MessageRouter {
     /**
      * Returns all the applications that want to receive messages for the given
      * application ID.
-     *
+     * 
      * @param ID The application ID or <code>null</code> for all apps.
      * @return A list of all applications that want to receive the message.
      */
