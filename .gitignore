@@ -48,6 +48,7 @@ nbproject/private/
 # ========== SIMULATION / REPORT FILES ==========
 # Simulation report files
 reports/
+settings/
 
 # Javadoc
 *.html
