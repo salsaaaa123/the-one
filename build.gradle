@@ -54,47 +54,11 @@ tasks.jar {
 }
 
 tasks.named('run', JavaExec) {
-//    args = ['1', 'settings/default_settings.txt'] // default ONE
+    args = ['1', 'settings/default_settings.txt'] // default ONE
 
     // Run routing configuration
-    args = ['-b','11', 'settings/Prophet/prophet_Movenment_perStrategyForwarding.txt']
+//    args = ['-b','11', 'settings/Prophet/prophet_Movenment_perStrategyForwarding.txt']
 
-
-
-    // args = listOf("1", "settings/Prophet/prophet_Movenment.txt")
-//    args = listOf("1", "settings/Prophet/prophet_Movenment_perStrategyForwarding.txt")
-//    args = listOf("1", "settings/Prophet/prophet_Movenment_perStrategyForwardingMod.txt")
-
-//    args = listOf("-b","11", "settings/Prophet/prophet_Movenment_perStrategyForwardingMod.txt")
-//    args = listOf("-b","11", "settings/Prophet/prophet_Movenment_perStrategyForwarding.txt")
-
-
-    // args = listOf("-b","20", "settings/Prophet/prophet_Movenment_Forwarding.txt")
-    // args = listOf("-b","7", "settings/Prophet/prophet_Movenment_Haggle.txt")
-    // args = listOf("-b","7", "settings/Prophet/prophet_Movenment_HaggleMod.txt")
-    // args = listOf("-b","4", "settings/Prophet/prophetPaper_Movenment.txt")
-//    args = listOf("-b","1", "settings/Epidemic/EpidemicDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/SprayAndWait/SprayAndWaitDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/Prophet/ProphetDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/SprayAndFocus/SprayAndFocusDecisionEngineDuration_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/SprayAndFocus/SprayAndFocusDecisionEngineDuration_human_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/SprayAndFocus/SprayAndFocusRouterRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/SprayAndFocus/SprayAndFocusRouterHuman_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/PeopleRank/test1.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/PeopleRank/test.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/PeopleRank/DistributedPeopleRank_random_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/bublerap/bublerap_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/bublerap/settings_reality-bubblerap.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/PeopleRank/PeopleRankDecisionEngine_randomwaypoint_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/Prophet/prophet_settings_dec.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/Prophet/prophet2_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","1", "settings/Prophet/eunhaklee-prophetplus.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","6", "settings/Prophet/prophetRandom_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","6", "settings/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("1", "settings/Prophet/prophetOriginal_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//   args = listOf("-b","6", "settings/Prophet/prophetOriginal_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("-b","6", "settings/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
-//    args = listOf("1", "settings/Prophet/prophetRandom_Haggle_settings.txt")  // Sesuaikan dengan eksekusi GUI
 }
 
 tasks.named('test', Test) {
