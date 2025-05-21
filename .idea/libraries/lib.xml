@@ -1,6 +1,11 @@
 <component name="libraryTable">
   <library name="lib">
-    <CLASSES />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/DTNConsoleConnection.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/uncommons-maths-1.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/junit-4.8.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ECLA.jar!/" />
+    </CLASSES>
     <JAVADOC />
     <SOURCES />
   </library>
