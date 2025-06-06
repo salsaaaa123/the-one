@@ -25,7 +25,7 @@ public class RandomWalkLevy extends MovementModel implements SwitchableMovement 
 		super(s);
 
 		this.alpha = s.contains("alpha") ? s.getDouble("alpha") : 0.3;
-		this.scale = s.contains("scale") ? s.getDouble("scale") : 3000.0;
+		this.scale = s.contains("scale") ? s.getDouble("scale") : 500.0;
 		this.maxDistance = s.contains("maxDistance") ? s.getDouble("maxDistance") : 10000.0;
 
 		this.pareto = new Pareto(this.scale, this.alpha, this.maxDistance, this.rng);
